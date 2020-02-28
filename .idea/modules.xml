@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AuctionBlockchain.iml" filepath="$PROJECT_DIR$/AuctionBlockchain.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../pom.xml/pom.xml.iml" filepath="$PROJECT_DIR$/../pom.xml/pom.xml.iml" />
     </modules>
   </component>
 </project>
