@@ -6,10 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="AuctionBlockchain" />
         <module name="pom.xml" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="AuctionBlockchain" target="7" />
       <module name="pom.xml" target="1.5" />
     </bytecodeTargetLevel>
   </component>
