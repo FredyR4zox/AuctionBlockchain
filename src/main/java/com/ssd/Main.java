@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class Main {
 
     public static ArrayList<Block> blockchain = new ArrayList<>();
-    public static int difficulty = 5;
+    public static int difficulty = 7;
 
     public static void main(String[] args) {
         //add our blocks to the blockchain ArrayList:
