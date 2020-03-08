@@ -1,30 +1,35 @@
 package com.ssd;
 
-import com.google.gson.GsonBuilder;
-
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-
 public class Main {
 
-    public static ArrayList<Block> blockchain = new ArrayList<>();
-    public static int difficulty = 6;
 
     public static void main(String[] args) {
-        //add our blocks to the blockchain ArrayList:
-        blockchain.add(new Block("Hi im the first block", "0"));
+        //addXBlock our blocks to the BlockChain ArrayList:
+        transaction trans1 = new transaction(1,2, 5);
+        transaction trans12 = new transaction(1,2, 10);
+        Block b1 = new Block(trans1, "0");
+        b1.addTransaction(trans12);
+        BlockChain.addBlock(b1);
         System.out.println("Trying to Mine block 1... ");
-        blockchain.get(0).mineBlock(difficulty);
+        BlockChain.getXBlock(0).mineBlock(BlockChain.getDifficulty());
 
-        blockchain.add(new Block("Yo im the second block",blockchain.get(blockchain.size()-1).hash));
+        transaction trans2 = new transaction(1,2, 20);
+        BlockChain.addBlock(new Block(BlockChain.getXBlock(BlockChain.getSize()-1).hash));
         System.out.println("Trying to Mine block 2... ");
-        blockchain.get(1).mineBlock(difficulty);
+        BlockChain.getXBlock(1).mineBlock(BlockChain.getDifficulty());
 
-        blockchain.add(new Block("Hey im the third block",blockchain.get(blockchain.size()-1).hash));
+        transaction trans3 = new transaction(1,2, 2);
+        BlockChain.addBlock(new Block(trans3,BlockChain.getXBlock(BlockChain.getSize()-1).hash));
         System.out.println("Trying to Mine block 3... ");
-        blockchain.get(2).mineBlock(difficulty);
 
-        String blockchainJson = new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
-        System.out.println(blockchainJson);
+        BlockChain.getXBlock(2).mineBlock(BlockChain.getDifficulty());
+        System.out.println("\nBlockchain is Valid: " + BlockChain.isChainValid());
+        String transJson = trans1.makeJson();
+        System.out.println(transJson);
+        String blockJson = b1.makeJson();
+        System.out.println(blockJson);
+
+        //String BlockChainJson = BlockChain.makeJson();
+        //System.out.println(BlockChainJson);
     }
 }
