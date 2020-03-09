@@ -3,8 +3,10 @@ package com.ssd;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 public class utils {
     public static String getsha256(String input){
@@ -18,5 +20,8 @@ public class utils {
         byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
         String sha256hex = new String(Hex.encode(hash));
         return sha256hex;
+    }
+    public static String getStringFromKey(Key key) {
+        return Base64.getEncoder().encodeToString(key.getEncoded());
     }
 }

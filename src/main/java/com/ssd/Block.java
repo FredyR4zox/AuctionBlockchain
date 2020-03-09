@@ -1,13 +1,16 @@
 package com.ssd;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 
 public class Block{
     public String hash;
     public String previousHash;
+    private transaction minersReward;
     private transaction[] data;
     private int nrTransactions; //last occupied value in data
     private long timeStamp;
@@ -32,10 +35,19 @@ public class Block{
     }
 
     public String calculateHash() {
-        return utils.getsha256(previousHash + timeStamp + nonce + Arrays.toString(data));
+        return utils.getsha256(this.previousHash + this.timeStamp + this.nonce + Arrays.toString(this.data));
     }
 
-    public void mineBlock(int difficulty) {
+    public void mineBlock(int difficulty, Wallet minerWallet) {
+        this.minersReward = new transaction(minerWallet.getPubKey());
+        this.minersReward.signTransaction(minerWallet.getPrivKey());
+        for (transaction trans: this.data
+             ) {  if(trans != null && !trans.verifySignature()){
+                 System.out.println("A signature doesn't match");
+                 return;
+        }
+
+        }
         String target = new String(new char[difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
         while(!this.hash.substring( 0, difficulty).equals(target)) {
             this.nonce ++;
@@ -56,5 +68,8 @@ public class Block{
 
     public String makeJson(){
         return new GsonBuilder().setPrettyPrinting().create().toJson(this);
+    }
+    public static Block makeFromJson(String bJson){
+        return new Gson().fromJson(bJson, Block.class);
     }
 }

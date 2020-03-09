@@ -1,13 +1,15 @@
 package com.ssd;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 
 public class BlockChain {
     public static ArrayList<Block> blockchain = new ArrayList<>();
-    private static int difficulty = 4;
+    private static int difficulty = 7;
     private static int size;
+    private static long minerReward;
 
     public static int getDifficulty() {
         return difficulty;
@@ -29,6 +31,9 @@ public class BlockChain {
         return new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
     }
 
+    public static BlockChain makeFromJson(String blockChainJson){
+        return new Gson().fromJson(blockChainJson, BlockChain.class);
+    }
     public static Boolean isChainValid(){
         Block currentBlock;
         Block previousBlock;
@@ -49,5 +54,9 @@ public class BlockChain {
             }
         }
         return true;
+    }
+
+    public static long getMinerReward() {
+        return BlockChain.minerReward;
     }
 }
