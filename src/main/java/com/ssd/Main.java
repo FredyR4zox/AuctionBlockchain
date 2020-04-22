@@ -5,29 +5,36 @@ public class Main {
 
     public static void main(String[] args) {
         //addXBlock our blocks to the BlockChain ArrayList:
+        Boolean ableToAdd;
 
         Wallet creator= new Wallet();
-        Block genesis = new Block("0");
-        BlockChain.checkMineAddBlock(genesis, creator);
+        BlockChain.createGenesisBlock(creator);
         System.out.println("creator address:" + creator.getAddress());
         BlockChain.printHashMap();
         System.out.println();
 
+        Wallet miner = new Wallet();
+        addBlock minerAddition = new addBlock(miner);
+
         Wallet wallet1 = new Wallet();
         Wallet wallet2 = new Wallet();
-        Wallet miner = new Wallet();
+
 
         transaction trans1 = new transaction(creator.getAddress(), wallet1.getAddress(),creator.getPubKey(), 40,0,0);
         trans1.signTransaction(creator.getPrivKey());
+        ableToAdd = minerAddition.addTransactionIfValid(trans1);
+        System.out.println("Able to add transaction: "+ ableToAdd);
+
         transaction trans12 = new transaction(wallet1.getAddress(),wallet2.getAddress(),wallet1.getPubKey(), 30,0,10);
         trans12.signTransaction(wallet1.getPrivKey());
-        Block b1 = new Block(trans1, BlockChain.getLastHash());
-        b1.addTransaction(trans12);
-        b1.addTransaction(trans1);
+        ableToAdd = minerAddition.addTransactionIfValid(trans12);
+        System.out.println("Able to add transaction: "+ ableToAdd);
+
         System.out.println("Trying to add block 1... ");
-        Boolean blockValid = BlockChain.checkMineAddBlock(b1, miner);
-        System.out.println("Is block valid:" + blockValid);
+        ableToAdd = minerAddition.checkMineAddBlock();
+        System.out.println("Able to add block: " + ableToAdd);
         BlockChain.printHashMap();
+
         Boolean output=BlockChain.isChainValidAndCreateHashMap();
         System.out.println("Is Chain Valid:" + output);
         BlockChain.printHashMap();

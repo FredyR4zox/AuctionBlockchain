@@ -12,22 +12,12 @@ public class Block{
     public String previousHash;
     public transaction minersReward;
     public transaction[] data;
-    public int nrTransactions; //last occupied value in data
+    public int nrTransactions; //index of transaction
     public long timeStamp;
     public long nonce;
 
-    public Block(transaction data, String previousHash) {
-        this.nrTransactions = 0;
-        this.previousHash = previousHash;
-        this.data = new transaction[5];
-        this.data[0] = data;
-        this.timeStamp = new Date().getTime();
-        this.nonce = 0;
-        this.hash = calculateHash();
-    }
-
     public Block(String previousHash) {
-        this.nrTransactions = -1; //pretend its full
+        this.nrTransactions = -1;
         this.previousHash = previousHash;
         this.data = new transaction[5];
         this.timeStamp = new Date().getTime();
@@ -45,7 +35,7 @@ public class Block{
         return true;
     }
     public String calculateHash() {
-        return utils.getsha256(this.previousHash + this.timeStamp + this.nonce + Arrays.toString(this.data) + this.minersReward + this.nrTransactions);
+        return utils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.nonce);
     }
 
     public Boolean isHashValid() {
@@ -77,6 +67,8 @@ public class Block{
             this.nrTransactions++;
             this.data[this.nrTransactions]=newtrans;
         }
+        //recalculate hash
+        this.hash= calculateHash();
     }
 
     public String makeJson(){

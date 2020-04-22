@@ -29,16 +29,15 @@ public class BlockChain {
     public static String getLastHash(){
         return BlockChain.getXBlock(size).hash;
     }
-    public static Boolean checkMineAddBlock(Block newBlock, Wallet minerWallet){
+    public static Boolean checkAddBlock(Block newBlock){
         //check if transactions in block are valid
         if(!newBlock.areSignaturesAndHashValid()) return false;
         if(!areFundsSufficient(newBlock)) return false;
-        //Mine block
-        newBlock.mineBlock(minerWallet);
-        //Add minersReward to HashMap
-        addMinerRewardToHashMap(newBlock.minersReward);
+
         //Add block to blockchain and update Hashmap
         addBlock(newBlock);
+        //Add minersReward to HashMap
+        addMinerRewardToHashMap(newBlock.minersReward);
         for(int i= 0; i<=newBlock.nrTransactions; i++){
             transaction trans = newBlock.data[i];
             //Add transaction to HashMap
@@ -46,6 +45,14 @@ public class BlockChain {
         }
 
         return true;
+    }
+    public static void createGenesisBlock(Wallet creator){
+        Block genesis= new Block("0");
+        //Mine block
+        genesis.mineBlock(creator);
+        //Add minersReward to HashMap
+        addMinerRewardToHashMap(genesis.minersReward);
+        addBlock(genesis);
     }
 
     public static Boolean areFundsSufficient(Block block){
