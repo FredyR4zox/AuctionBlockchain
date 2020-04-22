@@ -6,8 +6,14 @@ import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 
 public class Wallet {
+    public String address;
     public PrivateKey privKey;
     public PublicKey pubKey;
+
+    public Wallet() {
+        generateKeys();
+        createAddress();
+    }
 
     public PrivateKey getPrivKey() {
         return privKey;
@@ -17,8 +23,10 @@ public class Wallet {
         return pubKey;
     }
 
-    public Wallet() {
-        generateKeys();
+    public String getAddress() { return address; }
+
+    private void createAddress(){
+        this.address = utils.getsha256(utils.getStringFromKey(this.pubKey));
     }
 
     public void printKeys(){

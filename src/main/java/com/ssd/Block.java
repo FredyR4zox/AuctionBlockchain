@@ -10,11 +10,11 @@ import java.util.Date;
 public class Block{
     public String hash;
     public String previousHash;
-    private transaction minersReward;
-    private transaction[] data;
-    private int nrTransactions; //last occupied value in data
-    private long timeStamp;
-    private long nonce;
+    public transaction minersReward;
+    public transaction[] data;
+    public int nrTransactions; //last occupied value in data
+    public long timeStamp;
+    public long nonce;
 
     public Block(transaction data, String previousHash) {
         this.nrTransactions = 0;
@@ -25,8 +25,9 @@ public class Block{
         this.nonce = 0;
         this.hash = calculateHash();
     }
+
     public Block(String previousHash) {
-        this.nrTransactions = -1; //because no transactions in the block
+        this.nrTransactions = -1; //pretend its full
         this.previousHash = previousHash;
         this.data = new transaction[5];
         this.timeStamp = new Date().getTime();
@@ -34,20 +35,32 @@ public class Block{
         this.hash = calculateHash();
     }
 
+    public Boolean areSignaturesAndHashValid(){
+        for (int i=0; i<=nrTransactions; i++) {
+            transaction trans = data[i];
+            if(!trans.verifyTransaction()){
+                return false;
+            }
+        }
+        return true;
+    }
     public String calculateHash() {
-        return utils.getsha256(this.previousHash + this.timeStamp + this.nonce + Arrays.toString(this.data));
+        return utils.getsha256(this.previousHash + this.timeStamp + this.nonce + Arrays.toString(this.data) + this.minersReward + this.nrTransactions);
     }
 
-    public void mineBlock(int difficulty, Wallet minerWallet) {
-        this.minersReward = new transaction(minerWallet.getPubKey());
-        this.minersReward.signTransaction(minerWallet.getPrivKey());
-        for (transaction trans: this.data
-             ) {  if(trans != null && !trans.verifySignature()){
-                 System.out.println("A signature doesn't match");
-                 return;
+    public Boolean isHashValid() {
+        //compare registered hash and calculated hash:
+        if(!hash.equals(calculateHash()) ){
+            System.out.println("Current Hashes not equal");
+            return false;
         }
+        else return true;
+    }
 
-        }
+    public void mineBlock(Wallet minerWallet) {
+        int difficulty = BlockChain.getDifficulty();
+        this.minersReward = new transaction(minerWallet.getAddress());
+
         String target = new String(new char[difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
         while(!this.hash.substring( 0, difficulty).equals(target)) {
             this.nonce ++;
