@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class BlockChain {
     public static ArrayList<Block> blockchain = new ArrayList<>();
-    public static HashMap<String, Double> walletsMoney = new HashMap<String, Double>();
+    public static HashMap<String, Double> walletsMoney = new HashMap<>();
     private static final int difficulty = 4;
     private static int size;
     private static final Double minerReward = 100.0;
@@ -33,7 +33,8 @@ public class BlockChain {
         //check if transactions in block are valid
         if(!newBlock.areSignaturesAndHashValid()) return false;
         if(!areFundsSufficient(newBlock)) return false;
-
+        //check if miner reward with transaction fees are valid
+        if(newBlock.getTransactionFeesTotal() == BlockChain.getMinerReward() - newBlock.minersReward.amount)return false;
         //Add block to blockchain and update Hashmap
         addBlock(newBlock);
         //Add minersReward to HashMap
@@ -50,8 +51,6 @@ public class BlockChain {
         Block genesis= new Block("0");
         //Mine block
         genesis.mineBlock(creator);
-        //Add minersReward to HashMap
-        addMinerRewardToHashMap(genesis.minersReward);
         addBlock(genesis);
     }
 
@@ -67,7 +66,7 @@ public class BlockChain {
     }
 
     private static HashMap<String, Double> copyUsedHashMapValues(Block block) {
-        HashMap<String, Double> fundsTracking = new HashMap<String, Double>();
+        HashMap<String, Double> fundsTracking = new HashMap<>();
         for(int i= 0; i<=block.nrTransactions; i++) {
             transaction trans = block.data[i];
             if(walletsMoney.containsKey(trans.buyerID)&&!fundsTracking.containsKey(trans.buyerID)){
@@ -94,8 +93,9 @@ public class BlockChain {
     }
 
     public static void updateHashMapValues(transaction t, HashMap <String, Double> walletsMoney) {
-        if(walletsMoney.putIfAbsent(t.sellerID, t.amount)!=null) {
-            double sellerNewValue = walletsMoney.get(t.sellerID) + t.amount;
+
+        if(walletsMoney.putIfAbsent(t.sellerID, t.amount- t.transactionFee)!=null) {
+            double sellerNewValue = walletsMoney.get(t.sellerID) + t.amount - t.transactionFee;
             walletsMoney.replace(t.sellerID, sellerNewValue);
         }
         double buyerNewValue = walletsMoney.get(t.buyerID)-t.amount;
@@ -125,8 +125,10 @@ public class BlockChain {
             else{
                 if (!areHashesValid(currentBlock, previousBlock)) return false;
             }
+            //check if miner reward with transaction fees are valid
+            if(!block.areTransactionFeesValid()) return false;
             //Add minersReward to HashMap
-            addMinerRewardToHashMap(block.minersReward);
+            BlockChain.addMinerRewardToHashMap(block.minersReward);
             //make transactions checks
             //Do Hash and signature check
             if(!block.areSignaturesAndHashValid()) return false;
@@ -141,9 +143,15 @@ public class BlockChain {
         return true;
     }
 
+
     public static void addMinerRewardToHashMap(transaction minersReward){
-        walletsMoney.put(minersReward.sellerID, minersReward.amount);
-    }
+            //in case its a coinbase transfer
+                if(BlockChain.walletsMoney.putIfAbsent(minersReward.sellerID, minersReward.amount)!= null) {
+                    double minerNewValue = BlockChain.walletsMoney.get(minersReward.sellerID) + minersReward.amount;
+                    BlockChain.walletsMoney.replace(minersReward.sellerID, minerNewValue);
+                }
+                return;
+            }
 
     public static Boolean areHashesValid(Block currentBlock, Block previousBlock){
         //compare registered hash and calculated hash:
@@ -162,12 +170,18 @@ public class BlockChain {
     public static void addBlock(Block newBlock){
         blockchain.add(newBlock);
         size ++;
+        //Add minersReward to HashMap
+        BlockChain.addMinerRewardToHashMap(newBlock.minersReward);
+        //updates hashmap
+        for(int i= 0; i<=newBlock.nrTransactions; i++){
+            transaction trans = newBlock.data[i];
+            //Add transaction to HashMap
+            BlockChain.updateHashMapValues(trans, BlockChain.walletsMoney);
+        }
     }
 
     public static void printHashMap(){
-        for (Map.Entry m:walletsMoney.entrySet()) {
-            System.out.println(m.getKey()+" "+m.getValue());
-        }
+        walletsMoney.forEach((key, value) -> System.out.println(key + " " + value));
     }
 
     public static String makeJson(){

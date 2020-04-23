@@ -10,15 +10,15 @@ public class addBlock {
     public addBlock(Wallet minerWallet){
         this.minerWallet = minerWallet;
         newBlock = new Block(BlockChain.getLastHash());
-        fundsTracking = new HashMap<String, Double>();
+        fundsTracking = new HashMap<>();
     }
     public Boolean addTransactionIfValid(transaction trans){
         //Do hashes check && Do signature checks
         if(!trans.verifyTransaction()) return false;
         addTransactionToFundsTracking(trans);
         if(!BlockChain.checkIfEnoughFunds(trans, fundsTracking)) return false;
+        if(!this.newBlock.addTransaction(trans))return false;
         BlockChain.updateHashMapValues(trans, fundsTracking);
-        this.newBlock.addTransaction(trans);
         return true;
     }
     private void addTransactionToFundsTracking(transaction trans){
@@ -36,16 +36,13 @@ public class addBlock {
         if(!newBlock.isHashValid()) return false;
         //Mine block
         newBlock.mineBlock(minerWallet);
-        //Add minersReward to HashMap
-        BlockChain.addMinerRewardToHashMap(newBlock.minersReward);
         //Add block to blockchain and update Hashmap
         BlockChain.addBlock(newBlock);
-        for(int i= 0; i<=newBlock.nrTransactions; i++){
-            transaction trans = newBlock.data[i];
-            //Add transaction to HashMap
-            BlockChain.updateHashMapValues(trans, BlockChain.walletsMoney);
-        }
 
         return true;
+    }
+    public void reset(){
+        newBlock = new Block(BlockChain.getLastHash());
+        fundsTracking.clear();
     }
 }

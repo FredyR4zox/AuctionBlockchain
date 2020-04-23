@@ -29,6 +29,18 @@ public class Wallet {
         this.address = utils.getsha256(utils.getStringFromKey(this.pubKey));
     }
 
+    public static boolean checkAddress(PublicKey pubKey, String address){
+        if(getAddressFromPubKey(pubKey).equals(address))
+            return true;
+        else {
+            System.out.println("public key doesn't correspond to address");
+            return false;
+        }
+    }
+    public static String getAddressFromPubKey(PublicKey pubKey){
+        return utils.getsha256(utils.getStringFromKey(pubKey));
+    }
+
     public void printKeys(){
         System.out.println("public key:" + this.pubKey.toString());
         System.out.println("private key:" + this.privKey.toString());

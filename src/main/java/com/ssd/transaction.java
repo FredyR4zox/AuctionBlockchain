@@ -4,51 +4,60 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.util.Arrays;
 
 public class transaction {
     public String sellerID;
     public String buyerID;
     public Double amount;
     public Double transactionFee;
+    public Double transactionFeePercentage;
     public long itemID;
     public PublicKey buyerPublicKey;
     public byte[] signature;
     public String hash;
 
-    public transaction(String buyerID, String sellerID, PublicKey buyerPublicKey, double amount, double transactionFee, long itemID) {
+    public transaction(String buyerID, String sellerID, PublicKey buyerPublicKey, double amount, double transactionFeePercentage, long itemID) {
         this.buyerID = buyerID;
         this.sellerID = sellerID;
         this.buyerPublicKey= buyerPublicKey;
         this.amount = amount;
-        this.transactionFee = transactionFee;
+        this.transactionFeePercentage= transactionFeePercentage;
+        this.transactionFee = getTransactionFeeValue(amount, transactionFeePercentage);
         this.itemID = itemID;
         this.hash = this.getHashToBeSigned();
     }
 
-    //coinbase transaction for miner reward
-    public transaction(String sellerID) {
+    public transaction(Wallet buyerWallet, String sellerID, double amount, double transactionFeePercentage, long itemID){
+        this.buyerID = buyerWallet.getAddress();
+        this.buyerPublicKey= buyerWallet.getPubKey();
         this.sellerID = sellerID;
-        this.buyerID = "0000000000000000000000000000000000000000000000000000000000000000";
-        this.amount = BlockChain.getMinerReward();
+        this.amount = amount;
+        this.transactionFeePercentage= transactionFeePercentage;
+        this.transactionFee = getTransactionFeeValue(amount, transactionFeePercentage);
+        this.itemID = itemID;
         this.hash = this.getHashToBeSigned();
+        signTransaction(buyerWallet.getPrivKey());
     }
 
-    public String getAddressFromPubKey(PublicKey pubKey){
-        utils.getsha256(utils.getStringFromKey(pubKey));
-        return hash;
+    private Double getTransactionFeeValue(double amount, double transactionFeePercentage) {
+        return (amount*transactionFeePercentage)/100;
     }
-    public boolean checkAddress(PublicKey pubKey){
-        if(getAddressFromPubKey(pubKey).equals(this.buyerID))
-            return true;
-        else
-            return false;
+
+    //coinbase transaction for miner reward
+    public transaction(String sellerID, double transactionFeesTotal) {
+        this.sellerID = sellerID;
+        this.buyerID = "0000000000000000000000000000000000000000000000000000000000000000";
+        this.amount = BlockChain.getMinerReward()+transactionFeesTotal;
+        this.hash = this.getHashToBeSigned();
     }
 
     public Boolean verifyTransaction() {
         //Do hashes check && Do signature checks
-        if(isHashValid()&&verifySignature()) return true;
+        if(isHashValid()&&verifySignature()&&Wallet.checkAddress(this.buyerPublicKey, this.buyerID)) return true;
         else return false;
     }
+
     public Boolean isHashValid(){
         if(!this.hash.equals(this.getHashToBeSigned())){
             System.out.println("Transaction Hashes don't match");
@@ -71,6 +80,7 @@ public class transaction {
             e.printStackTrace();
         }
         if (!output) System.out.println("Signatures don't match");
+        this.hash=this.getHashToBeSigned();
         return output;
     }
 
@@ -86,7 +96,7 @@ public class transaction {
     }
 
     private String getHashToBeSigned(){
-        if(this.buyerPublicKey != null) {
+        if(this.buyerPublicKey!=null){
             return utils.getsha256(this.sellerID + this.buyerID + utils.getStringFromKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID);
         }
         else{
