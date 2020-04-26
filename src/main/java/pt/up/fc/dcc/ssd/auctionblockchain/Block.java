@@ -1,9 +1,8 @@
-package com.ssd;
+package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 

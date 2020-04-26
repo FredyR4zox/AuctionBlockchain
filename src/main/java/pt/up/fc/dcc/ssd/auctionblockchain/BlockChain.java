@@ -1,11 +1,10 @@
-package com.ssd;
+package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class BlockChain {
     public static ArrayList<Block> blockchain = new ArrayList<>();

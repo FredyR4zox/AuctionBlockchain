@@ -1,10 +1,9 @@
-package com.ssd;
+package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.util.Arrays;
 
 public class transaction {
     public String sellerID;
