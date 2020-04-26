@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+
+option java_multiple_files = true;
+option java_package = "pt.up.fc.dcc.ssd.auctionblockchain";
+option java_outer_classname = "AuctionBlockchainProto";
+option objc_class_prefix = "ABC";
+
+package auctionblockchain;
+
+service AuctionBlockchain {
+    rpc Ping(NodeID) returns (NodeID) {}
+
+    rpc Store(StoreRequest) returns (StoreResponse) {}
+
+    rpc FindNode(FindNodeRequest) returns (FindNodeResponse) {}
+
+    rpc FindValue(FindValueRequest) returns (FindValueResponse) {}
+}
+
+
+
+message NodeID {
+    bytes id = 1;
+}
+
+message KademliaNodeProto {
+    string ipAddress = 1;
+    uint32 port = 2;
+    NodeID nodeID = 3;
+}
+
+message KBucketProto {
+    repeated KademliaNodeProto nodes = 1;
+}
+
+
+
+message StoreRequest {
+    NodeID nodeID = 1;
+    string key = 2;
+    oneof BlockOrTransaction {
+        BlockProto block = 3;
+        Transaction transaction = 4;
+    }
+}
+
+message StoreResponse {
+    NodeID nodeID = 1;
+    bool success = 2;
+}
+
+
+
+message FindNodeRequest {
+    NodeID nodeID = 1;
+    NodeID requestedNodeId = 2;
+}
+
+message FindNodeResponse {
+    NodeID nodeID = 1;
+    KBucketProto bucket = 2;
+}
+
+
+
+message FindValueRequest {
+    NodeID nodeID = 1;
+    string key = 2;
+}
+
+message FindValueResponse {
+    NodeID nodeID = 1;
+    oneof BlockOrTransactionOrNodes {
+        BlockProto block = 2;
+        Transaction transaction = 3;
+        KBucketProto bucket = 4;
+    }
+}
+
+
+
+
+
+
+message PublicKeyProto {
+    bytes key = 1;
+}
+
+// hash - The hash of the referenced transaction.
+// index - The index of the specific output in the transaction. The first output is 0, etc.
+message OutPoint {
+    bytes hash = 1;
+    fixed32 index = 2;
+}
+
+// previousOutput - The previous output transaction reference, as an OutPoint structure.
+// signatureScript - Computational Script for confirming transaction authorization.
+message TxIn {
+    OutPoint previousOutput = 1;
+    bytes signatureScript = 2;
+}
+
+// value - Transaction Value.
+// pkScript - Usually contains the public key as a Bitcoin script setting up conditions to claim this output.
+message TxOut {
+    fixed64 value = 1;
+    PublicKeyProto pkScript = 2;
+}
+
+// txIn - A list of 1 or more transaction inputs or sources for coins.
+// txOut - A list of 1 or more transaction outputs or destinations for coins.
+message Transaction {
+    repeated TxIn txIn = 1;
+    repeated TxOut txOut = 2;
+}
+
+// nonce - The nonce used to generate this block… to allow variations of the header and compute different hashes.
+message BlockHeader {
+    bytes prevBlock = 1;
+    bytes merkleRoot = 2;
+    fixed32 timestamp = 3;
+    fixed32 difficulty = 4;
+    fixed32 nonce = 5;
+}
+
+message BlockProto {
+    BlockHeader blockHeader = 1;
+    repeated Transaction transactions = 2;
+}
+
+message BlockChainProto {
+    repeated BlockProto blocks = 1;
+}
+
+
+
