@@ -7,6 +7,7 @@ public class Main {
         Boolean ableToAdd;
 
         Wallet creator= new Wallet();
+
         BlockChain.createGenesisBlock(creator);
         System.out.println("creator address:" + creator.getAddress());
         BlockChain.printHashMap();
@@ -20,14 +21,14 @@ public class Main {
         Wallet alice = new Wallet();
         Wallet bob = new Wallet();
 
-        transaction trans1 = new transaction(creator, wallet1.getAddress(), 60,0.1,0);
+        Transaction trans1 = new Transaction(creator, wallet1.getAddress(), 60,0.1,0);
         ableToAdd = minerAddition.addTransactionIfValid(trans1);
-        System.out.println("Able to add transaction: "+ ableToAdd);
+        System.out.println("Able to add Transaction: "+ ableToAdd);
 
-        transaction trans12 = new transaction(wallet1,wallet2.getAddress(),10,0.1,10);
+        Transaction trans12 = new Transaction(wallet1,wallet2.getAddress(),10,0.1,10);
         for(int i=0; i<6;i++) {
             ableToAdd = minerAddition.addTransactionIfValid(trans12);
-            System.out.println("Able to add transaction: " + ableToAdd);
+            System.out.println("Able to add Transaction: " + ableToAdd);
         }
 
         System.out.println("Trying to add block 1... ");
@@ -38,9 +39,9 @@ public class Main {
         System.out.println();
         minerAddition.reset();
 
-        transaction trans21 = new transaction(miner, alice.getAddress(), 60,0.2,5);
+        Transaction trans21 = new Transaction(miner, alice.getAddress(), 60,0.2,5);
         ableToAdd = minerAddition.addTransactionIfValid(trans21);
-        System.out.println("Able to add transaction: "+ ableToAdd);
+        System.out.println("Able to add Transaction: "+ ableToAdd);
 
         System.out.println("Trying to add block 2... ");
         ableToAdd = minerAddition.checkMineAddBlock();
@@ -54,5 +55,6 @@ public class Main {
 
         //String BlockChainJson = BlockChain.makeJson();
         //System.out.println(BlockChainJson);
+        
     }
 }

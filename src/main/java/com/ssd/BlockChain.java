@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class BlockChain {
     public static ArrayList<Block> blockchain = new ArrayList<>();
@@ -27,26 +26,28 @@ public class BlockChain {
         return blockchain.get(blocknr-1);
     }
     public static String getLastHash(){
-        return BlockChain.getXBlock(size).hash;
+        return BlockChain.getXBlock(size).getHash();
     }
+
     public static Boolean checkAddBlock(Block newBlock){
         //check if transactions in block are valid
         if(!newBlock.areSignaturesAndHashValid()) return false;
         if(!areFundsSufficient(newBlock)) return false;
-        //check if miner reward with transaction fees are valid
-        if(newBlock.getTransactionFeesTotal() == BlockChain.getMinerReward() - newBlock.minersReward.amount)return false;
+        //check if miner reward with Transaction fees are valid
+        if(newBlock.getTransactionFeesTotal() == BlockChain.getMinerReward() - newBlock.getMinersReward().getAmount())return false;
         //Add block to blockchain and update Hashmap
         addBlock(newBlock);
         //Add minersReward to HashMap
-        addMinerRewardToHashMap(newBlock.minersReward);
-        for(int i= 0; i<=newBlock.nrTransactions; i++){
-            transaction trans = newBlock.data[i];
-            //Add transaction to HashMap
+        addMinerRewardToHashMap(newBlock.getMinersReward());
+        for(int i= 0; i<=newBlock.getNrTransactions(); i++){
+            Transaction trans = newBlock.getXData(i);
+            //Add Transaction to HashMap
             updateHashMapValues(trans, BlockChain.walletsMoney);
         }
 
         return true;
     }
+
     public static void createGenesisBlock(Wallet creator){
         Block genesis= new Block("0");
         //Mine block
@@ -56,8 +57,8 @@ public class BlockChain {
 
     public static Boolean areFundsSufficient(Block block){
         HashMap<String, Double> fundsTracking = copyUsedHashMapValues(block);
-        for(int i= 0; i<=block.nrTransactions; i++){
-            transaction trans = block.data[i];
+        for(int i= 0; i<=block.getNrTransactions(); i++){
+            Transaction trans = block.getXData(i);
             //Check if he has money
             if(!checkIfEnoughFunds(trans, fundsTracking)) return false;
             updateHashMapValues(trans, fundsTracking);
@@ -67,43 +68,43 @@ public class BlockChain {
 
     private static HashMap<String, Double> copyUsedHashMapValues(Block block) {
         HashMap<String, Double> fundsTracking = new HashMap<>();
-        for(int i= 0; i<=block.nrTransactions; i++) {
-            transaction trans = block.data[i];
-            if(walletsMoney.containsKey(trans.buyerID)&&!fundsTracking.containsKey(trans.buyerID)){
-                fundsTracking.put(trans.buyerID, walletsMoney.get(trans.buyerID));
+        for(int i= 0; i<=block.getNrTransactions(); i++) {
+            Transaction trans = block.getXData(i);
+            if(walletsMoney.containsKey(trans.getBuyerID())&&!fundsTracking.containsKey(trans.getBuyerID())){
+                fundsTracking.put(trans.getBuyerID(), walletsMoney.get(trans.getBuyerID()));
             }
-            if(walletsMoney.containsKey(trans.sellerID)&&!fundsTracking.containsKey(trans.sellerID)){
-                fundsTracking.put(trans.sellerID,walletsMoney.get(trans.sellerID));
+            if(walletsMoney.containsKey(trans.getSellerID())&&!fundsTracking.containsKey(trans.getSellerID())){
+                fundsTracking.put(trans.getSellerID(),walletsMoney.get(trans.getSellerID()));
             }
         }
         return fundsTracking;
     }
 
-    public static Boolean checkIfEnoughFunds(transaction trans, HashMap <String, Double> walletsMoney) {
-        if(!walletsMoney.containsKey(trans.buyerID)){
+    public static Boolean checkIfEnoughFunds(Transaction trans, HashMap <String, Double> walletsMoney) {
+        if(!walletsMoney.containsKey(trans.getBuyerID())){
             System.out.println("This buyer has never received funds");
             return false;
         }
-        Double buyerFunds=walletsMoney.get(trans.buyerID);
-        if(buyerFunds-trans.amount<0) {
+        Double buyerFunds=walletsMoney.get(trans.getBuyerID());
+        if(buyerFunds-trans.getAmount()<0) {
             System.out.println("Buyer doesn't have enough funds");
             return false;
         }
         else return true;
     }
 
-    public static void updateHashMapValues(transaction t, HashMap <String, Double> walletsMoney) {
+    public static void updateHashMapValues(Transaction t, HashMap <String, Double> walletsMoney) {
 
-        if(walletsMoney.putIfAbsent(t.sellerID, t.amount- t.transactionFee)!=null) {
-            double sellerNewValue = walletsMoney.get(t.sellerID) + t.amount - t.transactionFee;
-            walletsMoney.replace(t.sellerID, sellerNewValue);
+        if(walletsMoney.putIfAbsent(t.getSellerID(), t.getAmount()- t.getTransactionFee())!=null) {
+            double sellerNewValue = walletsMoney.get(t.getSellerID()) + t.getAmount() - t.getTransactionFee();
+            walletsMoney.replace(t.getSellerID(), sellerNewValue);
         }
-        double buyerNewValue = walletsMoney.get(t.buyerID)-t.amount;
+        double buyerNewValue = walletsMoney.get(t.getBuyerID())-t.getAmount();
         if (buyerNewValue==0) {
-            walletsMoney.remove(t.buyerID);
+            walletsMoney.remove(t.getBuyerID());
         }
         else{
-            walletsMoney.replace(t.buyerID, buyerNewValue);
+            walletsMoney.replace(t.getBuyerID(), buyerNewValue);
         }
     }
 
@@ -125,30 +126,29 @@ public class BlockChain {
             else{
                 if (!areHashesValid(currentBlock, previousBlock)) return false;
             }
-            //check if miner reward with transaction fees are valid
+            //check if miner reward with Transaction fees are valid
             if(!block.areTransactionFeesValid()) return false;
             //Add minersReward to HashMap
-            BlockChain.addMinerRewardToHashMap(block.minersReward);
+            BlockChain.addMinerRewardToHashMap(block.getMinersReward());
             //make transactions checks
             //Do Hash and signature check
             if(!block.areSignaturesAndHashValid()) return false;
             //Check if they have money
             if(!areFundsSufficient(block)) return false;
-            for(int i= 0; i<=block.nrTransactions; i++){
-                transaction trans = block.data[i];
-                //Add transaction to HashMap
+            for(int i= 0; i<=block.getNrTransactions(); i++){
+                Transaction trans = block.getXData(i);
+                //Add Transaction to HashMap
                 updateHashMapValues(trans, BlockChain.walletsMoney);
             }
         }
         return true;
     }
 
-
-    public static void addMinerRewardToHashMap(transaction minersReward){
+    public static void addMinerRewardToHashMap(Transaction minersReward){
             //in case its a coinbase transfer
-                if(BlockChain.walletsMoney.putIfAbsent(minersReward.sellerID, minersReward.amount)!= null) {
-                    double minerNewValue = BlockChain.walletsMoney.get(minersReward.sellerID) + minersReward.amount;
-                    BlockChain.walletsMoney.replace(minersReward.sellerID, minerNewValue);
+                if(BlockChain.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount())!= null) {
+                    double minerNewValue = BlockChain.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount();
+                    BlockChain.walletsMoney.replace(minersReward.getSellerID(), minerNewValue);
                 }
                 return;
             }
@@ -160,7 +160,7 @@ public class BlockChain {
             return false;
         }
         //compare previous hash and registered previous hash
-        if(!previousBlock.hash.equals(currentBlock.previousHash) ) {
+        if(!previousBlock.getHash().equals(currentBlock.getPreviousHash()) ) {
             System.out.println("Previous Hashes not equal");
             return false;
         }
@@ -171,11 +171,11 @@ public class BlockChain {
         blockchain.add(newBlock);
         size ++;
         //Add minersReward to HashMap
-        BlockChain.addMinerRewardToHashMap(newBlock.minersReward);
+        BlockChain.addMinerRewardToHashMap(newBlock.getMinersReward());
         //updates hashmap
-        for(int i= 0; i<=newBlock.nrTransactions; i++){
-            transaction trans = newBlock.data[i];
-            //Add transaction to HashMap
+        for(int i= 0; i<=newBlock.getNrTransactions(); i++){
+            Transaction trans = newBlock.getXData(i);
+            //Add Transaction to HashMap
             BlockChain.updateHashMapValues(trans, BlockChain.walletsMoney);
         }
     }

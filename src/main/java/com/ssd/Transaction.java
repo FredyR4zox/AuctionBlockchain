@@ -2,38 +2,38 @@ package com.ssd;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.util.Arrays;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
-public class transaction {
-    public String sellerID;
-    public String buyerID;
-    public Double amount;
-    public Double transactionFee;
-    public Double transactionFeePercentage;
-    public long itemID;
-    public PublicKey buyerPublicKey;
-    public byte[] signature;
-    public String hash;
+public class Transaction {
+    private final String sellerID;
+    private final String buyerID;
+    private final Double amount;
+    private Double transactionFee;
+    private long itemID;
+    private PublicKey buyerPublicKey;
+    private byte[] signature;
+    private String hash;
 
-    public transaction(String buyerID, String sellerID, PublicKey buyerPublicKey, double amount, double transactionFeePercentage, long itemID) {
+    public Transaction(String buyerID, String sellerID, byte[] buyerPublicKey, double amount, double transactionFeePercentage, long itemID) {
         this.buyerID = buyerID;
         this.sellerID = sellerID;
-        this.buyerPublicKey= buyerPublicKey;
+        this.buyerPublicKey= Wallet.getPublicKeyFromBytes(buyerPublicKey);
         this.amount = amount;
-        this.transactionFeePercentage= transactionFeePercentage;
         this.transactionFee = getTransactionFeeValue(amount, transactionFeePercentage);
         this.itemID = itemID;
         this.hash = this.getHashToBeSigned();
     }
 
-    public transaction(Wallet buyerWallet, String sellerID, double amount, double transactionFeePercentage, long itemID){
+    public Transaction(Wallet buyerWallet, String sellerID, double amount, double transactionFeePercentage, long itemID){
         this.buyerID = buyerWallet.getAddress();
         this.buyerPublicKey= buyerWallet.getPubKey();
         this.sellerID = sellerID;
         this.amount = amount;
-        this.transactionFeePercentage= transactionFeePercentage;
         this.transactionFee = getTransactionFeeValue(amount, transactionFeePercentage);
         this.itemID = itemID;
         this.hash = this.getHashToBeSigned();
@@ -44,8 +44,8 @@ public class transaction {
         return (amount*transactionFeePercentage)/100;
     }
 
-    //coinbase transaction for miner reward
-    public transaction(String sellerID, double transactionFeesTotal) {
+    //coinbase Transaction for miner reward
+    public Transaction(String sellerID, double transactionFeesTotal) {
         this.sellerID = sellerID;
         this.buyerID = "0000000000000000000000000000000000000000000000000000000000000000";
         this.amount = BlockChain.getMinerReward()+transactionFeesTotal;
@@ -106,8 +106,23 @@ public class transaction {
     public String makeJson(){
         return new GsonBuilder().setPrettyPrinting().create().toJson(this);
     }
-    public static transaction makeFromJson(String tJson){
-        return new Gson().fromJson(tJson, transaction.class);
+    public static Transaction makeFromJson(String tJson){
+        return new Gson().fromJson(tJson, Transaction.class);
     }
 
+    public Double getTransactionFee() {
+        return transactionFee;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public String getSellerID() {
+        return sellerID;
+    }
+
+    public String getBuyerID() {
+        return buyerID;
+    }
 }

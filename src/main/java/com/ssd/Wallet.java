@@ -4,6 +4,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
 public class Wallet {
     public String address;
@@ -58,6 +60,21 @@ public class Wallet {
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();
         }
+    }
+    public static PublicKey getPublicKeyFromBytes(byte[] bKey){
+        X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(bKey);
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+            return keyFactory.generatePublic(pubKeySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Couldnt retrieve public key from bytes");
+        return null;
+    }
+
+    public static byte[] getEncodedPublicKey(PublicKey publicKey){
+        return publicKey.getEncoded();
     }
 
 }

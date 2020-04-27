@@ -12,7 +12,7 @@ public class addBlock {
         newBlock = new Block(BlockChain.getLastHash());
         fundsTracking = new HashMap<>();
     }
-    public Boolean addTransactionIfValid(transaction trans){
+    public Boolean addTransactionIfValid(Transaction trans){
         //Do hashes check && Do signature checks
         if(!trans.verifyTransaction()) return false;
         addTransactionToFundsTracking(trans);
@@ -21,12 +21,12 @@ public class addBlock {
         BlockChain.updateHashMapValues(trans, fundsTracking);
         return true;
     }
-    private void addTransactionToFundsTracking(transaction trans){
-        if(BlockChain.walletsMoney.containsKey(trans.buyerID)&&!fundsTracking.containsKey(trans.buyerID)){
-            fundsTracking.put(trans.buyerID, BlockChain.walletsMoney.get(trans.buyerID));
+    private void addTransactionToFundsTracking(Transaction trans){
+        if(BlockChain.walletsMoney.containsKey(trans.getBuyerID())&&!fundsTracking.containsKey(trans.getBuyerID())){
+            fundsTracking.put(trans.getBuyerID(), BlockChain.walletsMoney.get(trans.getBuyerID()));
         }
-        if(BlockChain.walletsMoney.containsKey(trans.sellerID)&&!fundsTracking.containsKey(trans.sellerID)){
-            fundsTracking.put(trans.sellerID,BlockChain.walletsMoney.get(trans.sellerID));
+        if(BlockChain.walletsMoney.containsKey(trans.getSellerID())&&!fundsTracking.containsKey(trans.getSellerID())){
+            fundsTracking.put(trans.getSellerID(),BlockChain.walletsMoney.get(trans.getSellerID()));
         }
     }
     public Boolean checkMineAddBlock(){
