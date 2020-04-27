@@ -1,4 +1,4 @@
-package com.ssd;
+package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import java.util.HashMap;
 

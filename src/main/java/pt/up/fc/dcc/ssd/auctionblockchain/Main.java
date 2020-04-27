@@ -1,4 +1,4 @@
-package com.ssd;
+package pt.up.fc.dcc.ssd.auctionblockchain;
 
 public class Main {
 
@@ -58,3 +58,4 @@ public class Main {
 
     }
 }
+
