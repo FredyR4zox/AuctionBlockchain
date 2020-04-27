@@ -55,6 +55,6 @@ public class Main {
 
         //String BlockChainJson = BlockChain.makeJson();
         //System.out.println(BlockChainJson);
-        
+
     }
 }
