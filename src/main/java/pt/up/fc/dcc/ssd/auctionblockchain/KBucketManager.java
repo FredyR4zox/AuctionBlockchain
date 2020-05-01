@@ -1,7 +1,6 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.logging.Logger;
 import java.lang.Math;
 
@@ -15,8 +14,8 @@ public class KBucketManager {
     public KBucketManager(KademliaNode myNode) {
         this.myNode = myNode;
 
-        this.buckets = new KBucket[KademliaUtil.idSizeInBits];
-        for(int i = 0 ; i < KademliaUtil.idSizeInBits; i++)
+        this.buckets = new KBucket[KademliaUtils.idSizeInBits];
+        for(int i = 0; i < KademliaUtils.idSizeInBits; i++)
             buckets[i] = new KBucket();
     }
 
@@ -42,9 +41,9 @@ public class KBucketManager {
     }
 
     public int distanceTo(byte[] nodeID1, byte[] nodeID2){
-        byte[] distance = new byte[KademliaUtil.idSizeInBits];
+        byte[] distance = new byte[KademliaUtils.idSizeInBits];
 
-        for (int i = 0; i < KademliaUtil.idSizeInBits; i++)
+        for (int i = 0; i < KademliaUtils.idSizeInBits; i++)
             distance[i] = (byte) ((int)nodeID1[i] ^ (int)nodeID2[i]);
 
         return new BigInteger(distance).intValue();

@@ -50,7 +50,7 @@ public class KBucket {
                 }
             }
         }
-        else if (nodes.size() == KademliaUtil.k){
+        else if (nodes.size() == KademliaUtils.k){
             synchronized(nodes) {
                 KademliaNode first = nodes.get(0);
                 if(!KademliaClient.ping(first)){

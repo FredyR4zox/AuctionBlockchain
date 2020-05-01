@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class KademliaUtil {
+public class KademliaUtils {
     public static final Charset charset = Charset.forName("ASCII");
     public static final int idSizeInBits = 160;
     public static final int idSizeInBytes = idSizeInBits/8;
