@@ -21,11 +21,11 @@ public class Main {
         Wallet alice = new Wallet();
         Wallet bob = new Wallet();
 
-        Transaction trans1 = new Transaction(creator, wallet1.getAddress(), 60,0.1,0);
+        Transaction trans1 = new Transaction(creator, wallet1.getAddress(), 60, 1, 0);
         ableToAdd = minerAddition.addTransactionIfValid(trans1);
         System.out.println("Able to add Transaction: "+ ableToAdd);
 
-        Transaction trans12 = new Transaction(wallet1,wallet2.getAddress(),10,0.1,10);
+        Transaction trans12 = new Transaction(wallet1, wallet2.getAddress(), 10, 1, 10);
         for(int i=0; i<6;i++) {
             ableToAdd = minerAddition.addTransactionIfValid(trans12);
             System.out.println("Able to add Transaction: " + ableToAdd);
@@ -39,7 +39,7 @@ public class Main {
         System.out.println();
         minerAddition.reset();
 
-        Transaction trans21 = new Transaction(miner, alice.getAddress(), 60,0.2,5);
+        Transaction trans21 = new Transaction(miner, alice.getAddress(), 60, 2, 5);
         ableToAdd = minerAddition.addTransactionIfValid(trans21);
         System.out.println("Able to add Transaction: "+ ableToAdd);
 

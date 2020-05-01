@@ -4,9 +4,10 @@ import java.util.HashMap;
 
 public class addBlock {
     //class to manage adding blocks and checking transactions by miners
-    HashMap<String, Double> fundsTracking;
+    HashMap<String, Long> fundsTracking;
     Block newBlock;
     Wallet minerWallet;
+
     public addBlock(Wallet minerWallet){
         this.minerWallet = minerWallet;
         newBlock = new Block(BlockChain.getLastHash());

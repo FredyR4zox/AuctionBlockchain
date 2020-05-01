@@ -1,55 +1,64 @@
-package com.ssd;
+package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 public class Transaction {
     private final String sellerID;
     private final String buyerID;
-    private final Double amount;
-    private Double transactionFee;
-    private long itemID;
     private PublicKey buyerPublicKey;
+    private long amount;
+    private long transactionFee;
+    private long itemID;
     private byte[] signature;
     private String hash;
 
-    public Transaction(String buyerID, String sellerID, byte[] buyerPublicKey, double amount, double transactionFeePercentage, long itemID) {
+    public Transaction(String buyerID, String sellerID, byte[] buyerPublicKey, long amount, long transactionFee, long itemID, byte[] signature) {
         this.buyerID = buyerID;
         this.sellerID = sellerID;
         this.buyerPublicKey= Wallet.getPublicKeyFromBytes(buyerPublicKey);
         this.amount = amount;
-        this.transactionFee = getTransactionFeeValue(amount, transactionFeePercentage);
+        this.transactionFee = transactionFee;
         this.itemID = itemID;
+        this.signature = signature;
         this.hash = this.getHashToBeSigned();
     }
 
-    public Transaction(Wallet buyerWallet, String sellerID, double amount, double transactionFeePercentage, long itemID){
+    public Transaction(Wallet buyerWallet, String sellerID, long amount, long transactionFee, long itemID){
         this.buyerID = buyerWallet.getAddress();
         this.buyerPublicKey= buyerWallet.getPubKey();
         this.sellerID = sellerID;
         this.amount = amount;
-        this.transactionFee = getTransactionFeeValue(amount, transactionFeePercentage);
+        this.transactionFee = transactionFee;
         this.itemID = itemID;
         this.hash = this.getHashToBeSigned();
         signTransaction(buyerWallet.getPrivKey());
     }
 
-    private Double getTransactionFeeValue(double amount, double transactionFeePercentage) {
-        return (amount*transactionFeePercentage)/100;
+    public Transaction(Transaction transaction){
+        this.buyerID = transaction.getBuyerID();
+        this.buyerPublicKey= transaction.getBuyerPublicKey();
+        this.sellerID = transaction.getSellerID();
+        this.amount = transaction.getAmount();
+        this.transactionFee = transaction.getTransactionFee();
+        this.itemID = transaction.getItemID();
+        this.hash = transaction.getHash();
     }
 
     //coinbase Transaction for miner reward
-    public Transaction(String sellerID, double transactionFeesTotal) {
+    public Transaction(String sellerID, long transactionFeesTotal) {
         this.sellerID = sellerID;
         this.buyerID = "0000000000000000000000000000000000000000000000000000000000000000";
-        this.amount = BlockChain.getMinerReward()+transactionFeesTotal;
+        this.amount = BlockchainUtils.minerReward + transactionFee;
         this.hash = this.getHashToBeSigned();
+    }
+
+    private Double getTransactionFeeValue(double amount, double transactionFeePercentage) {
+        return (amount*transactionFeePercentage)/100;
     }
 
     public Boolean verifyTransaction() {
@@ -97,10 +106,10 @@ public class Transaction {
 
     private String getHashToBeSigned(){
         if(this.buyerPublicKey!=null){
-            return utils.getsha256(this.sellerID + this.buyerID + utils.getStringFromKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID);
+            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + BlockchainUtils.getStringFromKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID);
         }
         else{
-            return utils.getsha256(this.sellerID + this.buyerID + this.amount);
+            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + this.amount);
         }
     }
     public String makeJson(){
@@ -110,11 +119,11 @@ public class Transaction {
         return new Gson().fromJson(tJson, Transaction.class);
     }
 
-    public Double getTransactionFee() {
+    public long getTransactionFee() {
         return transactionFee;
     }
 
-    public Double getAmount() {
+    public long getAmount() {
         return amount;
     }
 
@@ -124,5 +133,21 @@ public class Transaction {
 
     public String getBuyerID() {
         return buyerID;
+    }
+
+    public long getItemID(){
+        return itemID;
+    }
+
+    public PublicKey getBuyerPublicKey() {
+        return buyerPublicKey;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public String getHash() {
+        return hash;
     }
 }

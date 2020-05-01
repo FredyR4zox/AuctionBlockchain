@@ -8,19 +8,14 @@ import java.util.HashMap;
 
 public class BlockChain {
     public static ArrayList<Block> blockchain = new ArrayList<>();
-    public static HashMap<String, Double> walletsMoney = new HashMap<>();
-    private static final int difficulty = 4;
+    public static HashMap<String, Long> walletsMoney = new HashMap<>();
     private static int size;
-    private static final Double minerReward = 100.0;
 
-    public static int getDifficulty() {
-        return difficulty;
-    }
     public static int getSize() {
         return size;
     }
     public static double getMinerReward() {
-        return BlockChain.minerReward;
+        return BlockchainUtils.minerReward;
     }
     public static Block getXBlock(int blocknr){
         return blockchain.get(blocknr-1);
@@ -56,7 +51,7 @@ public class BlockChain {
     }
 
     public static Boolean areFundsSufficient(Block block){
-        HashMap<String, Double> fundsTracking = copyUsedHashMapValues(block);
+        HashMap<String, Long> fundsTracking = copyUsedHashMapValues(block);
         for(int i= 0; i<=block.getNrTransactions(); i++){
             Transaction trans = block.getXData(i);
             //Check if he has money
@@ -66,11 +61,12 @@ public class BlockChain {
         return true;
     }
 
-    private static HashMap<String, Double> copyUsedHashMapValues(Block block) {
-        HashMap<String, Double> fundsTracking = new HashMap<>();
-        for(int i= 0; i<=block.getNrTransactions(); i++) {
+    private static HashMap<String, Long> copyUsedHashMapValues(Block block) {
+        HashMap<String, Long> fundsTracking = new HashMap<>();
+
+        for(int i=0; i<=block.getNrTransactions(); i++) {
             Transaction trans = block.getXData(i);
-            if(walletsMoney.containsKey(trans.getBuyerID())&&!fundsTracking.containsKey(trans.getBuyerID())){
+            if(walletsMoney.containsKey(trans.getBuyerID()) && !fundsTracking.containsKey(trans.getBuyerID())){
                 fundsTracking.put(trans.getBuyerID(), walletsMoney.get(trans.getBuyerID()));
             }
             if(walletsMoney.containsKey(trans.getSellerID())&&!fundsTracking.containsKey(trans.getSellerID())){
@@ -80,12 +76,12 @@ public class BlockChain {
         return fundsTracking;
     }
 
-    public static Boolean checkIfEnoughFunds(Transaction trans, HashMap <String, Double> walletsMoney) {
+    public static Boolean checkIfEnoughFunds(Transaction trans, HashMap <String, Long> walletsMoney) {
         if(!walletsMoney.containsKey(trans.getBuyerID())){
             System.out.println("This buyer has never received funds");
             return false;
         }
-        Double buyerFunds=walletsMoney.get(trans.getBuyerID());
+        Long buyerFunds=walletsMoney.get(trans.getBuyerID());
         if(buyerFunds-trans.getAmount()<0) {
             System.out.println("Buyer doesn't have enough funds");
             return false;
@@ -93,13 +89,13 @@ public class BlockChain {
         else return true;
     }
 
-    public static void updateHashMapValues(Transaction t, HashMap <String, Double> walletsMoney) {
+    public static void updateHashMapValues(Transaction t, HashMap <String, Long> walletsMoney) {
 
-        if(walletsMoney.putIfAbsent(t.getSellerID(), t.getAmount()- t.getTransactionFee())!=null) {
-            double sellerNewValue = walletsMoney.get(t.getSellerID()) + t.getAmount() - t.getTransactionFee();
+        if(walletsMoney.putIfAbsent(t.getSellerID(), t.getAmount()- t.getTransactionFee()) != null) {
+            long sellerNewValue = walletsMoney.get(t.getSellerID()) + t.getAmount() - t.getTransactionFee();
             walletsMoney.replace(t.getSellerID(), sellerNewValue);
         }
-        double buyerNewValue = walletsMoney.get(t.getBuyerID())-t.getAmount();
+        long buyerNewValue = walletsMoney.get(t.getBuyerID())-t.getAmount();
         if (buyerNewValue==0) {
             walletsMoney.remove(t.getBuyerID());
         }
@@ -147,7 +143,7 @@ public class BlockChain {
     public static void addMinerRewardToHashMap(Transaction minersReward){
             //in case its a coinbase transfer
                 if(BlockChain.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount())!= null) {
-                    double minerNewValue = BlockChain.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount();
+                    Long minerNewValue = BlockChain.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount();
                     BlockChain.walletsMoney.replace(minersReward.getSellerID(), minerNewValue);
                 }
                 return;

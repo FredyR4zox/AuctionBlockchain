@@ -1,41 +1,53 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import java.lang.Math;
 
 public class KBucketManager {
     private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
-    private static final int idSizeInBits = 160;
 
     private KademliaNode myNode;
     private KBucket[] buckets;
 
-    public KBucketManager(KademliaNode node) {
-        myNode = node;
 
-        buckets = new KBucket[idSizeInBits];
-        for(int i=0 ; i<idSizeInBits; i++)
-            buckets[i] = new KBucket(i);
+    public KBucketManager(KademliaNode myNode) {
+        this.myNode = myNode;
+
+        this.buckets = new KBucket[KademliaUtil.idSizeInBits];
+        for(int i = 0 ; i < KademliaUtil.idSizeInBits; i++)
+            buckets[i] = new KBucket();
     }
 
+
     public boolean insertNode(KademliaNode node){
-        int distance = myNode.distanceTo(node);
+        int distance = distanceTo(myNode, node);
+
         int i = (int)log2(distance);
 
         return buckets[i].insertNode(node);
     }
 
     public KBucket[] getBuckets() {
-        KBucket[] tmpBuckets = new KBucket[160];
-        for (int i=0; i<idSizeInBits; i++)
-            tmpBuckets[i] = new KBucket(buckets[i].getI(), Arrays.asList(buckets[i].getNodes()));
-
-        return tmpBuckets;
+        return buckets;
     }
 
     public KBucket getBucket(int i){
-        return new KBucket(buckets[i].getI(), Arrays.asList(buckets[i].getNodes()));
+        return buckets[i];
+    }
+
+    public int distanceTo(KademliaNode node1, KademliaNode node2){
+        return this.distanceTo(node1.getNodeID(), node2.getNodeID());
+    }
+
+    public int distanceTo(byte[] nodeID1, byte[] nodeID2){
+        byte[] distance = new byte[KademliaUtil.idSizeInBits];
+
+        for (int i = 0; i < KademliaUtil.idSizeInBits; i++)
+            distance[i] = (byte) ((int)nodeID1[i] ^ (int)nodeID2[i]);
+
+        return new BigInteger(distance).intValue();
     }
 
     public static double log2(double d) {

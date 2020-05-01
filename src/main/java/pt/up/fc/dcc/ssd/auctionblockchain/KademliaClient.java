@@ -15,18 +15,18 @@ public class KademliaClient {
     private final AuctionBlockchainStub asyncStub;
 
     public KademliaClient(String ipAddress, int port){
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(ipAddress + ":" + String.valueOf(port)).usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget(ipAddress + ":" + port).usePlaintext().build();
 
         blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
         asyncStub = AuctionBlockchainGrpc.newStub(channel);
     }
 
     public static boolean ping(KademliaNode node){
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + String.valueOf(node.getPort())).usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
         AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
 
         try {
-            NodeID id = blockingStub.ping(NodeID.newBuilder().setId(ByteString.copyFrom(node.getNodeID())).build());
+            NodeIDProto id = blockingStub.ping(NodeIDProto.newBuilder().setId(ByteString.copyFrom(node.getNodeID())).build());
             if (id.getId().equals(ByteString.copyFrom(node.getNodeID())))
                 return true;
         } catch (StatusRuntimeException e) {
@@ -43,7 +43,7 @@ public class KademliaClient {
         String key = "ABCD";
         try {
             StoreResponse response = blockingStub.store(StoreRequest.newBuilder()
-                    .setNodeID(NodeID.newBuilder().setId(ByteString.copyFrom(node.getNodeID())).build())
+                    .setNodeID(NodeIDProto.newBuilder().setId(ByteString.copyFrom(node.getNodeID())).build())
                     .setKey(key)
                     .setBlock(block)
                     .build());
@@ -54,5 +54,4 @@ public class KademliaClient {
 
         return false;
     }
-
 }

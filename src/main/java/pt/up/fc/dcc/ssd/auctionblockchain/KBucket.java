@@ -7,51 +7,52 @@ import java.util.logging.Logger;
 public class KBucket {
     private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
 
-    private static final int k = 20;
-    private final int i;
-    private SortedSet<KademliaNode> nodes;
-    private Set<byte[]> nodeIDs;
+    private final List<KademliaNode> nodes;
+    private final Set<byte[]> nodeIDs;
 
-    public KBucket(int i) {
-        this(i, new TreeSet<KademliaNode>());
+
+    public KBucket() {
+        this(new ArrayList<KademliaNode>());
     }
 
-    public KBucket(int i, Collection<KademliaNode> nodes){
-        this.i = i;
-        this.nodes = Collections.synchronizedSortedSet(new TreeSet<KademliaNode>(new KademliaNodeCompare()));
+    public KBucket(KademliaNode[] nodes){
+        this(Arrays.asList(nodes));
+    }
+
+    public KBucket(List<KademliaNode> nodes){
+        this.nodes = new ArrayList<KademliaNode>();
+        this.nodeIDs = new HashSet<>();
 
         for(KademliaNode node : nodes)
-            this.nodeIDs.add(node.getNodeID());
+            this.insertNode(node);
     }
 
-    public int getI() {
-        return i;
+    public KBucket(KBucket kBucket) {
+        this(kBucket.getNodes());
     }
+
+
 
     public boolean insertNode(KademliaNode node){
         if(nodeIDs.contains(node.getNodeID())){
             synchronized(nodes) {
-                SortedSet<KademliaNode> nodesAux = new TreeSet<KademliaNode>(new KademliaNodeCompare());
-                if(!nodesAux.addAll(nodes)) {
-                    logger.warning("Could not addAll nodes to new set.");
-                    return false;
-                }
+                List<KademliaNode> tempNodes = new ArrayList<>(nodes);
 
-                for (KademliaNode nodeAux : nodesAux){
+                for (KademliaNode nodeAux : tempNodes){
                     if(nodeAux.getNodeID() == node.getNodeID()) {
                         nodes.remove(nodeAux);
                         nodeAux.updateLastSeen(node.getLastSeen());
                         nodes.add(nodeAux);
 
-                        logger.info("Updated node of KBucket " + i);
+                        logger.info("Updated node");
                         return true;
                     }
                 }
             }
         }
-        else if (nodes.size() == k){
+        else if (nodes.size() == KademliaUtil.k){
             synchronized(nodes) {
-                KademliaNode first = nodes.first();
+                KademliaNode first = nodes.get(0);
                 if(!KademliaClient.ping(first)){
                     nodes.remove(first);
                     nodeIDs.remove(first.getNodeID());
@@ -59,7 +60,7 @@ public class KBucket {
                     nodes.add(node);
                     nodeIDs.add(node.getNodeID());
 
-                    logger.info("Added new node to KBucket " + i);
+                    logger.info("Added new node");
                     return true;
                 }
                 else {
@@ -77,42 +78,28 @@ public class KBucket {
                 nodeIDs.add(node.getNodeID());
             }
 
-            logger.info("Added new node to KBucket " + i);
+            logger.info("Added new node");
             return true;
         }
 
-        logger.info("Could not add new node to KBucket " + i);
+        logger.info("Could not add new node");
         return false;
     }
 
-    public KademliaNode[] getNodes(){
-        KademliaNode[] tempNodes = new KademliaNode[nodes.size()];
-
-        synchronized(nodes) {
-            SortedSet<KademliaNode> nodesAux = new TreeSet<KademliaNode>(new KademliaNodeCompare());
-            if (!nodesAux.addAll(nodes)) {
-                logger.warning("Could not addAll nodes to new set.");
-                return tempNodes;
-            }
-
-            int i = 0;
-            for (KademliaNode nodeAux : nodesAux) {
-                tempNodes[i] = new KademliaNode(nodeAux);
-            }
-        }
-        return tempNodes;
+    public List<KademliaNode> getNodes(){
+        return nodes;
     }
 
 
-    class KademliaNodeCompare implements Comparator<KademliaNode>
-    {
-        public int compare(KademliaNode k1, KademliaNode k2)
-        {
+//    class KademliaNodeCompare implements Comparator<KademliaNode>
+//    {
+//        public int compare(KademliaNode k1, KademliaNode k2)
+//        {
+////            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
+////            if (k1.getLastSeen() > k2.getLastSeen()) return 1;
+////            else return 0;
 //            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
-//            if (k1.getLastSeen() > k2.getLastSeen()) return 1;
-//            else return 0;
-            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
-            else return 1;
-        }
-    }
+//            else return 1;
+//        }
+//    }
 }

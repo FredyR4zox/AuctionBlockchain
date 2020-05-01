@@ -28,7 +28,7 @@ public class Wallet {
     public String getAddress() { return address; }
 
     private void createAddress(){
-        this.address = utils.getsha256(utils.getStringFromKey(this.pubKey));
+        this.address = BlockchainUtils.getsha256(BlockchainUtils.getStringFromKey(this.pubKey));
     }
 
     public static boolean checkAddress(PublicKey pubKey, String address){
@@ -40,7 +40,7 @@ public class Wallet {
         }
     }
     public static String getAddressFromPubKey(PublicKey pubKey){
-        return utils.getsha256(utils.getStringFromKey(pubKey));
+        return BlockchainUtils.getsha256(BlockchainUtils.getStringFromKey(pubKey));
     }
 
     public void printKeys(){
@@ -69,7 +69,7 @@ public class Wallet {
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
-        System.out.println("Couldnt retrieve public key from bytes");
+        System.out.println("Couldn't retrieve public key from bytes");
         return null;
     }
 

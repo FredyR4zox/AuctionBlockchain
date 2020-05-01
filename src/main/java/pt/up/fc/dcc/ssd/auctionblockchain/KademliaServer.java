@@ -92,7 +92,7 @@ public class KademliaServer {
         }
 
         @Override
-        public void ping(NodeID request, StreamObserver<NodeID> responseObserver) {
+        public void ping(NodeIDProto request, StreamObserver<NodeIDProto> responseObserver) {
             responseObserver.onNext(request);
             responseObserver.onCompleted();
         }
@@ -106,8 +106,8 @@ public class KademliaServer {
 
         @Override
         public void findNode(FindNodeRequest request, StreamObserver<FindNodeResponse> responseObserver) {
-            NodeID requestedID = request.getRequestedNodeId();
-            KademliaNodeProto node = KademliaNodeProto.newBuilder().setNodeID(NodeID.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setIpAddress(myNode.getIpAddress()).setPort(myNode.getPort()).build();
+            NodeIDProto requestedID = request.getRequestedNodeId();
+            KademliaNodeProto node = KademliaNodeProto.newBuilder().setNodeID(NodeIDProto.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setIpAddress(myNode.getIpAddress()).setPort(myNode.getPort()).build();
 
             KBucketProto bucket = KBucketProto.newBuilder().addNodes(node).build();
 
@@ -117,11 +117,11 @@ public class KademliaServer {
 
         @Override
         public void findValue(FindValueRequest request, StreamObserver<FindValueResponse> responseObserver) {
-            KademliaNodeProto node = KademliaNodeProto.newBuilder().setNodeID(NodeID.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setIpAddress(myNode.getIpAddress()).setPort(myNode.getPort()).build();
+            KademliaNodeProto node = KademliaNodeProto.newBuilder().setNodeID(NodeIDProto.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setIpAddress(myNode.getIpAddress()).setPort(myNode.getPort()).build();
 
             KBucketProto bucket = KBucketProto.newBuilder().addNodes(node).build();
 
-            responseObserver.onNext(FindValueResponse.newBuilder().setNodeID(NodeID.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setBucket(bucket).build());
+            responseObserver.onNext(FindValueResponse.newBuilder().setNodeID(NodeIDProto.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setBucket(bucket).build());
             responseObserver.onCompleted();
         }
     }
