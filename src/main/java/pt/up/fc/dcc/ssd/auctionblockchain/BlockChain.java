@@ -52,7 +52,7 @@ public class BlockChain {
 
     public static Boolean areFundsSufficient(Block block){
         HashMap<String, Long> fundsTracking = copyUsedHashMapValues(block);
-        for(int i= 0; i<=block.getNrTransactions(); i++){
+        for(int i= 0; i<block.getNrTransactions(); i++){
             Transaction trans = block.getXData(i);
             //Check if he has money
             if(!checkIfEnoughFunds(trans, fundsTracking)) return false;
@@ -64,7 +64,7 @@ public class BlockChain {
     private static HashMap<String, Long> copyUsedHashMapValues(Block block) {
         HashMap<String, Long> fundsTracking = new HashMap<>();
 
-        for(int i=0; i<=block.getNrTransactions(); i++) {
+        for(int i=0; i<block.getNrTransactions(); i++) {
             Transaction trans = block.getXData(i);
             if(walletsMoney.containsKey(trans.getBuyerID()) && !fundsTracking.containsKey(trans.getBuyerID())){
                 fundsTracking.put(trans.getBuyerID(), walletsMoney.get(trans.getBuyerID()));
@@ -131,7 +131,7 @@ public class BlockChain {
             if(!block.areSignaturesAndHashValid()) return false;
             //Check if they have money
             if(!areFundsSufficient(block)) return false;
-            for(int i= 0; i<=block.getNrTransactions(); i++){
+            for(int i= 0; i<block.getNrTransactions(); i++){
                 Transaction trans = block.getXData(i);
                 //Add Transaction to HashMap
                 updateHashMapValues(trans, BlockChain.walletsMoney);
@@ -169,7 +169,7 @@ public class BlockChain {
         //Add minersReward to HashMap
         BlockChain.addMinerRewardToHashMap(newBlock.getMinersReward());
         //updates hashmap
-        for(int i= 0; i<=newBlock.getNrTransactions(); i++){
+        for(int i= 0; i<newBlock.getNrTransactions(); i++){
             Transaction trans = newBlock.getXData(i);
             //Add Transaction to HashMap
             BlockChain.updateHashMapValues(trans, BlockChain.walletsMoney);

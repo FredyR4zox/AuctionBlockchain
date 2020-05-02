@@ -59,14 +59,48 @@ public class KBucketManager {
     }
 
 
-    public KBucket[] getBuckets() {
-        return buckets;
-    }
+//    public KBucket[] getBuckets() {
+//        return buckets;
+//    }
+//
+//    public KBucket getBucket(int i){
+//        if(i < 0 || i >= KademliaUtils.idSizeInBits)
+//            return null;
+//
+//        return buckets[i];
+//    }
 
-    public KBucket getBucket(int i){
-        if(i < 0 || i >= KademliaUtils.idSizeInBits)
-            return null;
+    public List<KademliaNode> getClosestNodes(byte[] requestorID, byte[] requestedID, int maxNodes) {
+        List<KademliaNode> ret = new ArrayList<>();
 
-        return buckets[i];
+        int distance = KademliaUtils.distanceTo(myNode.getNodeID(), requestedID);
+        int bucketLocation = (int)KademliaUtils.log2(distance);
+
+        List<KademliaNode> nodes = buckets[bucketLocation].getNodes();
+
+        for(KademliaNode node : nodes) {
+            if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                ret.add(node);
+        }
+
+        for(int i = 1; ret.size() < maxNodes && (bucketLocation + i < KademliaUtils.idSizeInBits || bucketLocation - i >= 0); i++) {
+            KBucket bucket = buckets[bucketLocation + i];
+            if(bucket != null) {
+                for (KademliaNode node : bucket.getNodes()) {
+                    if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                        ret.add(node);
+                }
+            }
+
+            bucket = buckets[bucketLocation - i];
+            if(bucket != null) {
+                for (KademliaNode node : bucket.getNodes()) {
+                    if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                        ret.add(node);
+                }
+            }
+        }
+
+        return ret.subList(0, Math.min(ret.size(), maxNodes));
     }
 }

@@ -50,7 +50,7 @@ public class Block{
     }
 
     public Boolean areSignaturesAndHashValid(){
-        for (int i=0; i<=nrTransactions; i++) {
+        for (int i=0; i<nrTransactions; i++) {
             Transaction trans = data[i];
             if(!trans.verifyTransaction()){
                 return false;
