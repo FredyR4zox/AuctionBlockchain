@@ -38,7 +38,7 @@ message KBucketProto {
 
 message StoreRequest {
     NodeIDProto nodeID = 1;
-    string key = 2;
+    bytes key = 2;
     oneof BlockOrTransaction {
         BlockProto block = 3;
         TransactionProto transaction = 4;
@@ -66,14 +66,14 @@ message FindNodeResponse {
 
 message FindValueRequest {
     NodeIDProto nodeID = 1;
-    string key = 2;
+    bytes key = 2;
 }
 
 message FindValueResponse {
     NodeIDProto nodeID = 1;
-    oneof BlockOrTransactionOrNodes {
+    oneof BlockOrTransactionsOrNodes {
         BlockProto block = 2;
-        TransactionProto transaction = 3;
+        MempoolProto transactions = 3;
         KBucketProto bucket = 4;
     }
 }
@@ -130,6 +130,10 @@ message TransactionProto {
     bytes hash = 8;
 }
 
+message MempoolProto {
+    repeated TransactionProto transactions = 1;
+}
+
 // nonce - The nonce used to generate this block… to allow variations of the header and compute different hashes.
 message BlockHeaderProto {
     bytes prevBlock = 1;
@@ -148,6 +152,4 @@ message BlockProto {
 message BlockChainProto {
     repeated BlockProto blocks = 1;
 }
-
-
 

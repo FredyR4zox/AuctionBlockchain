@@ -1,6 +1,10 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import java.math.BigInteger;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 import java.lang.Math;
 
@@ -20,36 +24,49 @@ public class KBucketManager {
     }
 
 
-    public boolean insertNode(KademliaNode node){
-        int distance = distanceTo(myNode, node);
+    public boolean insertNode(KademliaNode node) {
+        if (Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+            return false;
 
-        int i = (int)log2(distance);
+        int distance = KademliaUtils.distanceTo(myNode, node);
 
-        return buckets[i].insertNode(node);
+        int i = (int) KademliaUtils.log2(distance);
+
+        synchronized (buckets[i]) {
+            if(buckets[i].insertNode(node)) {
+                logger.info("Inserted node " + node.getNodeID());
+                return true;
+            }
+
+            List<KademliaNode> nodes = buckets[i].getNodes();
+            KademliaNode first = nodes.get(0);
+            if (!KademliaClient.ping(myNode, first)) {
+                buckets[i].removeNode(first);
+
+                buckets[i].insertNode(node);
+
+                logger.info("Discarded first node " + first.getNodeID() + "and added new node " + node.getNodeID());
+                return true;
+            } else {
+                buckets[i].removeNode(first);
+                first.updateLastSeen(Instant.now().getEpochSecond());
+                buckets[i].insertNode(first);
+
+                logger.info("Updated first node " + first.getNodeID());
+                return false;
+            }
+        }
     }
+
 
     public KBucket[] getBuckets() {
         return buckets;
     }
 
     public KBucket getBucket(int i){
+        if(i < 0 || i >= KademliaUtils.idSizeInBits)
+            return null;
+
         return buckets[i];
-    }
-
-    public int distanceTo(KademliaNode node1, KademliaNode node2){
-        return this.distanceTo(node1.getNodeID(), node2.getNodeID());
-    }
-
-    public int distanceTo(byte[] nodeID1, byte[] nodeID2){
-        byte[] distance = new byte[KademliaUtils.idSizeInBits];
-
-        for (int i = 0; i < KademliaUtils.idSizeInBits; i++)
-            distance[i] = (byte) ((int)nodeID1[i] ^ (int)nodeID2[i]);
-
-        return new BigInteger(distance).intValue();
-    }
-
-    public static double log2(double d) {
-        return Math.log(d)/Math.log(2.0);
     }
 }

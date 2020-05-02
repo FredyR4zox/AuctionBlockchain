@@ -6,6 +6,12 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -14,21 +20,23 @@ public class KademliaServer {
 
     private final int port;
     private final Server server;
+//    private final KademliaNode myNode;
+//    private final KBucketManager bucketManager;
 
     public KademliaServer(int port, KademliaNode myNode) throws IOException {
         this(port, myNode, new KBucketManager(myNode));
     }
 
-    /** Create a RouteGuide server listening on {@code port} using {@code featureFile} database. */
     public KademliaServer(int port, KademliaNode myNode, KBucketManager bucketManager) throws IOException {
         this(ServerBuilder.forPort(port), port, myNode, bucketManager);
     }
 
-    /** Create a RouteGuide server using serverBuilder as a base and features as data. */
-    public KademliaServer(ServerBuilder<?> serverBuilder, int port, KademliaNode myNode, KBucketManager kBucketManager) {
+    public KademliaServer(ServerBuilder<?> serverBuilder, int port, KademliaNode myNode, KBucketManager bucketManager) {
         this.port = port;
-        server = serverBuilder.addService(new AuctionBlockchainService(myNode, kBucketManager))
+        this.server = serverBuilder.addService(new AuctionBlockchainService(myNode, bucketManager))
                 .build();
+//        this.myNode = myNode;
+//        this.bucketManager = bucketManager;
     }
 
     /** Start serving requests. */
@@ -95,34 +103,113 @@ public class KademliaServer {
         public void ping(NodeIDProto request, StreamObserver<NodeIDProto> responseObserver) {
             responseObserver.onNext(request);
             responseObserver.onCompleted();
+
+            bucketManager.insertNode(new KademliaNode(request.getId().toByteArray()));
         }
 
         @Override
         public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
-            StoreResponse response = StoreResponse.newBuilder().setNodeID(request.getNodeID()).setSuccess(true).build();
-            responseObserver.onNext(response);
+            StoreResponse.Builder response = StoreResponse.newBuilder().setNodeID(request.getNodeID());
+
+//            if(DHT.store(request.getKey(), request.getValue()))
+//                response.setSuccess(true);
+//            else
+//                response.setSuccess(false);
+
+            response.setSuccess(true);
+
+            responseObserver.onNext(response.build());
             responseObserver.onCompleted();
         }
 
         @Override
         public void findNode(FindNodeRequest request, StreamObserver<FindNodeResponse> responseObserver) {
-            NodeIDProto requestedID = request.getRequestedNodeId();
-            KademliaNodeProto node = KademliaNodeProto.newBuilder().setNodeID(NodeIDProto.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setIpAddress(myNode.getIpAddress()).setPort(myNode.getPort()).build();
+            byte[] requestorID = KademliaUtils.NodeIDProtoToNodeID(request.getNodeID());
+            byte[] requestedID = KademliaUtils.NodeIDProtoToNodeID(request.getRequestedNodeId());
 
-            KBucketProto bucket = KBucketProto.newBuilder().addNodes(node).build();
+            List<KademliaNode> nodes = getClosestNodes(requestorID, requestedID, KademliaUtils.k);
 
-            responseObserver.onNext(FindNodeResponse.newBuilder().setNodeID(requestedID).setBucket(bucket).build());
+            FindNodeResponse response = FindNodeResponse.newBuilder()
+                    .setNodeID(request.getNodeID())
+                    .setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes))
+                    .build();
+
+            responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
 
         @Override
         public void findValue(FindValueRequest request, StreamObserver<FindValueResponse> responseObserver) {
-            KademliaNodeProto node = KademliaNodeProto.newBuilder().setNodeID(NodeIDProto.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setIpAddress(myNode.getIpAddress()).setPort(myNode.getPort()).build();
+            byte[] key = request.getKey().toByteArray();
 
-            KBucketProto bucket = KBucketProto.newBuilder().addNodes(node).build();
+            FindValueResponse.Builder responseBuilder = FindValueResponse.newBuilder().setNodeID(request.getNodeID());
 
-            responseObserver.onNext(FindValueResponse.newBuilder().setNodeID(NodeIDProto.newBuilder().setId(ByteString.copyFrom(myNode.getNodeID())).build()).setBucket(bucket).build());
+//            byte[] mempoolKey;
+//
+//            try {
+//                MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
+//                mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
+//            } catch (NoSuchAlgorithmException e) {
+//                logger.warning("Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+//                e.printStackTrace();
+//
+//                responseObserver.onNext(FindValueResponse.newBuilder().build());
+//                responseObserver.onCompleted();
+//                return;
+//            }
+//
+//            if(mempoolKey != null && Arrays.equals(key, mempoolKey)) {
+//                List<Transaction> transactions = DHT.getMempool();
+//                responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
+//            }
+//            else {
+//                if(DHT.contains(key)) {
+//                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(DHT.get(key)));
+//                }
+//                else {
+//                    List<KademliaNode> nodes = getClosestNodes(request.getNodeID().getId().toByteArray(), key, KademliaUtils.k);
+//                    responseBuilder.setBucket(KademliaUtils.KBucketToKBucketProto(new KBucket(nodes)));
+//                }
+//            }
+
+
+            responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
+        }
+
+
+        private List<KademliaNode> getClosestNodes(byte[] requestorID, byte[] requestedID, int maxNodes) {
+            List<KademliaNode> ret = new ArrayList<>();
+
+            int distance = KademliaUtils.distanceTo(myNode.getNodeID(), requestedID);
+            int bucketLocation = (int)KademliaUtils.log2(distance);
+
+            List<KademliaNode> nodes = bucketManager.getBucket(bucketLocation).getNodes();
+
+            for(KademliaNode node : nodes) {
+                if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                    ret.add(node);
+            }
+
+            for(int i = 1; ret.size() < maxNodes && (bucketLocation + i < KademliaUtils.idSizeInBits || bucketLocation - i >= 0); i++) {
+                KBucket bucket = bucketManager.getBucket(bucketLocation + i);
+                if(bucket != null) {
+                    for (KademliaNode node : bucket.getNodes()) {
+                        if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                            ret.add(node);
+                    }
+                }
+
+                bucket = bucketManager.getBucket(bucketLocation - i);
+                if(bucket != null) {
+                    for (KademliaNode node : bucket.getNodes()) {
+                        if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                            ret.add(node);
+                    }
+                }
+            }
+
+            return ret.subList(0, Math.min(ret.size(), maxNodes));
         }
     }
 }

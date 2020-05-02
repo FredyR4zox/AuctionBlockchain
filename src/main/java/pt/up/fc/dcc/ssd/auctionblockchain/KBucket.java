@@ -7,12 +7,11 @@ import java.util.logging.Logger;
 public class KBucket {
     private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
 
-    private final List<KademliaNode> nodes;
-    private final Set<byte[]> nodeIDs;
+    private final Set<KademliaNode> nodes;
 
 
     public KBucket() {
-        this(new ArrayList<KademliaNode>());
+        this(new ArrayList<>());
     }
 
     public KBucket(KademliaNode[] nodes){
@@ -20,8 +19,7 @@ public class KBucket {
     }
 
     public KBucket(List<KademliaNode> nodes){
-        this.nodes = new ArrayList<KademliaNode>();
-        this.nodeIDs = new HashSet<>();
+        this.nodes = new TreeSet<>(new KademliaNodeCompare());
 
         for(KademliaNode node : nodes)
             this.insertNode(node);
@@ -32,74 +30,67 @@ public class KBucket {
     }
 
 
+    public boolean contains(KademliaNode node){
+        return nodes.contains(node);
+    }
 
     public boolean insertNode(KademliaNode node){
-        if(nodeIDs.contains(node.getNodeID())){
-            synchronized(nodes) {
-                List<KademliaNode> tempNodes = new ArrayList<>(nodes);
+        //TODO: Don't change the whole object, only update the last time seen
+        if (nodes.contains(node)) {
+            nodes.remove(node);
+            nodes.add(node);
 
-                for (KademliaNode nodeAux : tempNodes){
-                    if(nodeAux.getNodeID() == node.getNodeID()) {
-                        nodes.remove(nodeAux);
-                        nodeAux.updateLastSeen(node.getLastSeen());
-                        nodes.add(nodeAux);
-
-                        logger.info("Updated node");
-                        return true;
-                    }
-                }
-            }
-        }
-        else if (nodes.size() == KademliaUtils.k){
-            synchronized(nodes) {
-                KademliaNode first = nodes.get(0);
-                if(!KademliaClient.ping(first)){
-                    nodes.remove(first);
-                    nodeIDs.remove(first.getNodeID());
-
-                    nodes.add(node);
-                    nodeIDs.add(node.getNodeID());
-
-                    logger.info("Added new node");
-                    return true;
-                }
-                else {
-                    nodes.remove(first);
-                    first.updateLastSeen(Instant.now().getEpochSecond());
-                    nodes.add(first);
-
-                    return false;
-                }
-            }
-        }
-        else {
-            synchronized(nodes) {
-                nodes.add(node);
-                nodeIDs.add(node.getNodeID());
-            }
-
-            logger.info("Added new node");
+            logger.info("Updated node in bucket");
             return true;
         }
+        else if (nodes.size() == KademliaUtils.k){
+            logger.warning("Error: Bucket full");
+            return false;
+        }
+        else if(nodes.size() > KademliaUtils.k){
+            logger.warning("Error: Bucket size (" + nodes.size() + ") bigger than k (" + KademliaUtils.k);
+            return false;
+        }
 
-        logger.info("Could not add new node");
-        return false;
+        nodes.add(node);
+        logger.info("Added node to bucket");
+        return true;
     }
+
+    public boolean removeNode(KademliaNode node){
+        return nodes.remove(node);
+    }
+
+    public int size(){
+        return nodes.size();
+    }
+
+//    public KademliaNode getNode(int i) {
+//        if(i < 0 || i >= nodes.size())
+//            return null;
+//
+//        return nodes. (i);
+//    }
 
     public List<KademliaNode> getNodes(){
-        return nodes;
+        return new ArrayList<>(nodes);
     }
-
-
-//    class KademliaNodeCompare implements Comparator<KademliaNode>
-//    {
-//        public int compare(KademliaNode k1, KademliaNode k2)
-//        {
-////            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
-////            if (k1.getLastSeen() > k2.getLastSeen()) return 1;
-////            else return 0;
-//            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
-//            else return 1;
-//        }
+//
+//    public Set<byte[]> getNodeIDs(){
+//        return new HashSet<>(nodeIDs);
 //    }
+
+
+
+    class KademliaNodeCompare implements Comparator<KademliaNode>
+    {
+        public int compare(KademliaNode k1, KademliaNode k2)
+        {
+//            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
+//            if (k1.getLastSeen() > k2.getLastSeen()) return 1;
+//            else return 0;
+            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
+            else return 1;
+        }
+    }
 }
