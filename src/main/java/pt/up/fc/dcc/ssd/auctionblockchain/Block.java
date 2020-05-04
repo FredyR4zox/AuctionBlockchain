@@ -41,7 +41,9 @@ public class Block{
     public Boolean areTransactionFeesValid(){
         //check if miner reward with Transaction fees are valid
         //TODO: Percorrer lista de transações e somar os fees
-        if(Math.abs(getTransactionFeesTotal() - (minersReward.getAmount() - BlockChain.getMinerReward())) >= 0.000001) {
+        long test = (minersReward.getAmount() - BlockChain.getMinerReward());
+        long test2 = this.getTransactionFeesTotal();
+        if(this.getTransactionFeesTotal() != (minersReward.getAmount() - BlockChain.getMinerReward())) {
             logger.warning("Transaction fee amount is invalid");
             return false;
         }

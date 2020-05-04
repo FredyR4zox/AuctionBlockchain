@@ -53,7 +53,7 @@ public class Transaction {
     public Transaction(String sellerID, long transactionFeesTotal) {
         this.sellerID = sellerID;
         this.buyerID = "0000000000000000000000000000000000000000000000000000000000000000";
-        this.amount = BlockchainUtils.minerReward + transactionFee;
+        this.amount = BlockchainUtils.minerReward + transactionFeesTotal;
         this.hash = this.getHashToBeSigned();
     }
 
