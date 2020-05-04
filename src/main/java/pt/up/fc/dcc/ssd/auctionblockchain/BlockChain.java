@@ -9,12 +9,13 @@ import java.util.HashMap;
 public class BlockChain {
     public static ArrayList<Block> blockchain = new ArrayList<>();
     public static HashMap<String, Long> walletsMoney = new HashMap<>();
+    public static HashMap<String, Block> blocksHashes = new HashMap<>();
     private static int size;
 
     public static int getSize() {
         return size;
     }
-    public static double getMinerReward() {
+    public static long getMinerReward() {
         return BlockchainUtils.minerReward;
     }
     public static Block getXBlock(int blocknr){
@@ -39,7 +40,6 @@ public class BlockChain {
             //Add Transaction to HashMap
             updateHashMapValues(trans, BlockChain.walletsMoney);
         }
-
         return true;
     }
 
