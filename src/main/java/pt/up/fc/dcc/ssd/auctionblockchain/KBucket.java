@@ -19,7 +19,7 @@ public class KBucket {
     }
 
     public KBucket(List<KademliaNode> nodes){
-        this.nodes = new TreeSet<>(new KademliaNodeCompare());
+        this.nodes = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
 
         for(KademliaNode node : nodes)
             this.insertNode(node);
@@ -35,7 +35,7 @@ public class KBucket {
     }
 
     public boolean insertNode(KademliaNode node){
-        //TODO: Don't change the whole object, only update the last time seen
+        // TODO: Don't change the whole object, only update the last time seen
         if (nodes.contains(node)) {
             nodes.remove(node);
             nodes.add(node);
@@ -79,18 +79,4 @@ public class KBucket {
 //    public Set<byte[]> getNodeIDs(){
 //        return new HashSet<>(nodeIDs);
 //    }
-
-
-
-    class KademliaNodeCompare implements Comparator<KademliaNode>
-    {
-        public int compare(KademliaNode k1, KademliaNode k2)
-        {
-//            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
-//            if (k1.getLastSeen() > k2.getLastSeen()) return 1;
-//            else return 0;
-            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
-            else return 1;
-        }
-    }
 }

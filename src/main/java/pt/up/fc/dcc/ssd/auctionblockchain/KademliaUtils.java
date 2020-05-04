@@ -4,10 +4,9 @@ import com.google.protobuf.ByteString;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 public class KademliaUtils {
     public static final Charset charset = Charset.forName("ASCII");
@@ -38,6 +37,34 @@ public class KademliaUtils {
     public static double log2(double d) {
         return Math.log(d)/Math.log(2.0);
     }
+
+    static class KademliaNodeCompare implements Comparator<KademliaNode>
+    {
+        public int compare(KademliaNode k1, KademliaNode k2)
+        {
+            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
+            if (k1.getLastSeen() > k2.getLastSeen()) return 1;
+            else return 0;
+//            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
+//            else return 1;
+        }
+    }
+
+    public static byte[] mempoolHash() {
+        byte[] mempoolKey;
+
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
+            mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+            e.printStackTrace();
+            return null;
+        }
+
+        return mempoolKey;
+    }
+
 
 
     public static BlockProto BlockToBlockProto(Block block){

@@ -11,8 +11,8 @@ import java.lang.Math;
 public class KBucketManager {
     private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
 
-    private KademliaNode myNode;
-    private KBucket[] buckets;
+    private final KademliaNode myNode;
+    private final KBucket[] buckets;
 
 
     public KBucketManager(KademliaNode myNode) {
@@ -38,6 +38,7 @@ public class KBucketManager {
                 return true;
             }
 
+            //When the TreeSet is converted to List, the order is maintained
             List<KademliaNode> nodes = buckets[i].getNodes();
             KademliaNode first = nodes.get(0);
             if (!KademliaClient.ping(myNode, first)) {
@@ -56,6 +57,10 @@ public class KBucketManager {
                 return false;
             }
         }
+    }
+
+    public KademliaNode getMyNode() {
+        return myNode;
     }
 
 
