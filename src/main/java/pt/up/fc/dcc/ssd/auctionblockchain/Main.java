@@ -11,6 +11,7 @@ public class Main {
         Security.addProvider(new BouncyCastleProvider());
 
         Boolean ableToAdd;
+        Block blockAdded;
 
         Wallet creator= new Wallet();
 
@@ -20,43 +21,42 @@ public class Main {
         System.out.println();
 
         Wallet miner = new Wallet();
-        addBlock minerAddition = new addBlock(miner);
+        MinerUtils minerAddition = new MinerUtils(miner);
 
         Wallet wallet1 = new Wallet();
         Wallet wallet2 = new Wallet();
         Wallet alice = new Wallet();
         Wallet bob = new Wallet();
 
-        Transaction trans1 = new Transaction(creator, wallet1.getAddress(), 60, 1, 0);
-        ableToAdd = minerAddition.addTransactionIfValid(trans1);
+        Transaction trans10 = new Transaction(creator, wallet1.getAddress(), 10, 2, 0);
+        Transaction trans11 = new Transaction(creator, wallet2.getAddress(), 20, 1, 10);
+        Transaction trans12 = new Transaction(creator, bob.getAddress(), 20, 1, 8);
+
+        minerAddition.addTransactionIfValidToPool(trans12);
+        ableToAdd = minerAddition.addTransactionIfValidToPool(trans10);
         System.out.println("Able to add Transaction: "+ ableToAdd);
 
-        Transaction trans12 = new Transaction(wallet1, wallet2.getAddress(), 10, 1, 10);
-        for(int i=0; i<6;i++) {
-            ableToAdd = minerAddition.addTransactionIfValid(trans12);
-            System.out.println("Able to add Transaction: " + ableToAdd);
+
+        for(int i=0; i<1;i++) {
+            ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
         }
 
-        System.out.println("Trying to add block 1... ");
-        ableToAdd = minerAddition.checkMineAddBlock();
-        System.out.println("Able to add block: " + ableToAdd);
-        BlockChain.printHashMap();
+        minerAddition.createBlock();
 
-        System.out.println();
-        minerAddition.reset();
+        BlockChain.printHashMap();
 
         Transaction trans21 = new Transaction(miner, alice.getAddress(), 60, 2, 5);
-        ableToAdd = minerAddition.addTransactionIfValid(trans21);
+        ableToAdd = minerAddition.addTransactionIfValidToPool(trans21);
         System.out.println("Able to add Transaction: "+ ableToAdd);
 
-        System.out.println("Trying to add block 2... ");
-        ableToAdd = minerAddition.checkMineAddBlock();
-        System.out.println("Able to add block: " + ableToAdd);
+        blockAdded = minerAddition.createBlock();
+        if(blockAdded != null) {
+            System.out.println("Able to add block: " + ableToAdd);
+        }
         BlockChain.printHashMap();
 
         System.out.println();
-        Boolean output=BlockChain.isChainValidAndCreateHashMap();
-        System.out.println("Is Chain Valid:" + output);
+        BlockChain.isChainValidAndCreateHashMap();
         BlockChain.printHashMap();
 
         //String BlockChainJson = BlockChain.makeJson();

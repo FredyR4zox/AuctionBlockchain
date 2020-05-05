@@ -6,8 +6,10 @@ import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.logging.Logger;
 
 public class Wallet {
+    private static final Logger logger = Logger.getLogger(Wallet.class.getName());
     public String address;
     public PrivateKey privKey;
     public PublicKey pubKey;
@@ -35,7 +37,7 @@ public class Wallet {
         if(getAddressFromPubKey(pubKey).equals(address))
             return true;
         else {
-            System.out.println("public key doesn't correspond to address");
+            logger.warning("public key doesn't correspond to address");
             return false;
         }
     }
@@ -44,8 +46,8 @@ public class Wallet {
     }
 
     public void printKeys(){
-        System.out.println("public key:" + this.pubKey.toString());
-        System.out.println("private key:" + this.privKey.toString());
+        logger.info("public key:" + this.pubKey.toString());
+        logger.info("private key:" + this.privKey.toString());
     }
 
     private void generateKeys() {
@@ -69,7 +71,7 @@ public class Wallet {
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
-        System.out.println("Couldn't retrieve public key from bytes");
+        logger.warning("Couldn't retrieve public key from bytes");
         return null;
     }
 

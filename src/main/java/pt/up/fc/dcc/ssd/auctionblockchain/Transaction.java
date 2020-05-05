@@ -6,8 +6,11 @@ import com.google.gson.GsonBuilder;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.logging.Logger;
 
 public class Transaction {
+    private static final Logger logger = Logger.getLogger(Transaction.class.getName());
     private final String sellerID;
     private final String buyerID;
     private PublicKey buyerPublicKey;
@@ -17,6 +20,10 @@ public class Transaction {
     private byte[] signature;
     private String hash;
 
+
+
+    private final long timeStamp;
+
     public Transaction(String buyerID, String sellerID, byte[] buyerPublicKey, long amount, long transactionFee, long itemID, byte[] signature) {
         this.buyerID = buyerID;
         this.sellerID = sellerID;
@@ -25,7 +32,9 @@ public class Transaction {
         this.transactionFee = transactionFee;
         this.itemID = itemID;
         this.signature = signature;
+        this.timeStamp = new Date().getTime();
         this.hash = this.getHashToBeSigned();
+
     }
 
     public Transaction(Wallet buyerWallet, String sellerID, long amount, long transactionFee, long itemID){
@@ -35,6 +44,7 @@ public class Transaction {
         this.amount = amount;
         this.transactionFee = transactionFee;
         this.itemID = itemID;
+        this.timeStamp = new Date().getTime();
         this.hash = this.getHashToBeSigned();
         signTransaction(buyerWallet.getPrivKey());
     }
@@ -47,6 +57,7 @@ public class Transaction {
         this.transactionFee = transaction.getTransactionFee();
         this.itemID = transaction.getItemID();
         this.hash = transaction.getHash();
+        this.timeStamp = transaction.getTimeStamp();
     }
 
     //coinbase Transaction for miner reward
@@ -54,6 +65,7 @@ public class Transaction {
         this.sellerID = sellerID;
         this.buyerID = "0000000000000000000000000000000000000000000000000000000000000000";
         this.amount = BlockchainUtils.minerReward + transactionFeesTotal;
+        this.timeStamp = new Date().getTime();
         this.hash = this.getHashToBeSigned();
     }
 
@@ -69,14 +81,14 @@ public class Transaction {
 
     public Boolean isHashValid(){
         if(!this.hash.equals(this.getHashToBeSigned())){
-            System.out.println("Transaction Hashes don't match");
+            logger.warning("Transaction Hashes don't match");
             return false;
         }
         else return true;
     }
     public Boolean verifySignature(){
         if(this.signature==null){
-            System.out.println("Transaction is not signed");
+            logger.warning("Transaction is not signed");
             return false;
         }
         boolean output =false;
@@ -88,7 +100,7 @@ public class Transaction {
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
         }
-        if (!output) System.out.println("Signatures don't match");
+        if (!output) logger.severe("Signatures don't match");
         this.hash=this.getHashToBeSigned();
         return output;
     }
@@ -106,10 +118,10 @@ public class Transaction {
 
     private String getHashToBeSigned(){
         if(this.buyerPublicKey!=null){
-            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + BlockchainUtils.getStringFromKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID);
+            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + BlockchainUtils.getStringFromKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID + this.timeStamp);
         }
         else{
-            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + this.amount);
+            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + this.amount + this.timeStamp);
         }
     }
     public String makeJson(){
@@ -149,5 +161,9 @@ public class Transaction {
 
     public String getHash() {
         return hash;
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
     }
 }
