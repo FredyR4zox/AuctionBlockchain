@@ -19,9 +19,6 @@ public class Transaction {
     private long itemID;
     private byte[] signature;
     private String hash;
-
-
-
     private final long timeStamp;
 
     public Transaction(String buyerID, String sellerID, byte[] buyerPublicKey, long amount, long transactionFee, long itemID, byte[] signature) {
@@ -46,7 +43,7 @@ public class Transaction {
         this.itemID = itemID;
         this.timeStamp = new Date().getTime();
         this.hash = this.getHashToBeSigned();
-        signTransaction(buyerWallet.getPrivKey());
+        this.signature = Wallet.signHash(buyerWallet.getPrivKey(), this.hash, logger);
     }
 
     public Transaction(Transaction transaction){
@@ -58,6 +55,7 @@ public class Transaction {
         this.itemID = transaction.getItemID();
         this.hash = transaction.getHash();
         this.timeStamp = transaction.getTimeStamp();
+        this.signature =transaction.getSignature();
     }
 
     //coinbase Transaction for miner reward
@@ -75,8 +73,9 @@ public class Transaction {
 
     public Boolean verifyTransaction() {
         //Do hashes check && Do signature checks
-        if(isHashValid()&&verifySignature()&&Wallet.checkAddress(this.buyerPublicKey, this.buyerID)) return true;
-        else return false;
+        return isHashValid()
+                && Wallet.verifySignature(this.signature, this.hash, this.buyerPublicKey, logger)
+                && Wallet.checkAddress(this.buyerPublicKey, this.buyerID);
     }
 
     public Boolean isHashValid(){
@@ -86,39 +85,10 @@ public class Transaction {
         }
         else return true;
     }
-    public Boolean verifySignature(){
-        if(this.signature==null){
-            logger.warning("Transaction is not signed");
-            return false;
-        }
-        boolean output =false;
-        try {
-            Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
-            ecdsaVerify.initVerify(this.buyerPublicKey);
-            ecdsaVerify.update(this.hash.getBytes(StandardCharsets.UTF_8));
-            output = ecdsaVerify.verify(this.signature);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            e.printStackTrace();
-        }
-        if (!output) logger.severe("Signatures don't match");
-        this.hash=this.getHashToBeSigned();
-        return output;
-    }
-
-    public void signTransaction(PrivateKey privKey){
-        try {
-            Signature ecdsaSign = Signature.getInstance("SHA256withECDSA");
-            ecdsaSign.initSign(privKey);
-            ecdsaSign.update(this.hash.getBytes(StandardCharsets.UTF_8));
-            this.signature = ecdsaSign.sign();
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            e.printStackTrace();
-        }
-    }
 
     private String getHashToBeSigned(){
         if(this.buyerPublicKey!=null){
-            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + BlockchainUtils.getStringFromKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID + this.timeStamp);
+            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + Wallet.getAddressFromPubKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID + this.timeStamp);
         }
         else{
             return BlockchainUtils.getsha256(this.sellerID + this.buyerID + this.amount + this.timeStamp);

@@ -33,9 +33,7 @@ public class Main {
         Transaction trans12 = new Transaction(creator, bob.getAddress(), 20, 1, 8);
 
         minerAddition.addTransactionIfValidToPool(trans12);
-        ableToAdd = minerAddition.addTransactionIfValidToPool(trans10);
-        System.out.println("Able to add Transaction: "+ ableToAdd);
-
+        minerAddition.addTransactionIfValidToPool(trans10);
 
         for(int i=0; i<1;i++) {
             ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
@@ -61,6 +59,10 @@ public class Main {
 
         //String BlockChainJson = BlockChain.makeJson();
         //System.out.println(BlockChainJson);
+
+        Auction auction = new Auction(0, 60, creator);
+        Boolean output= auction.verifyAuction();
+        System.out.println(output);
 
     }
 }

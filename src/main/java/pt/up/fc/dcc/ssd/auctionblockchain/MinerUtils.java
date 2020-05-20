@@ -9,19 +9,19 @@ import java.util.logging.Logger;
 public class MinerUtils {
     private static final Logger logger = Logger.getLogger(MinerUtils.class.getName());
     //class to manage adding blocks and checking transactions by miners
-    TreeSet<Transaction> transPool;
+    private TreeSet<Transaction> transPool;
     Wallet minerWallet;
 
     public MinerUtils(Wallet minerWallet){
         this.minerWallet = minerWallet;
-        transPool = new TreeSet<>(new transactionCompare());
+        this.transPool = new TreeSet<>(new transactionCompare());
     }
 
     public Block createBlock(){
 
         HashSet<String> usedIDs = new HashSet<>();
         Block newBlock =  new Block(BlockChain.getLastHash());
-        Iterator<Transaction> transIterator = transPool.iterator();
+        Iterator<Transaction> transIterator = this.transPool.iterator();
         if (!transIterator.hasNext()) {
             logger.warning("No transactions in transaction Pool");
             return null;
@@ -46,29 +46,18 @@ public class MinerUtils {
 
     }
 
+    public Boolean addTransactionIfValidToPool(Transaction trans) {
+        return BlockchainUtils.addTransactionIfValidToPool(trans, this.transPool, logger);
+    }
+
     private void removeTransactionsFromTransPool(Transaction[] data, int nrTransactions) {
         for (int i =0; i < nrTransactions; i++){
             Transaction trans = data[i];
-            transPool.remove(trans);
+            this.transPool.remove(trans);
         }
     }
 
-    public Boolean addTransactionIfValidToPool(Transaction trans){
-        //Do hashes check && Do signature checks
-        if(!trans.verifyTransaction()){
-            logger.warning("There was an attempt to add an invalid transaction to pool");
-            return false;
-        }
-        if(!BlockChain.checkIfEnoughFunds(trans, BlockChain.walletsMoney)) {
-            logger.warning("There was an attempt to add a transaction with insufficient funds to pool");
-            return false;
-        }
-        if(!transPool.add(trans)){
-            logger.warning("Transaction already exists in transaction pool");
-            return false;
-        }
-        return true;
-    }
+
 
     public Boolean checkMineAddBlock(Block newBlock){
         //check if transactions in block are valid

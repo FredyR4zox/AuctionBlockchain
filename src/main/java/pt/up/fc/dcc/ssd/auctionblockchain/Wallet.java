@@ -2,17 +2,19 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.logging.Logger;
 
 public class Wallet {
     private static final Logger logger = Logger.getLogger(Wallet.class.getName());
-    public String address;
-    public PrivateKey privKey;
-    public PublicKey pubKey;
+    private String address;
+    private PrivateKey privKey;
+    private PublicKey pubKey;
 
     public Wallet() {
         generateKeys();
@@ -30,7 +32,7 @@ public class Wallet {
     public String getAddress() { return address; }
 
     private void createAddress(){
-        this.address = BlockchainUtils.getsha256(BlockchainUtils.getStringFromKey(this.pubKey));
+        this.address = getAddressFromPubKey(this.pubKey);
     }
 
     public static boolean checkAddress(PublicKey pubKey, String address){
@@ -42,7 +44,7 @@ public class Wallet {
         }
     }
     public static String getAddressFromPubKey(PublicKey pubKey){
-        return BlockchainUtils.getsha256(BlockchainUtils.getStringFromKey(pubKey));
+        return BlockchainUtils.getsha256(Base64.getEncoder().encodeToString(pubKey.getEncoded()));
     }
 
     public void printKeys(){
@@ -63,6 +65,44 @@ public class Wallet {
             e.printStackTrace();
         }
     }
+
+    public static byte[] signHash(PrivateKey privKey, String hash, Logger logger){
+        byte[] signature = null;
+        try {
+            Signature ecdsaSign = Signature.getInstance("SHA256withECDSA");
+            ecdsaSign.initSign(privKey);
+            ecdsaSign.update(hash.getBytes(StandardCharsets.UTF_8));
+            signature = ecdsaSign.sign();
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            logger.warning("There was an error signing the hash");
+            e.printStackTrace();
+        } finally {
+            //careful errors that don't include the ones in the catch will go unnoticed
+            return signature;
+        }
+    }
+
+    public static Boolean verifySignature(byte[] signature, String hash, PublicKey pubKey, Logger logger){
+        if(signature==null){
+            logger.warning("Hash is not signed");
+            return false;
+        }
+        try {
+            Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
+            ecdsaVerify.initVerify(pubKey);
+            ecdsaVerify.update(hash.getBytes(StandardCharsets.UTF_8));
+            ecdsaVerify.verify(signature);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            logger.severe("Signatures don't match");
+            e.printStackTrace();
+            return false;
+        } finally{
+            //careful errors that don't include the ones in the catch will go unnoticed
+            return true;
+        }
+    }
+
+
     public static PublicKey getPublicKeyFromBytes(byte[] bKey){
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(bKey);
         try {
@@ -78,5 +118,4 @@ public class Wallet {
     public static byte[] getEncodedPublicKey(PublicKey publicKey){
         return publicKey.getEncoded();
     }
-
 }
