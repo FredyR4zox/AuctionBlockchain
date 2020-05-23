@@ -1,12 +1,15 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.bouncycastle.crypto.prng.DigestRandomGenerator;
 import org.bouncycastle.crypto.prng.RandomGenerator;
@@ -43,12 +46,15 @@ public class KademliaClient {
         try {
             id = blockingStub.ping(KademliaUtils.NodeIDToNodeIDProto(myNode.getNodeID()));
         } catch (StatusRuntimeException e) {
-            logger.warning("PING RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "PING RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
             return false;
         }
 
-        if (!myNode.getNodeID().equals(id.getId().toByteArray()))
+
+        if (!Arrays.equals(myNode.getNodeID(), KademliaUtils.NodeIDProtoToNodeID(id))) {
+            logger.log(Level.WARNING, "Response returned with different nodeID");
             return false;
+        }
 
         return true;
     }
@@ -66,7 +72,7 @@ public class KademliaClient {
             request.setBlock(KademliaUtils.BlockToBlockProto((Block) info));
         }
         else {
-            logger.warning("Error: store value type not valid - " + info.getClass());
+            logger.log(Level.SEVERE, "Error: store value type not valid - " + info.getClass());
             return false;
         }
 
@@ -78,12 +84,14 @@ public class KademliaClient {
         try {
             response = blockingStub.store(request .build());
         } catch (StatusRuntimeException e) {
-            logger.warning("STORE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "STORE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
             return false;
         }
 
-        if (!myNode.getNodeID().equals(response.getNodeID().getId().toByteArray()))
+        if (!Arrays.equals(myNode.getNodeID(), KademliaUtils.NodeIDProtoToNodeID(response.getNodeID()))) {
+            logger.log(Level.WARNING, "Response returned with different nodeID");
             return false;
+        }
 
         return response.getSuccess();
     }
@@ -102,12 +110,14 @@ public class KademliaClient {
         try {
             response = blockingStub.findNode(request);
         } catch (StatusRuntimeException e) {
-            logger.warning("FIND_NODE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "FIND_NODE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
             return new ArrayList<>();
         }
 
-        if (!myNode.getNodeID().equals(response.getNodeID().getId().toByteArray()))
+        if (!Arrays.equals(myNode.getNodeID(), KademliaUtils.NodeIDProtoToNodeID(response.getNodeID()))) {
+            logger.log(Level.WARNING, "Response returned with different nodeID");
             return new ArrayList<>();
+        }
 
         return (List<T>)KademliaUtils.KBucketProtoToKademliaNodeList(response.getBucket());
     }
@@ -126,12 +136,14 @@ public class KademliaClient {
         try {
             response = blockingStub.findValue(request);
         } catch (StatusRuntimeException e) {
-            logger.warning("FIND_VALUE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "FIND_VALUE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
             return new ArrayList<>();
         }
 
-        if (!myNode.getNodeID().equals(response.getNodeID().getId().toByteArray()))
+        if (!Arrays.equals(myNode.getNodeID(), KademliaUtils.NodeIDProtoToNodeID(response.getNodeID()))) {
+            logger.log(Level.WARNING, "Response returned with different nodeID");
             return new ArrayList<>();
+        }
 
         List<T> ret = new ArrayList<>();
         if (response.getBlockOrTransactionsOrNodesCase() == FindValueResponse.BlockOrTransactionsOrNodesCase.BLOCK) {
@@ -144,7 +156,7 @@ public class KademliaClient {
             ret.addAll((List<T>)KademliaUtils.KBucketProtoToKademliaNodeList(response.getBucket()));
         }
         else
-            logger.warning("Error: findValueResponse without BlockOrTransactionsOrNodesCase");
+            logger.log(Level.SEVERE, "Error: findValueResponse without BlockOrTransactionsOrNodesCase");
 
         return ret;
     }
@@ -153,12 +165,12 @@ public class KademliaClient {
     // nodeKey - nodes to search
     // key - key to search
     // This is done so that if we want mempool from certain nodes
-    private static <T> List<T> contactNNodes(KademliaNode myNode, byte[] nodeKey, byte[] key, TreeSet<KademliaNode> shortList, TreeSet<KademliaNode> probedNodes, int n, ThreeParameterFunction<KademliaNode, KademliaNode, byte[], List<T> > rpc) {
+    private static <T> List<T> contactNNodes(KademliaNode myNode, byte[] nodeKey, byte[] key, TreeSet<KademliaNodeWrapper> shortList, TreeSet<KademliaNodeWrapper> probedNodes, int n, ThreeParameterFunction<KademliaNode, KademliaNode, byte[], List<T> > rpc) {
         // Select alpha nodes to query
-        List<KademliaNode> tempAlphaList = new ArrayList<>();
+        List<KademliaNodeWrapper> tempAlphaList = new ArrayList<>();
         Iterator it = shortList.iterator();
         while (tempAlphaList.size() < KademliaUtils.alpha && it.hasNext()) {
-            KademliaNode node = (KademliaNode) it.next();
+            KademliaNodeWrapper node = (KademliaNodeWrapper) it.next();
 
             if (probedNodes.contains(node))
                 continue;
@@ -166,28 +178,37 @@ public class KademliaClient {
             tempAlphaList.add(node);
         }
 
+        logger.log(Level.INFO, "tempAlphaList with " + tempAlphaList.size() + " nodes");
+
         // Variable to store the returned objects in case the RPC is Find_Value
         List<T> ret = new ArrayList<>();
 
         // Query selected alpha nodes
-        for(KademliaNode node : tempAlphaList) {
+        for(KademliaNodeWrapper node : tempAlphaList) {
 
             List<T> retAux = rpc.apply(myNode, node, key);
 
-            if(retAux.isEmpty())
+            if(retAux.isEmpty()) {
+                logger.log(Level.INFO, "Node " + node + " didn't return anything. Removing from list.");
                 shortList.remove(node);
-            else
+            }
+            else {
+                logger.log(Level.INFO, "Node " + node + " returned some things.");
                 probedNodes.add(node);
+            }
 
             // Set node timestamp as the distance
             for(T aux : retAux) {
                 if (aux.getClass() == KademliaNode.class) {
                     KademliaNode aux2 = (KademliaNode) aux;
-                    aux2.updateLastSeen(KademliaUtils.distanceTo(aux2.getNodeID(), nodeKey));
-                    shortList.add(aux2);
+                    KademliaNodeWrapper aux3 = new KademliaNodeWrapper(aux2, KademliaUtils.distanceTo(aux2.getNodeID(), nodeKey));
+                    shortList.add(aux3);
+                    logger.log(Level.INFO, "Node " + aux2 + " added.");
                 }
-                else
+                else {
+                    logger.log(Level.INFO, "Added some information");
                     ret.add(aux);
+                }
             }
         }
 
@@ -225,15 +246,22 @@ public class KademliaClient {
     public static <T> boolean store(KBucketManager bucketManager, byte[] serviceKey, T value) {
         KademliaNode myNode = bucketManager.getMyNode();
 
-        TreeSet<KademliaNode> shortList = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
-        TreeSet<KademliaNode> probedNodes = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
+        TreeSet<KademliaNodeWrapper> shortList = new TreeSet<>(new KademliaNodeWrapperCompare());
+        TreeSet<KademliaNodeWrapper> probedNodes = new TreeSet<>(new KademliaNodeWrapperCompare());
 
         //Hack: Use the comparator that compares timestamps to compare distances by putting the distance as the timestamp
-        List<KademliaNode> hackedNodes = bucketManager.getClosestNodes(null, serviceKey, KademliaUtils.alpha);
-        for(KademliaNode node : hackedNodes)
-            node.updateLastSeen(KademliaUtils.distanceTo(node.getNodeID(), serviceKey));
+        List<KademliaNode> nodes = bucketManager.getClosestNodes(null, serviceKey, KademliaUtils.alpha);
 
-        shortList.addAll(hackedNodes);
+        if(nodes.isEmpty()){
+            logger.log(Level.WARNING, "No nodes found to send STORE RPC");
+            return false;
+        }
+
+        for(KademliaNode node : nodes)
+            shortList.add(new KademliaNodeWrapper(node, KademliaUtils.distanceTo(node.getNodeID(), serviceKey)));
+//            node.updateLastSeen(KademliaUtils.distanceTo(node.getNodeID(), serviceKey));
+//
+//        shortList.addAll(hackedNodes);
 
         KademliaNode closestNode;
         boolean iterationMoreClose = true;
@@ -246,41 +274,55 @@ public class KademliaClient {
 
 
             // Stop iterating if no better node was found
-            if(closestNode.equals(shortList.first())) {
-                iterationMoreClose = false;
+            if(!shortList.isEmpty()){
+                if(closestNode.equals(shortList.first())) {
+                    logger.log(Level.INFO, "Could not find a better node.");
+                    iterationMoreClose = false;
 
-                contactNNodes(myNode, serviceKey, serviceKey, shortList, probedNodes, KademliaUtils.k, KademliaClient::findNodeGRPC);
+                    contactNNodes(myNode, serviceKey, serviceKey, shortList, probedNodes, KademliaUtils.k, KademliaClient::findNodeGRPC);
+                }
+            }
+            else {
+                logger.log(Level.INFO, "Could not find a better node because the list was empty.");
+                iterationMoreClose = false;
             }
         }
 
 
-
-        List<KademliaNode> closestNodes = new ArrayList<>(probedNodes).subList(0, Math.min(probedNodes.size(), KademliaUtils.k));
+        List<KademliaNodeWrapper> closestNodes = new ArrayList<>(probedNodes).subList(0, Math.min(probedNodes.size(), KademliaUtils.k));
         probedNodes.clear();
         probedNodes.addAll(closestNodes);
 
-
+        boolean success = false;
         for(KademliaNode node : probedNodes) {
             if (storeGRPC(myNode, node, serviceKey, value)) {
-                return true;
+                logger.log(Level.INFO, "Success in storeGRPC for node " + node);
+                success = true;
             }
         }
 
-        return false;
+        return success;
     }
 
     public static <T> List<T> findNode(KBucketManager bucketManager, byte[] key) {
         KademliaNode myNode = bucketManager.getMyNode();
 
-        TreeSet<KademliaNode> shortList = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
-        TreeSet<KademliaNode> probedNodes = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
+        TreeSet<KademliaNodeWrapper> shortList = new TreeSet<>(new KademliaNodeWrapperCompare());
+        TreeSet<KademliaNodeWrapper> probedNodes = new TreeSet<>(new KademliaNodeWrapperCompare());
 
         //Hack: Use the comparator that compares timestamps to compare distances by putting the distance as the timestamp
-        List<KademliaNode> hackedNodes = bucketManager.getClosestNodes(null, key, KademliaUtils.alpha);
-        for(KademliaNode node : hackedNodes)
-            node.updateLastSeen(KademliaUtils.distanceTo(node.getNodeID(), key));
+        List<KademliaNode> nodes = bucketManager.getClosestNodes(null, key, KademliaUtils.alpha);
 
-        shortList.addAll(hackedNodes);
+        if(nodes.isEmpty()){
+            logger.log(Level.WARNING, "No nodes found to send FIND_NODE RPC");
+            return new ArrayList<>();
+        }
+
+        for(KademliaNode node : nodes)
+            shortList.add(new KademliaNodeWrapper(node, KademliaUtils.distanceTo(node.getNodeID(), key)));
+//            node.updateLastSeen(KademliaUtils.distanceTo(node.getNodeID(), key));
+//
+//        shortList.addAll(hackedNodes);
 
         KademliaNode closestNode;
         boolean iterationMoreClose = true;
@@ -289,14 +331,21 @@ public class KademliaClient {
         while(iterationMoreClose && probedNodes.size() < KademliaUtils.k) {
             closestNode = shortList.first();
 
-            contactNNodes(myNode, key, key, shortList, probedNodes, KademliaUtils.alpha, KademliaClient::findValueGRPC);
+            contactNNodes(myNode, key, key, shortList, probedNodes, KademliaUtils.alpha, KademliaClient::findNodeGRPC);
 
 
             // Stop iterating if no better node was found
-            if(closestNode.equals(shortList.first())) {
-                iterationMoreClose = false;
+            if(!shortList.isEmpty()){
+                if(closestNode.equals(shortList.first())) {
+                    logger.log(Level.INFO, "Could not find a better node.");
+                    iterationMoreClose = false;
 
-                contactNNodes(myNode, key, key, shortList, probedNodes, KademliaUtils.k, KademliaClient::findValueGRPC);
+                    contactNNodes(myNode, key, key, shortList, probedNodes, KademliaUtils.k, KademliaClient::findNodeGRPC);
+                }
+            }
+            else {
+                logger.log(Level.INFO, "Could not find a better node because the list was empty.");
+                iterationMoreClose = false;
             }
         }
 
@@ -306,17 +355,21 @@ public class KademliaClient {
     public static <T> List<T> findValue(KBucketManager bucketManager, byte[] nodeKey, byte[] key) {
         KademliaNode myNode = bucketManager.getMyNode();
 
-        TreeSet<KademliaNode> shortList = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
-        TreeSet<KademliaNode> probedNodes = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
+        TreeSet<KademliaNodeWrapper> shortList = new TreeSet<>(new KademliaNodeWrapperCompare());
+        TreeSet<KademliaNodeWrapper> probedNodes = new TreeSet<>(new KademliaNodeWrapperCompare());
 
-        // Hack: Use the comparator that compares timestamps to compare distances by putting the distance as the timestamp
-        List<KademliaNode> hackedNodes;
-        hackedNodes = bucketManager.getClosestNodes(null, nodeKey, KademliaUtils.alpha);
+        List<KademliaNode> nodes = bucketManager.getClosestNodes(null, nodeKey, KademliaUtils.alpha);
 
-        for(KademliaNode node : hackedNodes)
-            node.updateLastSeen(KademliaUtils.distanceTo(node.getNodeID(), nodeKey));
+        if(nodes.isEmpty()){
+            logger.log(Level.WARNING, "No nodes found to send RPC");
+            return new ArrayList<>();
+        }
 
-        shortList.addAll(hackedNodes);
+        for(KademliaNode node : nodes)
+            shortList.add(new KademliaNodeWrapper(node, KademliaUtils.distanceTo(node.getNodeID(), nodeKey)));
+//            node.updateLastSeen(KademliaUtils.distanceTo(node.getNodeID(), nodeKey));
+//
+//        shortList.addAll(nodes);
 
         KademliaNode closestNode;
         boolean iterationMoreClose = true;
@@ -330,21 +383,61 @@ public class KademliaClient {
 
             // If we received anything from the nodes
             if(!retAux.isEmpty()) {
+                logger.log(Level.INFO, "Received data.");
                 return retAux;
             }
 
             // Stop iterating if no better node was found
-            if(closestNode.equals(shortList.first())) {
-                iterationMoreClose = false;
+            if(!shortList.isEmpty()) {
+                if (closestNode.equals(shortList.first())) {
+                    logger.log(Level.INFO, "Could not find a better node.");
+                    iterationMoreClose = false;
 
-                retAux = contactNNodes(myNode, nodeKey, key, shortList, probedNodes, KademliaUtils.k, KademliaClient::findValueGRPC);
-                if(!retAux.isEmpty()) {
-                    return retAux;
+                    retAux = contactNNodes(myNode, nodeKey, key, shortList, probedNodes, KademliaUtils.k, KademliaClient::findValueGRPC);
+                    if (!retAux.isEmpty()) {
+                        logger.log(Level.INFO, "Received data.");
+                        return retAux;
+                    }
                 }
+            }
+            else {
+                logger.log(Level.INFO, "Could not find a better node because the list was empty.");
+                iterationMoreClose = false;
             }
         }
 
+        logger.log(Level.INFO, "Returning an empty list.");
         return new ArrayList<>();
+    }
+
+    // https://dzone.com/articles/how-to-sort-a-map-by-value-in-java-8
+    public static Map<KademliaNode, BigInteger> sortMapByValue(final Map<KademliaNode, BigInteger> nodes) {
+
+        return nodes.entrySet()
+                .stream()
+                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+    }
+
+    private static class KademliaNodeWrapper extends KademliaNode{
+        private final BigInteger distance;
+
+        public KademliaNodeWrapper(KademliaNode node, BigInteger distance) {
+            super(node);
+            this.distance = distance;
+        }
+
+        public BigInteger getDistance() {
+            return distance;
+        }
+    }
+
+    static class KademliaNodeWrapperCompare implements Comparator<KademliaNodeWrapper>
+    {
+        public int compare(KademliaNodeWrapper k1, KademliaNodeWrapper k2)
+        {
+            return k1.getDistance().compareTo(k2.getDistance());
+        }
     }
 }
 

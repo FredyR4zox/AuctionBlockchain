@@ -3,12 +3,17 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 import com.google.protobuf.ByteString;
 
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class KademliaUtils {
+    private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
+
     public static final Charset charset = Charset.forName("ASCII");
     public static final int alpha = 3;
     public static final int idSizeInBits = 160;
@@ -18,25 +23,30 @@ public class KademliaUtils {
 
 
 
-    public static int distanceTo(KademliaNode node1, KademliaNode node2){
+    public static BigInteger distanceTo(KademliaNode node1, KademliaNode node2){
         return distanceTo(node1.getNodeID(), node2.getNodeID());
     }
 
-    public static int distanceTo(byte[] nodeID1, byte[] nodeID2){
-        byte[] distance = new byte[KademliaUtils.idSizeInBytes];
+    public static BigInteger distanceTo(byte[] nodeID1, byte[] nodeID2){
+//        byte[] distance = new byte[KademliaUtils.idSizeInBytes];
+//
+//        for (int i = 0; i < KademliaUtils.idSizeInBytes; i++) {
+//            distance[i] = (byte) ((int) nodeID1[i] ^ (int) nodeID2[i]);
+//            if (distance[i] < 0)
+//                distance[i] += 256; // Two's complement stuff
+//        }
 
-        for (int i = 0; i < KademliaUtils.idSizeInBytes; i++) {
-            distance[i] = (byte) ((int) nodeID1[i] ^ (int) nodeID2[i]);
-            if (distance[i] < 0)
-                distance[i] += 256; // Two's complement stuff
-        }
+        BigInteger distance = new BigInteger(nodeID1);
+        distance = distance.xor(new BigInteger(nodeID2));
+        return distance.abs();
 
-        return new BigInteger(distance).intValue();
+//        return BigIntegerMath.log2(distance, RoundingMode.FLOOR);
     }
 
-    public static double log2(double d) {
-        return Math.log(d)/Math.log(2.0);
-    }
+
+//    public static double log2(double d) {
+//        return Math.log(d)/Math.log(2.0);
+//    }
 
     static class KademliaNodeCompare implements Comparator<KademliaNode>
     {
@@ -57,7 +67,7 @@ public class KademliaUtils {
             MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
             mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
         } catch (NoSuchAlgorithmException e) {
-            System.out.println("Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
             e.printStackTrace();
             return null;
         }

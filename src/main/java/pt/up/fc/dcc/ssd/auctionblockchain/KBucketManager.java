@@ -1,12 +1,15 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.lang.Math;
+import com.google.common.math.BigIntegerMath;
 
 public class KBucketManager {
     private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
@@ -25,16 +28,26 @@ public class KBucketManager {
 
 
     public boolean insertNode(KademliaNode node) {
-        if (Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+        if (myNode.equals(node)) {
+            logger.log(Level.SEVERE, "Error: Trying to insert own node into bucket");
             return false;
+        }
 
-        int distance = KademliaUtils.distanceTo(myNode, node);
+//        System.out.println("Inserting Node: ");
+//        for(int j=0; j<KademliaUtils.idSizeInBytes; j++)
+//            System.out.print(" " + node.getNodeID()[j]);
+//        System.out.println("\n\n");
 
-        int i = (int) KademliaUtils.log2(distance);
+        BigInteger distance = KademliaUtils.distanceTo(myNode, node);
+
+        if(distance.equals(BigInteger.ZERO))
+            logger.log(Level.SEVERE, "Error: Distance of 0 and the node is not equal to myNode");
+
+        int i = BigIntegerMath.log2(distance, RoundingMode.FLOOR);
 
         synchronized (buckets[i]) {
             if(buckets[i].insertNode(node)) {
-                logger.info("Inserted node " + node.getNodeID());
+                logger.log(Level.INFO, "Added node to bucket " + i);
                 return true;
             }
 
@@ -46,14 +59,14 @@ public class KBucketManager {
 
                 buckets[i].insertNode(node);
 
-                logger.info("Discarded first node " + first.getNodeID() + "and added new node " + node.getNodeID());
+                logger.log(Level.INFO, "Discarded first node " + new BigInteger(first.getNodeID()) + " and added new node " + new BigInteger(node.getNodeID()));
                 return true;
             } else {
                 buckets[i].removeNode(first);
                 first.updateLastSeen(Instant.now().getEpochSecond());
                 buckets[i].insertNode(first);
 
-                logger.info("Updated first node " + first.getNodeID());
+                logger.log(Level.INFO, "Updated first node " + new BigInteger(first.getNodeID()));
                 return false;
             }
         }
@@ -64,9 +77,9 @@ public class KBucketManager {
     }
 
 
-//    public KBucket[] getBuckets() {
-//        return buckets;
-//    }
+    public KBucket[] getBuckets() {
+        return buckets;
+    }
 //
 //    public KBucket getBucket(int i){
 //        if(i < 0 || i >= KademliaUtils.idSizeInBits)
@@ -78,8 +91,8 @@ public class KBucketManager {
     public List<KademliaNode> getClosestNodes(byte[] requestorID, byte[] requestedID, int maxNodes) {
         List<KademliaNode> ret = new ArrayList<>();
 
-        int distance = KademliaUtils.distanceTo(myNode.getNodeID(), requestedID);
-        int bucketLocation = (int)KademliaUtils.log2(distance);
+        BigInteger distance = KademliaUtils.distanceTo(myNode.getNodeID(), requestedID);
+        int bucketLocation = BigIntegerMath.log2(distance, RoundingMode.FLOOR);
 
         List<KademliaNode> nodes = buckets[bucketLocation].getNodes();
 
@@ -89,23 +102,30 @@ public class KBucketManager {
         }
 
         for(int i = 1; ret.size() < maxNodes && (bucketLocation + i < KademliaUtils.idSizeInBits || bucketLocation - i >= 0); i++) {
-            KBucket bucket = buckets[bucketLocation + i];
-            if(bucket != null) {
-                for (KademliaNode node : bucket.getNodes()) {
-                    if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
-                        ret.add(node);
+            KBucket bucket;
+
+            if(bucketLocation + i < KademliaUtils.idSizeInBits) {
+                bucket = buckets[bucketLocation + i];
+                if (bucket != null) {
+                    for (KademliaNode node : bucket.getNodes()) {
+                        if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                            ret.add(node);
+                    }
                 }
             }
 
-            bucket = buckets[bucketLocation - i];
-            if(bucket != null) {
-                for (KademliaNode node : bucket.getNodes()) {
-                    if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
-                        ret.add(node);
+            if(bucketLocation - i >= 0) {
+                bucket = buckets[bucketLocation - i];
+                if (bucket != null) {
+                    for (KademliaNode node : bucket.getNodes()) {
+                        if (!Arrays.equals(node.getNodeID(), requestorID) && !Arrays.equals(node.getNodeID(), myNode.getNodeID()))
+                            ret.add(node);
+                    }
                 }
             }
         }
 
+        logger.log(Level.INFO, "Aggregated " + ret.size() + " nodes");
         return ret.subList(0, Math.min(ret.size(), maxNodes));
     }
 }

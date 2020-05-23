@@ -2,12 +2,14 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class KBucket {
     private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
 
-    private final Set<KademliaNode> nodes;
+    private final LinkedList<KademliaNode> nodes;
+    private final Set<byte[]> nodeIDs;
 
 
     public KBucket() {
@@ -19,7 +21,8 @@ public class KBucket {
     }
 
     public KBucket(List<KademliaNode> nodes){
-        this.nodes = new TreeSet<>(new KademliaUtils.KademliaNodeCompare());
+        this.nodes = new LinkedList<>();
+        this.nodeIDs = new HashSet<>();
 
         for(KademliaNode node : nodes)
             this.insertNode(node);
@@ -36,24 +39,33 @@ public class KBucket {
 
     public boolean insertNode(KademliaNode node){
         // TODO: Don't change the whole object, only update the last time seen
+        // This function inserts the element at the end of the list, assuming the
+        // last time seen is the most recent (without checking the lastTimeSeen variable)
         if (nodes.contains(node)) {
             nodes.remove(node);
-            nodes.add(node);
+            nodes.addLast(node);
 
-            logger.info("Updated node in bucket");
+//            System.out.println("Updated node: ");
+//            for(int j=0; j<KademliaUtils.idSizeInBytes; j++)
+//                System.out.print(" " + node.getNodeID()[j]);
+//            System.out.println("\n\n");
+
+            logger.log(Level.INFO, "Updated node in bucket");
             return true;
         }
         else if (nodes.size() == KademliaUtils.k){
-            logger.warning("Error: Bucket full");
+            logger.log(Level.INFO, "Bucket full");
             return false;
         }
         else if(nodes.size() > KademliaUtils.k){
-            logger.warning("Error: Bucket size (" + nodes.size() + ") bigger than k (" + KademliaUtils.k);
+            logger.log(Level.SEVERE, "Error: Bucket size (" + nodes.size() + ") bigger than k (" + KademliaUtils.k + ")");
             return false;
         }
 
-        nodes.add(node);
-        logger.info("Added node to bucket");
+        nodes.addLast(node);
+//        nodeIDs.add(Arrays.copyOf(node.getNodeID(), node.getNodeID().length));
+//        System.out.println("Bucket now has length of " + nodes.size());
+        logger.log(Level.INFO, "Added node to bucket and now has length of " + nodes.size());
         return true;
     }
 

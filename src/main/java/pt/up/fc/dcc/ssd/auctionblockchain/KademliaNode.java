@@ -48,7 +48,18 @@ public class KademliaNode {
             return false;
         KademliaNode node = (KademliaNode) obj;
         // field comparison
-        return Objects.equals(nodeID, node.getNodeID());
+
+//        System.out.println("node1: ");
+//        for(int j=0; j<KademliaUtils.idSizeInBytes; j++)
+//            System.out.print(" " + nodeID[j]);
+//        System.out.println("");
+//
+//        System.out.println("node2: ");
+//        for(int j=0; j<KademliaUtils.idSizeInBytes; j++)
+//            System.out.print(" " + node.getNodeID()[j]);
+//        System.out.println("\n\n");
+
+        return Arrays.equals(nodeID, node.getNodeID());
     }
 
 
@@ -70,5 +81,16 @@ public class KademliaNode {
 
     public long getLastSeen() {
         return lastSeen;
+    }
+
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+
+        for(int i=0; i<KademliaUtils.idSizeInBytes; i++)
+            buf.append(nodeID[i]);
+
+        buf.append(" " + ipAddress + ":" + port);
+
+        return buf.toString();
     }
 }
