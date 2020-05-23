@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.logging.Logger;
 
 public class Block{
-    private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
+    private static final Logger logger = Logger.getLogger(Block.class.getName());
 
     private String hash;
     private final String previousHash;
@@ -40,9 +40,7 @@ public class Block{
 
     public Boolean areTransactionFeesValid(){
         //check if miner reward with Transaction fees are valid
-        //TODO: Percorrer lista de transações e somar os fees
-        long test = (minersReward.getAmount() - BlockChain.getMinerReward());
-        long test2 = this.getTransactionFeesTotal();
+        //Percorrer lista de transações e somar os fees
         if(this.getTransactionFeesTotal() != (minersReward.getAmount() - BlockChain.getMinerReward())) {
             logger.warning("Transaction fee amount is invalid");
             return false;
@@ -84,7 +82,6 @@ public class Block{
             this.nonce++;
             this.hash = calculateHash();
         }
-        System.out.println("Block Mined!!! : " + this.hash);
     }
 
     public long getTransactionFeesTotal() {
@@ -109,6 +106,14 @@ public class Block{
         //recalculate hash
         this.hash= calculateHash();
 
+        return true;
+    }
+
+    public Boolean addTransactionIfValid(Transaction trans){
+        //Do hashes check && Do signature checks
+        if(!trans.verifyTransaction()) return false;
+        if(!BlockChain.checkIfEnoughFunds(trans, BlockChain.walletsMoney)) return false;
+        if(!this.addTransaction(trans))return false;
         return true;
     }
 
