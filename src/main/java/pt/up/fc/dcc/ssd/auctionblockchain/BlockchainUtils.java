@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 public class BlockchainUtils {
     public static final int MAX_NR_TRANSACTIONS = 5;
-    public static final int difficulty = 7;
+    public static final int difficulty = 5;
     public static final long minerReward = 100;
 
     public static String getsha256(String input){

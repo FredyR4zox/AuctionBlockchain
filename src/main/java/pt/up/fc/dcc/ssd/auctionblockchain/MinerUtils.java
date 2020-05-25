@@ -1,17 +1,20 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
+import com.sun.source.tree.Tree;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-public class MinerUtils {
+public class MinerUtils implements Runnable {
     private static final Logger logger = Logger.getLogger(MinerUtils.class.getName());
     //class to manage adding blocks and checking transactions by miners
     private TreeSet<Transaction> transPool;
     Wallet minerWallet;
     private String lastHash;
+    Block newBlock;
 
     public MinerUtils(Wallet minerWallet){
         this.minerWallet = minerWallet;
@@ -19,14 +22,18 @@ public class MinerUtils {
         this.lastHash = BlockChain.getLastHash();
     }
 
-    public Block createBlock(){
+    public MinerUtils() {
+
+    }
+
+    public void createBlock(){
         checkBlockChainUpdates();
         HashSet<String> usedIDs = new HashSet<>();
-        Block newBlock =  new Block(BlockChain.getLastHash());
+        newBlock =  new Block(BlockChain.getLastHash());
         Iterator<Transaction> transIterator = this.transPool.iterator();
         if (!transIterator.hasNext()) {
             logger.warning("No transactions in transaction Pool");
-            return null;
+            return;
         }
         for(int i=0; i< BlockchainUtils.MAX_NR_TRANSACTIONS && transIterator.hasNext(); i++){
             Transaction trans = transIterator.next();
@@ -39,14 +46,7 @@ public class MinerUtils {
             if(!newBlock.addTransactionIfValid(trans)) i--;
             usedIDs.add(trans.getBuyerID());
         }
-        logger.info("Trying to mine a block\n");
-        if (checkMineAddBlock(newBlock)){
-            removeTransactionsFromTransPool(newBlock.getData(), newBlock.getNrTransactions());
-            this.lastHash=newBlock.getHash();
-            return newBlock;
-        }
-        else return null;
-
+        checkMineAddBlock(newBlock);
     }
 
     public void checkBlockChainUpdates(){
@@ -57,7 +57,7 @@ public class MinerUtils {
         logger.info("Blockchain is not up to date");
         Block block = BlockChain.getBlockWithHash(lastHash);
         while(!this.lastHash.equals(block.getHash())){
-            removeTransactionsFromTransPool(block.getData(), block.getNrTransactions());
+            MinerUtils.removeTransactionsFromTransPool(block, this.transPool);
             block = BlockChain.getBlockWithHash(block.getPreviousHash());
         }
         this.lastHash = lastHash;
@@ -69,26 +69,37 @@ public class MinerUtils {
         return output;
     }
 
-    private void removeTransactionsFromTransPool(Transaction[] data, int nrTransactions) {
-        for (int i =0; i < nrTransactions; i++){
+    public static void removeTransactionsFromTransPool(Block block, TreeSet<Transaction> transPool) {
+        Transaction[] data = block.getData();
+        for (int i =0; i < block.getNrTransactions(); i++){
             Transaction trans = data[i];
-            this.transPool.remove(trans);
+            transPool.remove(trans);
         }
     }
 
 
 
-    public Boolean checkMineAddBlock(Block newBlock){
+    public void checkMineAddBlock(Block newBlock){
         //check if transactions in block are valid
-        if(!newBlock.areSignaturesAndHashValid()) return false;
+        if(!newBlock.areSignaturesAndHashValid()) return;
         //check block hash
-        if(!newBlock.isHashValid()) return false;
+        if(!newBlock.isHashValid()) return;
         //Mine block
-        if(!newBlock.mineBlock(minerWallet)) return false;
         //Add block to blockchain and update Hashmap
-        BlockChain.addBlock(newBlock);
-        logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
-        return true;
+        Thread thread = new Thread(this);
+        thread.start();
+        return;
+    }
+
+    @Override
+    public void run() {
+        logger.info("Trying to mine a block\n");
+        if (newBlock.mineBlock(minerWallet)){
+            BlockChain.addBlock(newBlock);
+            logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
+            removeTransactionsFromTransPool(newBlock, this.getTransPool());
+            this.setLastHash(newBlock.getHash());
+        }
     }
 
     static class transactionCompare implements Comparator<Transaction>{
@@ -103,5 +114,25 @@ public class MinerUtils {
             }
             else return result;
         }
+    }
+
+    public static Logger getLogger() {
+        return logger;
+    }
+
+    public TreeSet<Transaction> getTransPool() {
+        return transPool;
+    }
+
+    public Wallet getMinerWallet() {
+        return minerWallet;
+    }
+
+    public String getLastHash() {
+        return lastHash;
+    }
+
+    public void setLastHash(String lastHash) {
+        this.lastHash = lastHash;
     }
 }

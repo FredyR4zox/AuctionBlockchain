@@ -22,6 +22,10 @@ public class Main {
 
                 Wallet miner = new Wallet();
                 MinerUtils minerAddition = new MinerUtils(miner);
+                //Thread thread = new Thread(minerAddition);
+                Wallet miner2 = new Wallet();
+                MinerUtils miner2Addition = new MinerUtils(miner);
+                //Thread thread2 = new Thread(miner2Addition);
 
                 Wallet wallet1 = new Wallet();
                 Wallet wallet2 = new Wallet();
@@ -32,18 +36,33 @@ public class Main {
                 Transaction trans11 = new Transaction(creator, wallet2.getAddress(), 20, 1, 10);
                 Transaction trans12 = new Transaction(creator, bob.getAddress(), 20, 1, 8);
 
-                minerAddition.addTransactionIfValidToPool(trans12);
                 minerAddition.addTransactionIfValidToPool(trans10);
+                minerAddition.addTransactionIfValidToPool(trans12);
+                miner2Addition.addTransactionIfValidToPool(trans10);
+                miner2Addition.addTransactionIfValidToPool(trans12);
 
                 for(int i=0; i<1;i++) {
                         ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
                 }
 
                 minerAddition.createBlock();
+                miner2Addition.createBlock();
+
+//                thread.start();
+//                thread2.start();
+//
+//                try {
+//                        thread.join();
+//                        thread2.join();
+//                } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                }
+
+                System.out.println("is it");
 
                 BlockChain.printHashMap();
 
-                Transaction trans21 = new Transaction(miner, alice.getAddress(), 60, 2, 5);
+                /*Transaction trans21 = new Transaction(miner, alice.getAddress(), 60, 2, 5);
                 ableToAdd = minerAddition.addTransactionIfValidToPool(trans21);
                 System.out.println("Able to add Transaction: "+ ableToAdd);
 
@@ -63,7 +82,7 @@ public class Main {
                 Auction auction = new Auction(0, 60, creator);
                 Boolean output= auction.verifyAuction();
                 System.out.println(output);
-
+*/
         }
 }
 

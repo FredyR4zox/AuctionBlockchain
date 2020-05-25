@@ -74,6 +74,7 @@ public class Block{
     }
 
     public Boolean mineBlock(Wallet minerWallet) {
+
         long transactionFeesTotal = getTransactionFeesTotal();
         this.minersReward = new Transaction(minerWallet.getAddress(), transactionFeesTotal);
 
@@ -81,12 +82,16 @@ public class Block{
         while(!this.hash.substring(0, difficulty).equals(target)) {
             this.nonce++;
             this.hash = calculateHash();
-            if(this.nonce%100==0){
+            if(this.nonce%1000==0){
                 if(!this.previousHash.equals(BlockChain.getLastHash())){
                     logger.warning("A newer block was added while mining");
                     return false;
                 }
             }
+        }
+        if(!this.previousHash.equals(BlockChain.getLastHash())){
+            logger.warning("A newer block was added while mining");
+            return false;
         }
         return true;
     }
