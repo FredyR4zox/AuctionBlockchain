@@ -55,7 +55,7 @@ public class BlockChain {
     public static void createGenesisBlock(Wallet creator){
         Block genesis= new Block("0");
         //Mine block
-        genesis.mineBlock(creator);
+        genesis.mineGenesisBlock(creator);
         addBlock(genesis);
     }
 

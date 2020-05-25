@@ -73,7 +73,25 @@ public class Block{
         return true;
     }
 
-    public void mineBlock(Wallet minerWallet) {
+    public Boolean mineBlock(Wallet minerWallet) {
+        long transactionFeesTotal = getTransactionFeesTotal();
+        this.minersReward = new Transaction(minerWallet.getAddress(), transactionFeesTotal);
+
+        String target = new String(new char[difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
+        while(!this.hash.substring(0, difficulty).equals(target)) {
+            this.nonce++;
+            this.hash = calculateHash();
+            if(this.nonce%100==0){
+                if(!this.previousHash.equals(BlockChain.getLastHash())){
+                    logger.warning("A newer block was added while mining");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public Boolean mineGenesisBlock(Wallet minerWallet) {
         long transactionFeesTotal = getTransactionFeesTotal();
         this.minersReward = new Transaction(minerWallet.getAddress(), transactionFeesTotal);
 
@@ -82,6 +100,7 @@ public class Block{
             this.nonce++;
             this.hash = calculateHash();
         }
+        return true;
     }
 
     public long getTransactionFeesTotal() {
@@ -161,5 +180,9 @@ public class Block{
             return null;
 
         return data[x];
+    }
+
+    public void setMinersReward(Transaction minersReward) {
+        this.minersReward = minersReward;
     }
 }

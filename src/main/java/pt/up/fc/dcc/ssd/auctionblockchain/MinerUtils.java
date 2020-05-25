@@ -11,14 +11,16 @@ public class MinerUtils {
     //class to manage adding blocks and checking transactions by miners
     private TreeSet<Transaction> transPool;
     Wallet minerWallet;
+    private String lastHash;
 
     public MinerUtils(Wallet minerWallet){
         this.minerWallet = minerWallet;
         this.transPool = new TreeSet<>(new transactionCompare());
+        this.lastHash = BlockChain.getLastHash();
     }
 
     public Block createBlock(){
-
+        checkBlockChainUpdates();
         HashSet<String> usedIDs = new HashSet<>();
         Block newBlock =  new Block(BlockChain.getLastHash());
         Iterator<Transaction> transIterator = this.transPool.iterator();
@@ -40,14 +42,31 @@ public class MinerUtils {
         logger.info("Trying to mine a block\n");
         if (checkMineAddBlock(newBlock)){
             removeTransactionsFromTransPool(newBlock.getData(), newBlock.getNrTransactions());
+            this.lastHash=newBlock.getHash();
             return newBlock;
         }
         else return null;
 
     }
 
+    public void checkBlockChainUpdates(){
+        String lastHash = BlockChain.getLastHash();
+        if(this.lastHash.equals(lastHash)) {
+            return;
+        }
+        logger.info("Blockchain is not up to date");
+        Block block = BlockChain.getBlockWithHash(lastHash);
+        while(!this.lastHash.equals(block.getHash())){
+            removeTransactionsFromTransPool(block.getData(), block.getNrTransactions());
+            block = BlockChain.getBlockWithHash(block.getPreviousHash());
+        }
+        this.lastHash = lastHash;
+    }
+
     public Boolean addTransactionIfValidToPool(Transaction trans) {
-        return BlockchainUtils.addTransactionIfValidToPool(trans, this.transPool, logger);
+        Boolean output = BlockchainUtils.addTransactionIfValidToPool(trans, this.transPool, logger);
+        checkBlockChainUpdates();
+        return output;
     }
 
     private void removeTransactionsFromTransPool(Transaction[] data, int nrTransactions) {
@@ -65,7 +84,7 @@ public class MinerUtils {
         //check block hash
         if(!newBlock.isHashValid()) return false;
         //Mine block
-        newBlock.mineBlock(minerWallet);
+        if(!newBlock.mineBlock(minerWallet)) return false;
         //Add block to blockchain and update Hashmap
         BlockChain.addBlock(newBlock);
         logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
