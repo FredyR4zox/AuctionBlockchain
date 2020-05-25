@@ -37,16 +37,16 @@ public class Main {
                 Transaction trans12 = new Transaction(creator, bob.getAddress(), 20, 1, 8);
 
                 minerAddition.addTransactionIfValidToPool(trans10);
+                minerAddition.addTransactionIfValidToPool(trans11);
                 minerAddition.addTransactionIfValidToPool(trans12);
                 miner2Addition.addTransactionIfValidToPool(trans10);
+                miner2Addition.addTransactionIfValidToPool(trans11);
                 miner2Addition.addTransactionIfValidToPool(trans12);
 
-                for(int i=0; i<1;i++) {
+                for(int i=0; i<0;i++) {
                         ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
                 }
 
-                minerAddition.createBlock();
-                miner2Addition.createBlock();
 
 //                thread.start();
 //                thread2.start();

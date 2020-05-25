@@ -12,29 +12,31 @@ public class MinerUtils implements Runnable {
     private static final Logger logger = Logger.getLogger(MinerUtils.class.getName());
     //class to manage adding blocks and checking transactions by miners
     private TreeSet<Transaction> transPool;
-    Wallet minerWallet;
+    private Wallet minerWallet;
     private String lastHash;
-    Block newBlock;
+    private Block newBlock;
+    private Boolean isMining;
 
     public MinerUtils(Wallet minerWallet){
         this.minerWallet = minerWallet;
         this.transPool = new TreeSet<>(new transactionCompare());
         this.lastHash = BlockChain.getLastHash();
+        this.isMining = false;
     }
 
     public MinerUtils() {
 
     }
 
-    public void createBlock(){
-        checkBlockChainUpdates();
+    private void createBlock(){
+        isMining = true;
         HashSet<String> usedIDs = new HashSet<>();
         newBlock =  new Block(BlockChain.getLastHash());
         Iterator<Transaction> transIterator = this.transPool.iterator();
-        if (!transIterator.hasNext()) {
-            logger.warning("No transactions in transaction Pool");
-            return;
-        }
+//        if (!transIterator.hasNext()) {
+//            logger.warning("No transactions in transaction Pool");
+//            return;
+//        }
         for(int i=0; i< BlockchainUtils.MAX_NR_TRANSACTIONS && transIterator.hasNext(); i++){
             Transaction trans = transIterator.next();
             //a transaction cant have the same buyerID
@@ -66,6 +68,9 @@ public class MinerUtils implements Runnable {
     public Boolean addTransactionIfValidToPool(Transaction trans) {
         Boolean output = BlockchainUtils.addTransactionIfValidToPool(trans, this.transPool, logger);
         checkBlockChainUpdates();
+        if (this.transPool.size()>= BlockchainUtils.MIN_NR_TRANSACTIONS && !isMining){
+            this.createBlock();
+        }
         return output;
     }
 
@@ -81,9 +86,15 @@ public class MinerUtils implements Runnable {
 
     public void checkMineAddBlock(Block newBlock){
         //check if transactions in block are valid
-        if(!newBlock.areSignaturesAndHashValid()) return;
+        if(!newBlock.areSignaturesAndHashValid()){
+            this.isMining=false;
+            return;
+        }
         //check block hash
-        if(!newBlock.isHashValid()) return;
+        if(!newBlock.isHashValid()){
+            this.isMining=false;
+            return;
+        }
         //Mine block
         //Add block to blockchain and update Hashmap
         Thread thread = new Thread(this);
@@ -99,7 +110,9 @@ public class MinerUtils implements Runnable {
             logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
             removeTransactionsFromTransPool(newBlock, this.getTransPool());
             this.setLastHash(newBlock.getHash());
+            this.isMining=false;
         }
+        this.isMining=false;
     }
 
     static class transactionCompare implements Comparator<Transaction>{

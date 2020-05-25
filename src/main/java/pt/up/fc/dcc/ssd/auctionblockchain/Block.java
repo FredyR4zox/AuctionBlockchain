@@ -82,7 +82,7 @@ public class Block{
         while(!this.hash.substring(0, difficulty).equals(target)) {
             this.nonce++;
             this.hash = calculateHash();
-            if(this.nonce%1000==0){
+            if(this.nonce%10000==0){
                 if(!this.previousHash.equals(BlockChain.getLastHash())){
                     logger.warning("A newer block was added while mining");
                     return false;

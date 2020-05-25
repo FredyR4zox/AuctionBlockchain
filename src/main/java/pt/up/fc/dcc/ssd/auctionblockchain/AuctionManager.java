@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 public class AuctionManager {
     private static final Logger logger = Logger.getLogger(AuctionManager.class.getName());
 
-    Auction auction;
+    private Auction auction;
     private TreeSet<Transaction> bids;
 
     public AuctionManager(Auction auction) {

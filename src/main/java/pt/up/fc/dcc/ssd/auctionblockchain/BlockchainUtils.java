@@ -12,6 +12,7 @@ public class BlockchainUtils {
     public static final int MAX_NR_TRANSACTIONS = 5;
     public static final int difficulty = 5;
     public static final long minerReward = 100;
+    public static final int MIN_NR_TRANSACTIONS = 3 ;
 
     public static String getsha256(String input){
         MessageDigest digest = null;
