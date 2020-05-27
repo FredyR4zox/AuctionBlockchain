@@ -12,7 +12,7 @@ import java.lang.Math;
 import com.google.common.math.BigIntegerMath;
 
 public class KBucketManager {
-    private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
+    private static final Logger logger = Logger.getLogger(KBucketManager.class.getName());
 
     private final KademliaNode myNode;
     private final KBucket[] buckets;
@@ -54,7 +54,9 @@ public class KBucketManager {
             //When the TreeSet is converted to List, the order is maintained
             List<KademliaNode> nodes = buckets[i].getNodes();
             KademliaNode first = nodes.get(0);
-            if (!KademliaClient.ping(myNode, first)) {
+
+            Pair<KademliaNode, Boolean> ret = KademliaClient.ping(myNode, first);
+            if (!ret.getSecond().booleanValue()) {
                 buckets[i].removeNode(first);
 
                 buckets[i].insertNode(node);
@@ -63,10 +65,10 @@ public class KBucketManager {
                 return true;
             } else {
                 buckets[i].removeNode(first);
-                first.updateLastSeen(Instant.now().getEpochSecond());
-                buckets[i].insertNode(first);
+//                first.updateLastSeen(Instant.now().getEpochSecond());
+                buckets[i].insertNode(ret.getFirst());
 
-                logger.log(Level.INFO, "Updated first node " + new BigInteger(first.getNodeID()));
+                logger.log(Level.INFO, "Updated first node " + new BigInteger(ret.getFirst().getNodeID()));
                 return false;
             }
         }

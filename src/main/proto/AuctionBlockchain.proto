@@ -9,7 +9,7 @@ option objc_class_prefix = "ABC";
 package auctionblockchain;
 
 service AuctionBlockchain {
-    rpc Ping(NodeIDProto) returns (NodeIDProto) {}
+    rpc Ping(KademliaNodeProto) returns (KademliaNodeProto) {}
 
     rpc Store(StoreRequest) returns (StoreResponse) {}
 
@@ -37,7 +37,7 @@ message KBucketProto {
 
 
 message StoreRequest {
-    NodeIDProto nodeID = 1;
+    KademliaNodeProto node = 1;
     bytes key = 2;
     oneof BlockOrTransaction {
         BlockProto block = 3;
@@ -46,31 +46,31 @@ message StoreRequest {
 }
 
 message StoreResponse {
-    NodeIDProto nodeID = 1;
+    KademliaNodeProto node = 1;
     bool success = 2;
 }
 
 
 
 message FindNodeRequest {
-    NodeIDProto nodeID = 1;
+    KademliaNodeProto node = 1;
     NodeIDProto requestedNodeId = 2;
 }
 
 message FindNodeResponse {
-    NodeIDProto nodeID = 1;
+    KademliaNodeProto node = 1;
     KBucketProto bucket = 2;
 }
 
 
 
 message FindValueRequest {
-    NodeIDProto nodeID = 1;
+    KademliaNodeProto node = 1;
     bytes key = 2;
 }
 
 message FindValueResponse {
-    NodeIDProto nodeID = 1;
+    KademliaNodeProto node = 1;
     oneof BlockOrTransactionsOrNodes {
         BlockProto block = 2;
         MempoolProto transactions = 3;
@@ -136,11 +136,12 @@ message MempoolProto {
 
 // nonce - The nonce used to generate this block… to allow variations of the header and compute different hashes.
 message BlockHeaderProto {
-    bytes prevBlock = 1;
-    bytes merkleRoot = 2;
-    fixed64 timestamp = 3;
-    fixed32 difficulty = 4;
-    fixed64 nonce = 5;
+    fixed32 blockNR = 1;
+    bytes prevBlock = 2;
+    bytes merkleRoot = 3;
+    fixed64 timestamp = 4;
+    fixed32 difficulty = 5;
+    fixed64 nonce = 6;
 }
 
 message BlockProto {

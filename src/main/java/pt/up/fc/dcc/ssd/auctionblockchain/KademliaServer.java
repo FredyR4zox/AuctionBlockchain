@@ -19,7 +19,7 @@ public class KademliaServer {
     private final int port;
     private final Server server;
 //    private final KademliaNode myNode;
-//    private final KBucketManager bucketManager;
+    private final KBucketManager bucketManager;
 
 //    public KademliaServer(int port) throws IOException {
 //        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
@@ -28,16 +28,16 @@ public class KademliaServer {
 //        this(port, new KBucketManager(new KademliaNode(rand)));
 //    }
 
-    public KademliaServer(int port, KBucketManager bucketManager) throws IOException {
-        this(ServerBuilder.forPort(port), port, bucketManager);
+    public KademliaServer(int port, KBucketManager bucketManager, MinerUtils minerUtils) throws IOException {
+        this(ServerBuilder.forPort(port), port, bucketManager, minerUtils);
     }
 
-    public KademliaServer(ServerBuilder<?> serverBuilder, int port, KBucketManager bucketManager) {
+    public KademliaServer(ServerBuilder<?> serverBuilder, int port, KBucketManager bucketManager, MinerUtils minerUtils) {
         this.port = port;
-        this.server = serverBuilder.addService(new AuctionBlockchainService(bucketManager))
+        this.server = serverBuilder.addService(new AuctionBlockchainService(bucketManager, minerUtils))
                 .build();
 //        this.myNode = myNode;
-//        this.bucketManager = bucketManager;
+        this.bucketManager = bucketManager;
     }
 
     /** Start serving requests. */
@@ -75,6 +75,7 @@ public class KademliaServer {
         }
     }
 
+
     /**
      * Main method.  This comment makes the linter happy.
      */
@@ -93,63 +94,81 @@ public class KademliaServer {
 
     private static class AuctionBlockchainService extends AuctionBlockchainGrpc.AuctionBlockchainImplBase {
         private final KBucketManager bucketManager;
+        private final MinerUtils minerUtils;
 //        private final KademliaNode myNode;
 
-        AuctionBlockchainService(KBucketManager bucketManager) {
+        AuctionBlockchainService(KBucketManager bucketManager, MinerUtils minerUtils) {
             this.bucketManager = bucketManager;
+            this.minerUtils = minerUtils;
 //            this.myNode = myNode;
         }
 
         @Override
-        public void ping(NodeIDProto request, StreamObserver<NodeIDProto> responseObserver) {
-            responseObserver.onNext(request);
+        public void ping(KademliaNodeProto request, StreamObserver<KademliaNodeProto> responseObserver) {
+            responseObserver.onNext(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
             responseObserver.onCompleted();
 
-            KademliaNode node =  new KademliaNode(KademliaUtils.NodeIDProtoToNodeID(request));
+            KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request);
             bucketManager.insertNode(node);
 
-            logger.log(Level.INFO, "Received a PING RPC from " + node);
+            logger.log(Level.INFO, "Processed PING RPC from " + node);
         }
 
         @Override
         public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
             logger.log(Level.INFO, "Received a STORE RPC");
 
-            StoreResponse.Builder response = StoreResponse.newBuilder().setNodeID(request.getNodeID());
+            StoreResponse.Builder response = StoreResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
-//            if(DHT.store(request.getKey(), request.getValue()))
-//                response.setSuccess(true);
-//            else
-//                response.setSuccess(false);
+            StoreRequest.BlockOrTransactionCase type = request.getBlockOrTransactionCase();
+            boolean result = false;
 
-            response.setSuccess(true);
+            if(type == StoreRequest.BlockOrTransactionCase.TRANSACTION){
+                Transaction transaction = KademliaUtils.TransactionProtoToTransaction(request.getTransaction());
+
+                result = minerUtils.addTransactionIfValidToPool(transaction);
+            }
+            else if(type == StoreRequest.BlockOrTransactionCase.BLOCK){
+                Block block = KademliaUtils.BlockProtoToBlock(request.getBlock());
+
+                result = BlockChain.checkAddBlock(block);
+            }
+            else
+                logger.log(Level.SEVERE, "Error: Type of store request not known");
+
+
+            response.setSuccess(result);
 
             responseObserver.onNext(response.build());
             responseObserver.onCompleted();
 
-            KademliaNode node =  new KademliaNode(KademliaUtils.NodeIDProtoToNodeID(request.getNodeID()));
-            logger.log(Level.INFO, "Received a STORE RPC from " + node);
+            KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
+            bucketManager.insertNode(node);
+
+            logger.log(Level.INFO, "Processed STORE RPC from " + node);
         }
 
         @Override
         public void findNode(FindNodeRequest request, StreamObserver<FindNodeResponse> responseObserver) {
             logger.log(Level.INFO, "Received a FIND_NODE RPC");
 
-            byte[] requestorID = KademliaUtils.NodeIDProtoToNodeID(request.getNodeID());
+            byte[] requestorID = KademliaUtils.NodeIDProtoToNodeID(request.getNode().getNodeID());
             byte[] requestedID = KademliaUtils.NodeIDProtoToNodeID(request.getRequestedNodeId());
 
             List<KademliaNode> nodes = bucketManager.getClosestNodes(requestorID, requestedID, KademliaUtils.k);
 
             FindNodeResponse response = FindNodeResponse.newBuilder()
-                    .setNodeID(request.getNodeID())
+                    .setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()))
                     .setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes))
                     .build();
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-            KademliaNode node =  new KademliaNode(KademliaUtils.NodeIDProtoToNodeID(request.getNodeID()));
-            logger.log(Level.INFO, "Received a FIND_NODE RPC from " + node);
+            KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
+            bucketManager.insertNode(node);
+
+            logger.log(Level.INFO, "Processed FIND_NODE RPC from " + node);
         }
 
         @Override
@@ -158,42 +177,68 @@ public class KademliaServer {
 
             byte[] key = request.getKey().toByteArray();
 
-            FindValueResponse.Builder responseBuilder = FindValueResponse.newBuilder().setNodeID(request.getNodeID());
+            FindValueResponse.Builder responseBuilder = FindValueResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
-//            byte[] mempoolKey;
-//
+            byte[] mempoolKey;
+//            byte[] lastBlocksKey;
+
+            try {
+                MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
+                mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
+            } catch (NoSuchAlgorithmException e) {
+                logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+                e.printStackTrace();
+
+                responseObserver.onNext(responseBuilder.build());
+                responseObserver.onCompleted();
+                return;
+            }
+
 //            try {
 //                MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-//                mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
+//                lastBlocksKey = messageDigest.digest("lastBlock".getBytes(KademliaUtils.charset));
 //            } catch (NoSuchAlgorithmException e) {
 //                logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
 //                e.printStackTrace();
 //
-//                responseObserver.onNext(FindValueResponse.newBuilder().build());
+//                responseObserver.onNext(responseBuilder.build());
 //                responseObserver.onCompleted();
 //                return;
 //            }
+
+
+            KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
+
+            if(mempoolKey != null && Arrays.equals(key, mempoolKey)) {
+                List<Transaction> transactions = new ArrayList<>(minerUtils.getTransPool());
+                responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
+            }
+//            else if(lastBlocksKey != null && Arrays.equals(key, lastBlocksKey)) {
+//                Block lastBlock = BlockChain.getBlockWithHash(BlockChain.getLastHash());
 //
-//            if(mempoolKey != null && Arrays.equals(key, mempoolKey)) {
-//                List<Transaction> transactions = DHT.getMempool();
-//                responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
+//                if(lastBlock != null)
+//                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(lastBlock));
 //            }
-//            else {
-//                if(DHT.contains(key)) {
-//                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(DHT.get(key)));
-//                }
-//                else {
-//                    List<KademliaNode> nodes = bucketManager.getClosestNodes(request.getNodeID().getId().toByteArray(), key, KademliaUtils.k);
-//                    responseBuilder.setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes));
-//                }
-//            }
+            else {
+                Block block = BlockChain.getBlockWithHash(new String(key));
+                logger.log(Level.INFO, "Could not get block with hash " + new String(key));
+
+                if(block == null){
+                    List<KademliaNode> nodes = bucketManager.getClosestNodes(node.getNodeID(), key, KademliaUtils.k);
+                    responseBuilder.setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes));
+                }
+                else {
+                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(block));
+                }
+            }
 
 
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
 
-            KademliaNode node =  new KademliaNode(KademliaUtils.NodeIDProtoToNodeID(request.getNodeID()));
-            logger.log(Level.INFO, "Received a FIND_NODE RPC from " + node);
+            bucketManager.insertNode(node);
+
+            logger.log(Level.INFO, "Processed FIND_NODE RPC from " + node);
         }
     }
 }
