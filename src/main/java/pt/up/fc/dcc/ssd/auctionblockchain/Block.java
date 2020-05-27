@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 public class Block{
     private static final Logger logger = Logger.getLogger(Block.class.getName());
 
+    private int blockNR;
     private String hash;
     private final String previousHash;
     private Transaction minersReward;
@@ -19,7 +20,8 @@ public class Block{
     private int difficulty;
     private long nonce;
 
-    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce) {
+    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce, int blockNR) {
+        //this.blockNR = blocknr;
         this.hash = hash;
         this.previousHash = previousHash;
         this.minersReward = minersReward;
@@ -28,14 +30,17 @@ public class Block{
         this.timeStamp = timeStamp;
         this.difficulty = difficulty;
         this.nonce = nonce;
+        this.blockNR = blockNR;
     }
 
-    public Block(String previousHash) {
+    //hash is initialized but is calculated while mining
+    public Block(String previousHash, int blockNR) {
         this.previousHash = previousHash;
         this.data = new Transaction[BlockchainUtils.MAX_NR_TRANSACTIONS];
         this.timeStamp = new Date().getTime();
         this.difficulty = BlockchainUtils.difficulty;
-        this.hash = calculateHash();
+        //cant initialize with zeroes
+        this.hash = "11111111";
     }
 
     public Boolean areTransactionFeesValid(){
@@ -60,7 +65,7 @@ public class Block{
     }
 
     public String calculateHash() {
-        return BlockchainUtils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce);
+        return BlockchainUtils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.blockNR);
     }
 
     public Boolean isHashValid() {
@@ -186,7 +191,9 @@ public class Block{
 
         return data[x];
     }
-
+    public int getBlockNR(){
+        return this.blockNR;
+    }
     public void setMinersReward(Transaction minersReward) {
         this.minersReward = minersReward;
     }

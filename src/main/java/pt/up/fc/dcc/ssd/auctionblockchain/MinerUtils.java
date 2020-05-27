@@ -31,7 +31,7 @@ public class MinerUtils implements Runnable {
     private void createBlock(){
         isMining = true;
         HashSet<String> usedIDs = new HashSet<>();
-        newBlock =  new Block(BlockChain.getLastHash());
+        newBlock =  new Block(BlockChain.getLastHash(), BlockChain.getSize()+1);
         Iterator<Transaction> transIterator = this.transPool.iterator();
 //        if (!transIterator.hasNext()) {
 //            logger.warning("No transactions in transaction Pool");
