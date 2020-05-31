@@ -1,46 +1,67 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
-import org.bouncycastle.util.encoders.Hex;
-
-import java.nio.charset.StandardCharsets;
-import java.security.*;
-import java.util.Base64;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 public class BlockchainUtils {
+    private static final Logger logger = Logger.getLogger(BlockchainUtils.class.getName());
     public static final int MAX_NR_TRANSACTIONS = 5;
-    public static final int difficulty = 5;
+    public static final int difficulty = 2;
     public static final long minerReward = 100;
     public static final int MIN_NR_TRANSACTIONS = 3 ;
+    public static final int WORK_RESOLVE_SPLIT = 2;
+    public static final BlockChain original = new BlockChain();
+    private static Block newBlock;
 
-    public static String getsha256(String input){
-        MessageDigest digest = null;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        assert digest != null;
-        byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-        String sha256hex = new String(Hex.encode(hash));
-        return sha256hex;
+    public static Boolean addBlock(Block newBlock){
+        return original.addBlockToCorrectChain(newBlock);
     }
 
-    public static Boolean addTransactionIfValidToPool(Transaction trans, TreeSet<Transaction> transPool, Logger logger){
-        //Do hashes check && Do signature checks
-        if(!trans.verifyTransaction()){
-            logger.warning("There was an attempt to add an invalid transaction to pool");
-            return false;
+    public static void mineBlock(Wallet miner){
+        original.tryResolveForks();
+        BlockChain longest= getLongestChain();
+        newBlock = longest.createBlock(miner);
+        if (newBlock==null){
+            longest.setMining(false);
+            return;
         }
-        if(!BlockChain.checkIfEnoughFunds(trans, BlockChain.walletsMoney)) {
-            logger.warning("There was an attempt to add a transaction with insufficient funds to pool");
-            return false;
+        Thread thread = new Thread(longest);
+        thread.start();
+    }
+
+    //adds transactions to all chains terminations
+    public static void addTransaction(Transaction trans){
+        original.addTransactionToCorrectChains(trans);
+    }
+
+    public static void createGenesisBlock(Wallet creator){
+        Block genesis= new Block("0");
+        //Mine block
+        genesis.mineGenesisBlock(creator);
+        original.addBlock(genesis);
+    }
+
+    public static BlockChain getLongestChain(){
+        return original.getLongestChain();
+    }
+
+    public static long getMinerReward() {
+        return minerReward;
+    }
+
+    public static BlockChain largestChain(BlockChain[] chains) {
+        int[] chainsWork = new int[chains.length];
+        for(int i=0; i< chains.length; i++){
+            chainsWork[i]=chains[i].getWork();
         }
-        if(!transPool.add(trans)){
-            logger.warning("Transaction already exists in transaction pool");
-            return false;
-        }
-        return true;
+        int largestIndex = Utils.largestIndex(chainsWork);
+        return chains[largestIndex];
+    }
+
+    public static Block getNewBlock() {
+        return newBlock;
+    }
+
+    public static BlockChain getOriginal() {
+        return original;
     }
 }

@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 public class Block{
     private static final Logger logger = Logger.getLogger(Block.class.getName());
 
-    private int blockNR;
     private String hash;
     private final String previousHash;
     private Transaction minersReward;
@@ -20,21 +19,21 @@ public class Block{
     private int difficulty;
     private long nonce;
 
-    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce, int blockNR) {
-        //this.blockNR = blocknr;
+    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce) {
         this.hash = hash;
         this.previousHash = previousHash;
         this.minersReward = minersReward;
         this.data = data;
-        this.nrTransactions = data.length;
+        for(Transaction trans: this.data){
+            if (trans!=null) this.nrTransactions++;
+        }
         this.timeStamp = timeStamp;
         this.difficulty = difficulty;
         this.nonce = nonce;
-        this.blockNR = blockNR;
     }
 
     //hash is initialized but is calculated while mining
-    public Block(String previousHash, int blockNR) {
+    public Block(String previousHash) {
         this.previousHash = previousHash;
         this.data = new Transaction[BlockchainUtils.MAX_NR_TRANSACTIONS];
         this.timeStamp = new Date().getTime();
@@ -43,10 +42,16 @@ public class Block{
         this.hash = "11111111";
     }
 
+    @Override
+    public Block clone(){
+        Block newBlock = new Block(this.hash, this.previousHash, this.minersReward, this.data, this.difficulty, this.timeStamp, this.nonce);
+        return newBlock;
+    }
+
     public Boolean areTransactionFeesValid(){
         //check if miner reward with Transaction fees are valid
         //Percorrer lista de transações e somar os fees
-        if(this.getTransactionFeesTotal() != (minersReward.getAmount() - BlockChain.getMinerReward())) {
+        if(this.getTransactionFeesTotal() != (minersReward.getAmount() - BlockchainUtils.getMinerReward())) {
             logger.warning("Transaction fee amount is invalid");
             return false;
         }
@@ -65,7 +70,7 @@ public class Block{
     }
 
     public String calculateHash() {
-        return BlockchainUtils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.blockNR);
+        return Utils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce);
     }
 
     public Boolean isHashValid() {
@@ -78,23 +83,20 @@ public class Block{
         return true;
     }
 
-    public Boolean mineBlock(Wallet minerWallet) {
-
-        long transactionFeesTotal = getTransactionFeesTotal();
-        this.minersReward = new Transaction(minerWallet.getAddress(), transactionFeesTotal);
+    public Boolean mineBlock(BlockChain curBlockchain) {
 
         String target = new String(new char[difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
         while(!this.hash.substring(0, difficulty).equals(target)) {
             this.nonce++;
             this.hash = calculateHash();
             if(this.nonce%10000==0){
-                if(!this.previousHash.equals(BlockChain.getLastHash())){
+                if(!curBlockchain.isMining()){
                     logger.warning("A newer block was added while mining");
                     return false;
                 }
             }
         }
-        if(!this.previousHash.equals(BlockChain.getLastHash())){
+        if(!curBlockchain.isMining()){
             logger.warning("A newer block was added while mining");
             return false;
         }
@@ -138,13 +140,20 @@ public class Block{
         return true;
     }
 
-    public Boolean addTransactionIfValid(Transaction trans){
-        //Do hashes check && Do signature checks
-        if(!trans.verifyTransaction()) return false;
-        if(!BlockChain.checkIfEnoughFunds(trans, BlockChain.walletsMoney)) return false;
-        if(!this.addTransaction(trans))return false;
-        return true;
+    public void removeLastTransaction(){
+        //this.data[nrTransactions-1]=null;
+        this.nrTransactions--;
+
+        //recalculate hash
+        this.hash= calculateHash();
     }
+
+//    public Boolean addTransactionIfValid(Transaction trans, BlockChain curBlockchain){
+//        //Do hashes check && Do signature checks
+//        if(!trans.verifyTransaction()) return false;
+//        if(!this.addTransaction(trans))return false;
+//        return true;
+//    }
 
     public String makeJson(){
         return new GsonBuilder().setPrettyPrinting().create().toJson(this);
@@ -190,9 +199,6 @@ public class Block{
             return null;
 
         return data[x];
-    }
-    public int getBlockNR(){
-        return this.blockNR;
     }
     public void setMinersReward(Transaction minersReward) {
         this.minersReward = minersReward;

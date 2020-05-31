@@ -67,7 +67,7 @@ public class Transaction {
         this.hash = this.getHashToBeSigned();
     }
 
-    private Double getTransactionFeeValue(double amount, double transactionFeePercentage) {
+    private Double getTransactionFeeValueFromPercentage(double amount, double transactionFeePercentage) {
         return (amount*transactionFeePercentage)/100;
     }
 
@@ -88,10 +88,10 @@ public class Transaction {
 
     private String getHashToBeSigned(){
         if(this.buyerPublicKey!=null){
-            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + Wallet.getAddressFromPubKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID + this.timeStamp);
+            return Utils.getsha256(this.sellerID + this.buyerID + Wallet.getAddressFromPubKey(this.buyerPublicKey) + this.amount + this.transactionFee + this.itemID + this.timeStamp);
         }
         else{
-            return BlockchainUtils.getsha256(this.sellerID + this.buyerID + this.amount + this.timeStamp);
+            return Utils.getsha256(this.sellerID + this.buyerID + this.amount + this.timeStamp);
         }
     }
     public String makeJson(){

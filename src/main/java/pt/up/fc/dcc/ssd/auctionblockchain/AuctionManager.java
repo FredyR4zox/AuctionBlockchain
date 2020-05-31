@@ -10,10 +10,12 @@ public class AuctionManager {
 
     private Auction auction;
     private TreeSet<Transaction> bids;
+    private BlockChain curBlockChain;
 
-    public AuctionManager(Auction auction) {
+    public AuctionManager(Auction auction, BlockChain curBlockChain) {
         this.auction = auction;
         this.bids= new TreeSet<>(new AuctionManager.bidsCompare());
+        this.curBlockChain = BlockchainUtils.getLongestChain();
     }
 
     public Boolean addBidIfValid(Transaction trans){
@@ -25,7 +27,7 @@ public class AuctionManager {
             return false;
         }
         else
-            return BlockchainUtils.addTransactionIfValidToPool(trans, this.bids, logger);
+            return this.addTransactionIfValidToPool(trans, this.bids, curBlockChain, logger);
     }
 
     public Transaction endBid(){
@@ -35,6 +37,23 @@ public class AuctionManager {
             return null;
         }
         return this.bids.last();
+    }
+
+    public Boolean addTransactionIfValidToPool(Transaction trans, TreeSet<Transaction> transPool, BlockChain blockchain ,Logger logger){
+        //Do hashes check && Do signature checks
+        if(!trans.verifyTransaction()){
+            logger.warning("There was an attempt to add an invalid transaction to pool");
+            return false;
+        }
+        if(!blockchain.checkIfEnoughFunds(trans.getBuyerID(), trans.getAmount())) {
+            logger.warning("There was an attempt to add a transaction with insufficient funds to pool");
+            return false;
+        }
+        if(!transPool.add(trans)){
+            logger.warning("Transaction already exists in transaction pool");
+            return false;
+        }
+        return true;
     }
 
     static class bidsCompare implements Comparator<Transaction> {

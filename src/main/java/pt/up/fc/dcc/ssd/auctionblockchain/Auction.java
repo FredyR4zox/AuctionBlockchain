@@ -42,7 +42,7 @@ public class Auction {
     }
 
     private String getHashToBeSigned() {
-        return BlockchainUtils.getsha256(this.itemID + this.sellerID + Wallet.getAddressFromPubKey(this.sellerPublicKey) + this.endTimeStamp);
+        return Utils.getsha256(this.itemID + this.sellerID + Wallet.getAddressFromPubKey(this.sellerPublicKey) + this.endTimeStamp);
     }
 
     private Boolean isHashValid() {
