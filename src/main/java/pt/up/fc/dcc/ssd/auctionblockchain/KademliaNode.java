@@ -1,9 +1,11 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import java.lang.reflect.Array;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Random;
 import java.util.logging.Logger;
 import java.math.BigInteger;
 

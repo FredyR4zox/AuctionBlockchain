@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class KBucket {
-    private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
+    private static final Logger logger = Logger.getLogger(KBucket.class.getName());
 
     private final LinkedList<KademliaNode> nodes;
     private final Set<byte[]> nodeIDs;

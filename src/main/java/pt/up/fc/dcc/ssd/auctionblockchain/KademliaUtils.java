@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class KademliaUtils {
-    private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
+    private static final Logger logger = Logger.getLogger(KademliaUtils.class.getName());
 
     public static final Charset charset = Charset.forName("ASCII");
     public static final int alpha = 3;
@@ -20,6 +20,9 @@ public class KademliaUtils {
     public static final int idSizeInBytes = idSizeInBits/8;
     public static final int k = 20;
     public static final String hashAlgorithm = "SHA-1";
+
+    public static final String bootstrapNodeIP = "127.0.0.1";
+    public static final int bootstrapNodePort = 1337;
 
 
 
@@ -84,6 +87,7 @@ public class KademliaUtils {
                 .setTimestamp(block.getTimeStamp())
                 .setDifficulty(block.getDifficulty())
                 .setNonce((int)block.getNonce())
+                .setBlockNR(block.getBlockNR())
                 .build();
 
         BlockProto.Builder builder = BlockProto.newBuilder().setBlockHeader(header);
@@ -113,7 +117,8 @@ public class KademliaUtils {
                 transactions,
                 blockHeader.getDifficulty(),
                 blockHeader.getTimestamp(),
-                blockHeader.getNonce());
+                blockHeader.getNonce(),
+                blockHeader.getBlockNR());
 
         return block;
     }
