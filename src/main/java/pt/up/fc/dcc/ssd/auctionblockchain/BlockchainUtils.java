@@ -34,7 +34,7 @@ public class BlockchainUtils {
     }
 
     public static void createGenesisBlock(Wallet creator){
-        Block genesis= new Block("0");
+        Block genesis= new Block("0", 2);
         //Mine block
         genesis.mineGenesisBlock(creator);
         original.addBlock(genesis);

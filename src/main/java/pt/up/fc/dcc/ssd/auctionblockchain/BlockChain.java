@@ -349,7 +349,7 @@ public class BlockChain implements Runnable {
     public Block createBlock(Wallet minerWallet){
         this.mining = true;
         HashMap<String, Long> usedIDs = new HashMap<>();
-        Block newBlock =  new Block(this.getLastBlockHash());
+        Block newBlock =  new Block(this.getLastBlockHash(), this.work);
         Iterator<Transaction> transIterator = this.unconfirmedTransaction.iterator();
 //        if (!transIterator.hasNext()) {
 //            logger.warning("No transactions in transaction Pool");

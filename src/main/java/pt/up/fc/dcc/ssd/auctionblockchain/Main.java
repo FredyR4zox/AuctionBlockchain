@@ -74,7 +74,7 @@ public class Main {
                 original.setMining(false);
                 //actual test
                 BlockchainUtils.addBlock(conflictingBlock);
-                BlockchainUtils.addBlock(conflictingBlock);
+                //BlockchainUtils.addBlock(conflictingBlock);
 
                 Transaction trans30 = new Transaction(alice, bob.getAddress(), 10 , 1, 6);
                 BlockchainUtils.addTransaction(trans30);

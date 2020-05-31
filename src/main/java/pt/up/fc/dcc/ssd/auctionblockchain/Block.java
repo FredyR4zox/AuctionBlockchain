@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 public class Block{
     private static final Logger logger = Logger.getLogger(Block.class.getName());
 
+    private int previousWork;
     private String hash;
     private final String previousHash;
     private Transaction minersReward;
@@ -19,7 +20,7 @@ public class Block{
     private int difficulty;
     private long nonce;
 
-    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce) {
+    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce, int previousWork) {
         this.hash = hash;
         this.previousHash = previousHash;
         this.minersReward = minersReward;
@@ -30,21 +31,23 @@ public class Block{
         this.timeStamp = timeStamp;
         this.difficulty = difficulty;
         this.nonce = nonce;
+        this.previousWork = previousWork;
     }
 
     //hash is initialized but is calculated while mining
-    public Block(String previousHash) {
+    public Block(String previousHash, int previousWork) {
         this.previousHash = previousHash;
         this.data = new Transaction[BlockchainUtils.MAX_NR_TRANSACTIONS];
         this.timeStamp = new Date().getTime();
         this.difficulty = BlockchainUtils.difficulty;
+        this.previousWork=previousWork;
         //cant initialize with zeroes
         this.hash = "11111111";
     }
 
     @Override
     public Block clone(){
-        Block newBlock = new Block(this.hash, this.previousHash, this.minersReward, this.data, this.difficulty, this.timeStamp, this.nonce);
+        Block newBlock = new Block(this.hash, this.previousHash, this.minersReward, this.data, this.difficulty, this.timeStamp, this.nonce, this.previousWork);
         return newBlock;
     }
 
@@ -70,7 +73,7 @@ public class Block{
     }
 
     public String calculateHash() {
-        return Utils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce);
+        return Utils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
     }
 
     public Boolean isHashValid() {
@@ -202,5 +205,9 @@ public class Block{
     }
     public void setMinersReward(Transaction minersReward) {
         this.minersReward = minersReward;
+    }
+
+    public int getPreviousWork() {
+        return previousWork;
     }
 }
