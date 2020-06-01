@@ -210,4 +210,8 @@ public class Block{
     public int getPreviousWork() {
         return previousWork;
     }
+
+    public void setPreviousWork(int previousWork) {
+        this.previousWork = previousWork;
+    }
 }
