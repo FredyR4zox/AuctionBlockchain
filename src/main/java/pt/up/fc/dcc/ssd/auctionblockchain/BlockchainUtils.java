@@ -28,13 +28,18 @@ public class BlockchainUtils {
         thread.start();
     }
 
+    public static Block getBlockWithPreviousHash(String hash){
+        BlockChain longest= getLongestChain();
+        return longest.getBlocksPreviousHashes().get(hash);
+    }
+
     //adds transactions to all chains terminations
     public static Boolean addTransaction(Transaction trans){
         return original.addTransactionToCorrectChains(trans);
     }
 
     public static void createGenesisBlock(Wallet creator){
-        Block genesis= new Block("0", 2);
+        Block genesis= new Block("0", 0);
         //Mine block
         genesis.mineGenesisBlock(creator);
         original.addBlock(genesis);
