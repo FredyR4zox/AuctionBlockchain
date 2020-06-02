@@ -3,6 +3,7 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -10,7 +11,7 @@ public class BlockChain implements Runnable {
     private static final Logger logger = Logger.getLogger(BlockChain.class.getName());
 
     private Boolean mining;
-    private int work;
+    private BigInteger work;
     private List<Block> blockchain;
     private ArrayList<BlockChain> unconfirmedBlockchains;
     private HashMap<String, Long> walletsMoney;
@@ -21,7 +22,7 @@ public class BlockChain implements Runnable {
     private int size;
 
     public BlockChain() {
-        work=0;
+        work= BigInteger.valueOf(0);
         size=0;
         this.blockchain = new ArrayList<>();
         this.unconfirmedBlockchains = new ArrayList<>();
@@ -105,23 +106,23 @@ public class BlockChain implements Runnable {
         if(!this.isForked()){
             return;
         }
-        int[] chainsWork = new int[unconfirmedBlockchains.size()];
+        BigInteger[] chainsWork = new BigInteger[unconfirmedBlockchains.size()];
         for(int i=0; i< unconfirmedBlockchains.size(); i++){
             chainsWork[i] = unconfirmedBlockchains.get(i).getBiggestChainWork();
         }
         //answer format is { largestA, posA, largestB, posB }
-        int[] res = Utils.twoLargest(chainsWork);
-        if((res[0]-res[2])>=BlockchainUtils.WORK_RESOLVE_SPLIT){
-            this.mergeChains(unconfirmedBlockchains.get(res[1]));
+        BigInteger[] res = Utils.twoLargest(chainsWork);
+        if((res[0].subtract(res[2])).compareTo(BlockchainUtils.WORK_RESOLVE_SPLIT)>=0){
+            this.mergeChains(unconfirmedBlockchains.get(res[1].intValue()));
         }
     }
 
     //get current work or highest value of work in forks
-    public int getBiggestChainWork(){
+    public BigInteger getBiggestChainWork(){
         if(!this.isForked()){
             return this.work;
         }
-        int[] chainsWork = new int[unconfirmedBlockchains.size()];
+        BigInteger[] chainsWork = new BigInteger[unconfirmedBlockchains.size()];
         for(int i=0; i< unconfirmedBlockchains.size(); i++){
             chainsWork[i] = unconfirmedBlockchains.get(i).getBiggestChainWork();
         }
@@ -164,6 +165,10 @@ public class BlockChain implements Runnable {
                 logger.info("Duplicated Block");
                 return false;
             }
+            if(this.getWork().subtract(newBlock.getPreviousWork()).compareTo(BlockchainUtils.WORK_RESOLVE_SPLIT)>0){
+                logger.info("Trying to add a block to far down the chain");
+                return false;
+            }
             return this.splitChain(newBlock);
         } else {
             boolean output = false;
@@ -182,12 +187,16 @@ public class BlockChain implements Runnable {
             if(buyerAmount==null) {
                 if(!this.checkIfEnoughFunds(trans.getBuyerID(), trans.getAmount())){
                     return false;
+                }else {
+                    usedIDs.put(trans.getBuyerID(), trans.getAmount());
                 }
             }
             else {
                 buyerAmount += trans.getAmount();
                 if (!this.checkIfEnoughFunds(trans.getBuyerID(), buyerAmount)) {
                     return false;
+                }else {
+                    usedIDs.replace(trans.getBuyerID(), buyerAmount);
                 }
             }
         }
@@ -230,7 +239,7 @@ public class BlockChain implements Runnable {
         this.blockchain.add(newBlock);
         this.lastBlockHash=newBlock.getHash();
         this.size ++;
-        this.work+=newBlock.getDifficulty();
+        this.work.add(newBlock.getDifficulty());
         //add the block to block hashes
         this.blocksPreviousHashes.put(newBlock.getPreviousHash(), newBlock);
         //Add minersReward to HashMap
@@ -267,7 +276,7 @@ public class BlockChain implements Runnable {
         this.blockchain.remove(block);
         this.lastBlockHash= block.getPreviousHash();
         this.size--;
-        this.work-=block.getDifficulty();
+        this.work.subtract(block.getDifficulty());
         this.blocksPreviousHashes.remove(block.getPreviousHash());
         this.removeMinerRewardFromHashMap(block.getMinersReward());
         for(int i= 0; i<block.getNrTransactions(); i++){
@@ -480,7 +489,7 @@ public class BlockChain implements Runnable {
         return blockchain.get(blocknr-1);
     }
 
-    public int getWork(){
+    public BigInteger getWork(){
         return this.work;
     }
 

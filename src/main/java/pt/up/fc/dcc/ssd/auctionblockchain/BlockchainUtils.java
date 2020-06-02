@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
+import java.math.BigInteger;
 import java.util.logging.Logger;
 
 public class BlockchainUtils {
@@ -8,7 +9,7 @@ public class BlockchainUtils {
     public static final int difficulty = 2;
     public static final long minerReward = 100;
     public static final int MIN_NR_TRANSACTIONS = 3 ;
-    public static final int WORK_RESOLVE_SPLIT = 2;
+    public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(2);
     public static final BlockChain original = new BlockChain();
     private static Block newBlock;
 
@@ -39,7 +40,7 @@ public class BlockchainUtils {
     }
 
     public static void createGenesisBlock(Wallet creator){
-        Block genesis= new Block("0", 0);
+        Block genesis= new Block("0", BigInteger.valueOf(0));
         //Mine block
         genesis.mineGenesisBlock(creator);
         original.addBlock(genesis);
@@ -54,7 +55,7 @@ public class BlockchainUtils {
     }
 
     public static BlockChain largestChain(BlockChain[] chains) {
-        int[] chainsWork = new int[chains.length];
+        BigInteger[] chainsWork = new BigInteger[chains.length];
         for(int i=0; i< chains.length; i++){
             chainsWork[i]=chains[i].getWork();
         }

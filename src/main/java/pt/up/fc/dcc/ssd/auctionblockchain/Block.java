@@ -3,6 +3,7 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Logger;
@@ -10,7 +11,7 @@ import java.util.logging.Logger;
 public class Block{
     private static final Logger logger = Logger.getLogger(Block.class.getName());
 
-    private int previousWork;
+    private BigInteger previousWork;
     private String hash;
     private final String previousHash;
     private Transaction minersReward;
@@ -20,7 +21,7 @@ public class Block{
     private int difficulty;
     private long nonce;
 
-    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce, int previousWork) {
+    public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce, BigInteger previousWork) {
         this.hash = hash;
         this.previousHash = previousHash;
         this.minersReward = minersReward;
@@ -35,7 +36,7 @@ public class Block{
     }
 
     //hash is initialized but is calculated while mining
-    public Block(String previousHash, int previousWork) {
+    public Block(String previousHash, BigInteger previousWork) {
         this.previousHash = previousHash;
         this.data = new Transaction[BlockchainUtils.MAX_NR_TRANSACTIONS];
         this.timeStamp = new Date().getTime();
@@ -189,8 +190,8 @@ public class Block{
         return timeStamp;
     }
 
-    public int getDifficulty() {
-        return difficulty;
+    public BigInteger getDifficulty() {
+        return BigInteger.valueOf(difficulty);
     }
 
     public long getNonce() {
@@ -207,11 +208,11 @@ public class Block{
         this.minersReward = minersReward;
     }
 
-    public int getPreviousWork() {
+    public BigInteger getPreviousWork() {
         return previousWork;
     }
 
-    public void setPreviousWork(int previousWork) {
+    public void setPreviousWork(BigInteger previousWork) {
         this.previousWork = previousWork;
     }
 }

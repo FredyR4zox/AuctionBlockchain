@@ -2,47 +2,48 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
 
 public class Utils {
-    public static int[] twoLargest(int values[]){
-        int largestA = Integer.MIN_VALUE, largestB = Integer.MIN_VALUE;
-        int posA = -1, posB = -1;
+    public static BigInteger[] twoLargest(BigInteger values[]){
+        BigInteger largestA = BigInteger.valueOf(Integer.MIN_VALUE), largestB = BigInteger.valueOf(Integer.MIN_VALUE);
+        BigInteger posA = BigInteger.valueOf(-1), posB = BigInteger.valueOf(-1);
 
         for(int i=0; i<values.length; i++) {
-            if(values[i] > largestA) {
+            if(values[i].compareTo(largestA)>0) {
                 largestB = largestA;
                 posB=posA;
                 largestA = values[i];
-                posA=i;
-            } else if (values[i] > largestB) {
+                posA=BigInteger.valueOf(i);
+            } else if (values[i].compareTo(largestB)>0) {
                 largestB = values[i];
-                posB=i;
+                posB=BigInteger.valueOf(i);
             }
         }
-        return new int[] { largestA, posA, largestB, posB };
+        return new BigInteger[] { largestA, posA, largestB, posB };
     }
 
-    public static int largest(int values[]){
-        int largest = Integer.MIN_VALUE;
+    public static BigInteger largest(BigInteger values[]){
+        BigInteger largest = BigInteger.valueOf(Integer.MIN_VALUE);
 
-        for (int value : values) {
-            if (value > largest) {
+        for (BigInteger value : values) {
+            if (value.compareTo(largest) > 0) {
                 largest = value;
             }
         }
         return largest;
     }
 
-    public static int largestIndex(int values[]){
+    public static int largestIndex(BigInteger values[]){
         int largestIndex = -1;
-        int largest = Integer.MIN_VALUE;
+        BigInteger largest = BigInteger.valueOf(Integer.MIN_VALUE);
 
         for (int i=0; i<values.length; i++) {
-            if(values[i] > largest){
+            if(values[i].compareTo(largest)>0){
                 largest = values[i];
                 largestIndex = i;
             }
