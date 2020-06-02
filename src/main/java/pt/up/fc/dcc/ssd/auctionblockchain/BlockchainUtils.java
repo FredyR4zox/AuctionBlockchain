@@ -29,8 +29,8 @@ public class BlockchainUtils {
     }
 
     //adds transactions to all chains terminations
-    public static void addTransaction(Transaction trans){
-        original.addTransactionToCorrectChains(trans);
+    public static Boolean addTransaction(Transaction trans){
+        return original.addTransactionToCorrectChains(trans);
     }
 
     public static void createGenesisBlock(Wallet creator){

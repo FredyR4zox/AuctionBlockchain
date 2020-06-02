@@ -390,16 +390,19 @@ public class BlockChain implements Runnable {
         return newBlock;
     }
 
-    public void addTransactionToCorrectChains(Transaction trans){
+    public Boolean addTransactionToCorrectChains(Transaction trans){
         if(!this.isForked()){
             if(this.confirmedTransactionHashes.contains(trans.getHash())){
-                return;
+                return false;
             }
             this.unconfirmedTransaction.add(trans);
+            return true;
         }else{
+            Boolean output = false;
             for (BlockChain unconfirmedBlockchain : this.unconfirmedBlockchains) {
-                unconfirmedBlockchain.addTransactionToCorrectChains(trans);
+                output= output || unconfirmedBlockchain.addTransactionToCorrectChains(trans);
             }
+            return output;
         }
     }
 
