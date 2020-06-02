@@ -190,10 +190,11 @@ public class Block{
         return timeStamp;
     }
 
-    public BigInteger getDifficulty() {
-        return BigInteger.valueOf(difficulty);
+    public int getDifficulty() {
+        return difficulty;
     }
 
+    public BigInteger getBigDifficulty(){return BigInteger.valueOf(difficulty); }
     public long getNonce() {
         return nonce;
     }

@@ -239,7 +239,7 @@ public class BlockChain implements Runnable {
         this.blockchain.add(newBlock);
         this.lastBlockHash=newBlock.getHash();
         this.size ++;
-        this.work.add(newBlock.getDifficulty());
+        this.work.add(newBlock.getBigDifficulty());
         //add the block to block hashes
         this.blocksPreviousHashes.put(newBlock.getPreviousHash(), newBlock);
         //Add minersReward to HashMap
@@ -276,7 +276,7 @@ public class BlockChain implements Runnable {
         this.blockchain.remove(block);
         this.lastBlockHash= block.getPreviousHash();
         this.size--;
-        this.work.subtract(block.getDifficulty());
+        this.work.subtract(block.getBigDifficulty());
         this.blocksPreviousHashes.remove(block.getPreviousHash());
         this.removeMinerRewardFromHashMap(block.getMinersReward());
         for(int i= 0; i<block.getNrTransactions(); i++){
