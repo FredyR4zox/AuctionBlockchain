@@ -87,7 +87,7 @@ public class KademliaUtils {
                 .setTimestamp(block.getTimeStamp())
                 .setDifficulty(block.getDifficulty())
                 .setNonce((int)block.getNonce())
-                .setPreviousWork(block.getPreviousWork().toByteArray())
+                .setPreviousWork(ByteString.copyFrom(block.getPreviousWork().toByteArray()))
                 .build();
 
         BlockProto.Builder builder = BlockProto.newBuilder().setBlockHeader(header);
@@ -118,7 +118,7 @@ public class KademliaUtils {
                 blockHeader.getDifficulty(),
                 blockHeader.getTimestamp(),
                 blockHeader.getNonce(),
-                new BigInteger(blockHeader.getPreviousWork()));
+                new BigInteger(blockHeader.getPreviousWork().toByteArray()));
 
         return block;
     }
