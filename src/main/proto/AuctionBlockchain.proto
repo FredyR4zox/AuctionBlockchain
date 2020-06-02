@@ -136,7 +136,7 @@ message MempoolProto {
 
 // nonce - The nonce used to generate this block… to allow variations of the header and compute different hashes.
 message BlockHeaderProto {
-    fixed32 blockNR = 1;
+    bytes previousWork = 1;
     bytes prevBlock = 2;
     bytes merkleRoot = 3;
     fixed64 timestamp = 4;

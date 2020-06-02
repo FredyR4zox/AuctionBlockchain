@@ -28,13 +28,13 @@ public class KademliaServer {
 //        this(port, new KBucketManager(new KademliaNode(rand)));
 //    }
 
-    public KademliaServer(int port, KBucketManager bucketManager, MinerUtils minerUtils) throws IOException {
-        this(ServerBuilder.forPort(port), port, bucketManager, minerUtils);
+    public KademliaServer(int port, KBucketManager bucketManager) throws IOException {
+        this(ServerBuilder.forPort(port), port, bucketManager);
     }
 
-    public KademliaServer(ServerBuilder<?> serverBuilder, int port, KBucketManager bucketManager, MinerUtils minerUtils) {
+    public KademliaServer(ServerBuilder<?> serverBuilder, int port, KBucketManager bucketManager) {
         this.port = port;
-        this.server = serverBuilder.addService(new AuctionBlockchainService(bucketManager, minerUtils))
+        this.server = serverBuilder.addService(new AuctionBlockchainService(bucketManager))
                 .build();
 //        this.myNode = myNode;
         this.bucketManager = bucketManager;
@@ -94,12 +94,10 @@ public class KademliaServer {
 
     private static class AuctionBlockchainService extends AuctionBlockchainGrpc.AuctionBlockchainImplBase {
         private final KBucketManager bucketManager;
-        private final MinerUtils minerUtils;
 //        private final KademliaNode myNode;
 
-        AuctionBlockchainService(KBucketManager bucketManager, MinerUtils minerUtils) {
+        AuctionBlockchainService(KBucketManager bucketManager) {
             this.bucketManager = bucketManager;
-            this.minerUtils = minerUtils;
 //            this.myNode = myNode;
         }
 
@@ -126,12 +124,12 @@ public class KademliaServer {
             if(type == StoreRequest.BlockOrTransactionCase.TRANSACTION){
                 Transaction transaction = KademliaUtils.TransactionProtoToTransaction(request.getTransaction());
 
-                result = minerUtils.addTransactionIfValidToPool(transaction);
+                result = BlockchainUtils.addTransaction(transaction);
             }
             else if(type == StoreRequest.BlockOrTransactionCase.BLOCK){
                 Block block = KademliaUtils.BlockProtoToBlock(request.getBlock());
 
-                result = BlockChain.checkAddBlock(block);
+                result = BlockchainUtils.addBlock(block);
             }
             else
                 logger.log(Level.SEVERE, "Error: Type of store request not known");
@@ -210,7 +208,7 @@ public class KademliaServer {
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
 
             if(mempoolKey != null && Arrays.equals(key, mempoolKey)) {
-                List<Transaction> transactions = new ArrayList<>(minerUtils.getTransPool());
+                List<Transaction> transactions = new ArrayList<>(BlockchainUtils.getLongestChain().getUnconfirmedTransaction());
                 responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
             }
 //            else if(lastBlocksKey != null && Arrays.equals(key, lastBlocksKey)) {
@@ -220,7 +218,7 @@ public class KademliaServer {
 //                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(lastBlock));
 //            }
             else {
-                Block block = BlockChain.getBlockWithHash(new String(key));
+                Block block = BlockchainUtils.getBlockWithPreviousHash(new String(key));
                 logger.log(Level.INFO, "Could not get block with hash " + new String(key));
 
                 if(block == null){
