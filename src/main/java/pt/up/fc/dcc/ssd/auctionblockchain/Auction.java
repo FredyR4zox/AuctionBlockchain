@@ -9,10 +9,14 @@ import java.util.logging.Logger;
 public class Auction {
     private static final Logger logger = Logger.getLogger(Auction.class.getName());
 
-    private final long itemID;
+    private final String itemID;
     private final String sellerID;
+    KademliaNode buyerNode;
+    private long minAmount;
+    private long minIncrement;
+    private long fee;
+    private long timeout;
     private final PublicKey sellerPublicKey;
-    private final long endTimeStamp;
     private final String hash;
     private final byte[] signature;
 

@@ -186,12 +186,12 @@ public class BlockChain implements Runnable {
 
     public Boolean areFundsSufficient(Transaction trans, HashMap<String, Long> usedIDs){
 
-        Long buyerAmount = usedIDs.get(trans.getBuyerID());
+        Long buyerAmount = usedIDs.get(trans.getBid().getBuyerID());
         if(buyerAmount==null) {
-            if(!this.checkIfEnoughFunds(trans.getBuyerID(), trans.getAmount())){
+            if(!this.checkIfEnoughFunds(trans.getBid().getBuyerID(), trans.getAmount())){
                 return false;
             }else {
-                usedIDs.put(trans.getBuyerID(), trans.getAmount());
+                usedIDs.put(trans.getBid().getBuyerID(), trans.getAmount());
             }
         }
         else {
