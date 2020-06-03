@@ -481,34 +481,42 @@ public class KademliaClient {
         return retList;
     }
 
-    public static <T> List<Block> getLastKnownBlock(KBucketManager bucketManager){
-        byte[] lastBlocksKey;
+//    public static <T> List<Block> getLastKnownBlock(KBucketManager bucketManager){
+//        byte[] lastBlocksKey;
+//
+//        try {
+//            MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
+//            lastBlocksKey = messageDigest.digest("lastBlock".getBytes(KademliaUtils.charset));
+//        } catch (NoSuchAlgorithmException e) {
+//            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+//            e.printStackTrace();
+//
+//            return new ArrayList<>();
+//        }
+//
+//        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+//
+//        List<T> blocks = KademliaClient.findValue(bucketManager, rand, lastBlocksKey);
+//
+//        List<Block> retList = new ArrayList<>();
+//        for(T tmp : blocks){
+//            if(tmp.getClass() == Block.class){
+//                logger.log(Level.INFO, "Added a block to the list.");
+//                retList.add((Block) tmp);
+//            }
+//            else
+//                logger.log(Level.SEVERE, "Error: Received information different than a block.");
+//        }
+//
+//        return retList;
+//    }
 
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-            lastBlocksKey = messageDigest.digest("lastBlock".getBytes(KademliaUtils.charset));
-        } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
-            e.printStackTrace();
+    public static boolean getBlockChain(KBucketManager bucketManager){
+        byte[] lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash().getBytes(KademliaUtils.charset);
 
-            return new ArrayList<>();
+        while(true){
+
         }
-
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
-
-        List<T> blocks = KademliaClient.findValue(bucketManager, rand, lastBlocksKey);
-
-        List<Block> retList = new ArrayList<>();
-        for(T tmp : blocks){
-            if(tmp.getClass() == Block.class){
-                logger.log(Level.INFO, "Added a block to the list.");
-                retList.add((Block) tmp);
-            }
-            else
-                logger.log(Level.SEVERE, "Error: Received information different than a block.");
-        }
-
-        return retList;
     }
 
 

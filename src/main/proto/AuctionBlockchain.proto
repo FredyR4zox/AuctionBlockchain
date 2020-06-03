@@ -81,6 +81,42 @@ message FindValueResponse {
 
 
 
+message BidProto {
+    bytes itemId = 1;
+    bytes sellerID = 2;
+    bytes buyerID = 3;
+    fixed64 amount = 4;
+    fixed64 fee = 5;
+    bytes buyerPublicKey = 6;
+    bytes hash = 7;
+    bytes signature = 8;
+}
+
+
+message TransactionProto {
+    BidProto bid = 1;
+    bytes sellerPublicKey = 2;
+    fixed64 timestamp = 3;
+    bytes hash = 4;
+    bytes signature = 5;
+}
+
+
+message AuctionProto {
+    bytes itemId = 1;
+    bytes sellerId = 2;
+    KademliaNodeProto node = 3;
+    fixed64 minAmount = 4;
+    fixed32 minIncrement = 5;
+    fixed64 fee = 6;
+    fixed64 timeout = 7;
+    bytes hash = 8;
+    bytes signature = 9;
+}
+
+
+
+
 
 
 //message PublicKeyProto {
@@ -119,16 +155,17 @@ message FindValueResponse {
 //    repeated TxOut txOut = 2;
 //}
 
-message TransactionProto {
-    bytes sellerID = 1;
-    bytes buyerID = 2;
-    fixed64 amount = 3;
-    fixed64 fee = 4;
-    fixed64 itemID = 5;
-    bytes buyerPublicKey = 6;
-    bytes signature = 7;
-    bytes hash = 8;
-}
+//message TransactionProto {
+//    bytes sellerID = 1;
+//    bytes buyerID = 2;
+//    fixed64 amount = 3;
+//    fixed64 fee = 4;
+//    fixed64 itemID = 5;
+//    bytes buyerPublicKey = 6;
+//    fixed64 timestamp = 7;
+//    bytes hash = 8;
+//    bytes signature = 9;
+//}
 
 message MempoolProto {
     repeated TransactionProto transactions = 1;
