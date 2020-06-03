@@ -123,27 +123,47 @@ public class KademliaUtils {
         return block;
     }
 
+    public static BidProto BidToBidProto(Bid bid){
+        return BidProto.newBuilder()
+                .setItemId(ByteString.copyFrom(bid.getItemId(), charset))
+                .setSellerID(ByteString.copyFrom(bid.getSellerID(), charset))
+                .setBuyerID(ByteString.copyFrom(bid.getBuyerID(), charset))
+                .setAmount(bid.getAmount())
+                .setFee(bid.getFee())
+                .setBuyerPublicKey(ByteString.copyFrom(bid.getBuyerPublicKey().toString(), charset))
+                .setHash(ByteString.copyFrom(bid.getHash(), charset))
+                .setSignature(ByteString.copyFrom(bid.getSignature()))
+                .build();
+    }
+
+    public static Bid BidProtoToBid(BidProto bidProto){
+        return new Bid(
+                bidProto.getItemId().toString(charset),
+                bidProto.getSellerID().toString(charset),
+                bidProto.getBuyerID().toString(charset),
+                bidProto.getAmount(),
+                bidProto.getFee(),
+                bidProto.getBuyerPublicKey().toByteArray(),
+                bidProto.getHash().toString(charset),
+                bidProto.getSignature().toByteArray());
+    }
+
     public static TransactionProto TransactionToTransactionProto(Transaction transaction){
         return TransactionProto.newBuilder()
-                .setSellerID(ByteString.copyFrom(transaction.getSellerID(), charset))
-                .setBuyerID(ByteString.copyFrom(transaction.getBuyerID(), charset))
-                .setAmount(transaction.getAmount())
-                .setFee(transaction.getTransactionFee())
-                .setItemID(transaction.getItemID())
-                .setBuyerPublicKey(ByteString.copyFrom(transaction.getBuyerPublicKey().toString(), charset))
-                .setSignature(ByteString.copyFrom(transaction.getSignature()))
+                .setBid(BidToBidProto(transaction.getBid()))
+                .setSellerPublicKey(ByteString.copyFrom(transaction.getSellerPublicKey().toString(), charset))
+                .setTimestamp(transaction.getTimeStamp())
                 .setHash(ByteString.copyFrom(transaction.getHash(), charset))
+                .setSignature(ByteString.copyFrom(transaction.getSignature()))
                 .build();
     }
 
     public static Transaction TransactionProtoToTransaction(TransactionProto transactionProto){
         return new Transaction(
-                transactionProto.getBuyerID().toString(charset),
-                transactionProto.getSellerID().toString(charset),
-                transactionProto.getBuyerPublicKey().toByteArray(),
-                transactionProto.getAmount(),
-                transactionProto.getFee(),
-                transactionProto.getItemID(),
+                BidProtoToBid(transactionProto.getBid()),
+                transactionProto.getSellerPublicKey().toByteArray(),
+                transactionProto.getTimestamp(),
+                transactionProto.getHash().toString(charset),
                 transactionProto.getSignature().toByteArray());
     }
 

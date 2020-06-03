@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -481,6 +482,18 @@ public class KademliaClient {
         return retList;
     }
 
+//    public static <T> Block findBlockWithPreviousHash(KBucketManager bucketManager, String hash){
+//        byte[] hashBytes = hash.getBytes(KademliaUtils.charset);
+//
+//        List<T> values = findValue(bucketManager, hashBytes, hashBytes);
+//
+//        for(T val : values){
+//            if(val.getClass() == Block.class) {
+//                if ()
+//            }
+//        }
+//    }
+
 //    public static <T> List<Block> getLastKnownBlock(KBucketManager bucketManager){
 //        byte[] lastBlocksKey;
 //
@@ -511,11 +524,34 @@ public class KademliaClient {
 //        return retList;
 //    }
 
-    public static boolean getBlockChain(KBucketManager bucketManager){
-        byte[] lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash().getBytes(KademliaUtils.charset);
+    public static void getBlockChain(KBucketManager bucketManager){
+        String lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash();
 
         while(true){
+            byte[] lastBlockHashBytes = lastBlockHash.getBytes(KademliaUtils.charset);
 
+            List<Block> blocks = findValue(bucketManager, lastBlockHashBytes, lastBlockHashBytes);
+
+            if(blocks.isEmpty())
+                break;
+
+            Block block = null;
+            for(int i=0; i<blocks.size(); i++) {
+                Block blockAux = blocks.get(i);
+                if (blockAux.getPreviousHash().equals(lastBlockHash)){
+                    block = blockAux;
+                    break;
+                }
+            }
+
+            if(block == null) {
+                logger.log(Level.WARNING, "findValue returned wrong block");
+                break;
+            }
+
+            BlockchainUtils.addBlock(block);
+
+            lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash();
         }
     }
 

@@ -27,6 +27,17 @@ public class Bid {
         this.signature = Wallet.signHash(buyer.getPrivKey(), this.hash, logger);
     }
 
+    public Bid(String itemId, String sellerID, String buyerID, long amount, long fee, byte[] buyerPublicKey, String hash, byte[] signature) {
+        this.itemId = itemId;
+        this.sellerID = sellerID;
+        this.buyerID = buyerID;
+        this.amount = amount;
+        this.fee = fee;
+        this.buyerPublicKey = Wallet.getPublicKeyFromBytes(buyerPublicKey);
+        this.hash = hash;
+        this.signature = signature;
+    }
+
     public Bid(String sellerID, long fee) {
         this.sellerID = sellerID;
         this.amount = BlockchainUtils.getMinerReward();
@@ -60,6 +71,10 @@ public class Bid {
         }else{
             return this.hash;
         }
+    }
+
+    public byte[] getSignature() {
+        return signature;
     }
 
     public String getSellerID() {

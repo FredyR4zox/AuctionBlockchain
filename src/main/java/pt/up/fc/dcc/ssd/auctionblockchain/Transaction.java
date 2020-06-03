@@ -27,6 +27,14 @@ public class Transaction {
 
     }
 
+    public Transaction(Bid bid, byte[] sellerPublicKey, long timeStamp, String hash, byte[] signature) {
+        this.bid = bid;
+        this.sellerPublicKey = Wallet.getPublicKeyFromBytes(sellerPublicKey);
+        this.timeStamp = timeStamp;
+        this.hash = hash;
+        this.signature = signature;
+    }
+
     public Transaction(Wallet buyerWallet, Bid bid){
         this.bid=bid;
         this.timeStamp = new Date().getTime();
