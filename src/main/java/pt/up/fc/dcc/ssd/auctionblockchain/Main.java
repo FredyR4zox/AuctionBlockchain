@@ -11,6 +11,7 @@ public class Main {
 
         public static void main(String[] args) {
                 Security.addProvider(new BouncyCastleProvider());
+                long id = 0;
 
                 Wallet creator= new Wallet();
                 System.out.println("creator address:" + creator.getAddress());
@@ -30,9 +31,9 @@ public class Main {
                 System.out.println();
 
 
-                Transaction trans10 = new Transaction(creator, wallet1.getAddress(), 10, 2, 0);
-                Transaction trans11 = new Transaction(creator, wallet2.getAddress(), 20, 1, 10);
-                Transaction trans12 = new Transaction(creator, bob.getAddress(), 20, 1, 8);
+                Transaction trans10 = new Transaction(creator, wallet1.getAddress(), 10, 2, ++id);
+                Transaction trans11 = new Transaction(creator, wallet2.getAddress(), 20, 1, ++id);
+                Transaction trans12 = new Transaction(creator, bob.getAddress(), 20, 1, ++id);
 
                 BlockchainUtils.addTransaction(trans10);
                 BlockchainUtils.addTransaction(trans11);
@@ -44,15 +45,15 @@ public class Main {
                 } catch (InterruptedException e) {
                         e.printStackTrace();
                 }
-                BlockchainUtils.getOriginal().printHashMap();
+                //BlockchainUtils.getOriginal().printHashMap();
 
                 for(int i=0; i<0;i++) {
                        // ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
                 }
 
-                Transaction trans20 = new Transaction(miner, alice.getAddress(), 30, 2, 5);
+                Transaction trans20 = new Transaction(miner, alice.getAddress(), 30, 2, ++id);
                 BlockchainUtils.addTransaction(trans20);
-                Transaction trans21 = new Transaction(miner, alice.getAddress(), 60, 2, 5);
+                Transaction trans21 = new Transaction(miner, alice.getAddress(), 60, 2, ++id);
                 BlockchainUtils.addTransaction(trans21);
 
                 BlockchainUtils.mineBlock(creator);
@@ -62,7 +63,7 @@ public class Main {
                         e.printStackTrace();
                 }
 
-                BlockchainUtils.getOriginal().printHashMap();
+                //BlockchainUtils.getOriginal().printHashMap();
 
                 //create mock for test
                 BlockChain original = BlockchainUtils.getOriginal();
@@ -76,7 +77,7 @@ public class Main {
                 BlockchainUtils.addBlock(conflictingBlock);
                 //BlockchainUtils.addBlock(conflictingBlock);
 
-                Transaction trans30 = new Transaction(alice, bob.getAddress(), 10 , 1, 6);
+                Transaction trans30 = new Transaction(alice, bob.getAddress(), 10 , 1, ++id);
                 BlockchainUtils.addTransaction(trans30);
                 BlockchainUtils.mineBlock(bob);
                 try {
@@ -85,7 +86,7 @@ public class Main {
                         e.printStackTrace();
                 }
 
-                Transaction trans40 = new Transaction(bob, creator.getAddress(), 30, 2,11);
+                Transaction trans40 = new Transaction(bob, creator.getAddress(), 30, 2,++id);
                 BlockchainUtils.addTransaction(trans40);
                 BlockchainUtils.mineBlock(alice);
                 try {

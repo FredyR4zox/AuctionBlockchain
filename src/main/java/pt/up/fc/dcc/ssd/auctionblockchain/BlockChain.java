@@ -10,27 +10,29 @@ import java.util.logging.Logger;
 public class BlockChain implements Runnable {
     private static final Logger logger = Logger.getLogger(BlockChain.class.getName());
 
-    private Boolean mining;
-    private BigInteger work;
-    private List<Block> blockchain;
+    private final List<Block> blockchain;
     private ArrayList<BlockChain> unconfirmedBlockchains;
     private HashMap<String, Long> walletsMoney;
-    private String lastBlockHash;
     private HashMap<String, Block> blocksPreviousHashes;
+    private String lastBlockHash;
     private TreeSet<Transaction> unconfirmedTransaction;
     private HashSet<String> confirmedTransactionHashes;
+    private HashSet<Long> registeredIDs;
     private int size;
+    private Boolean mining;
+    private BigInteger work;
 
     public BlockChain() {
-        work= BigInteger.valueOf(0);
-        size=0;
         this.blockchain = new ArrayList<>();
         this.unconfirmedBlockchains = new ArrayList<>();
         this.walletsMoney = new HashMap<>();
         this.blocksPreviousHashes = new HashMap<>();
         this.unconfirmedTransaction = new TreeSet<>(new Utils.transactionCompare());
         this.confirmedTransactionHashes = new HashSet<>();
+        this.registeredIDs = new HashSet<>();
+        size=0;
         this.mining = false;
+        work= BigInteger.valueOf(0);
     }
 
     public Boolean splitChain(Block newBlock){
@@ -74,6 +76,7 @@ public class BlockChain implements Runnable {
         clone.blocksPreviousHashes = (HashMap<String, Block>) this.blocksPreviousHashes.clone();
         clone.unconfirmedTransaction = (TreeSet<Transaction>) this.unconfirmedTransaction.clone();
         clone.confirmedTransactionHashes = (HashSet<String>) this.confirmedTransactionHashes.clone();
+        clone.registeredIDs = (HashSet<Long>) this.registeredIDs.clone();
         if( split == clone.size-1) {
             return clone;
         } else{
@@ -92,9 +95,10 @@ public class BlockChain implements Runnable {
 
     public void mergeChains(BlockChain joiner){
         this.blockchain.addAll(joiner.getBlockchain());
-        this.unconfirmedBlockchains = joiner.getUnconfirmedBlockchains();
+        this.unconfirmedBlockchains = joiner.getUnconfirmedBlockChains();
         this.confirmedTransactionHashes = joiner.getConfirmedTransactionHashes();
         this.unconfirmedTransaction = joiner.getUnconfirmedTransaction();
+        this.registeredIDs = joiner.getRegisteredIDs();
         this.walletsMoney= joiner.getWalletsMoney();
         this.blocksPreviousHashes = joiner.getBlocksPreviousHashes();
         this.lastBlockHash = joiner.getLastBlockHash();
@@ -166,7 +170,7 @@ public class BlockChain implements Runnable {
                 return false;
             }
             if(this.getWork().subtract(newBlock.getPreviousWork()).compareTo(BlockchainUtils.WORK_RESOLVE_SPLIT)>0){
-                logger.info("Trying to add a block to far down the chain");
+                logger.info("Trying to add a block that is too far down the chain");
                 return false;
             }
             return this.splitChain(newBlock);
@@ -179,25 +183,22 @@ public class BlockChain implements Runnable {
         }
     }
 
-    public Boolean areFundsSufficient(Block block){
-        HashMap<String, Long> usedIDs = new HashMap<>();
-        for(int i= 0; i<block.getNrTransactions(); i++){
-            Transaction trans = block.getXData(i);
-            Long buyerAmount = usedIDs.get(trans.getBuyerID());
-            if(buyerAmount==null) {
-                if(!this.checkIfEnoughFunds(trans.getBuyerID(), trans.getAmount())){
-                    return false;
-                }else {
-                    usedIDs.put(trans.getBuyerID(), trans.getAmount());
-                }
+    public Boolean areFundsSufficient(Transaction trans, HashMap<String, Long> usedIDs){
+
+        Long buyerAmount = usedIDs.get(trans.getBuyerID());
+        if(buyerAmount==null) {
+            if(!this.checkIfEnoughFunds(trans.getBuyerID(), trans.getAmount())){
+                return false;
+            }else {
+                usedIDs.put(trans.getBuyerID(), trans.getAmount());
             }
-            else {
-                buyerAmount += trans.getAmount();
-                if (!this.checkIfEnoughFunds(trans.getBuyerID(), buyerAmount)) {
-                    return false;
-                }else {
-                    usedIDs.replace(trans.getBuyerID(), buyerAmount);
-                }
+        }
+        else {
+            buyerAmount += trans.getAmount();
+            if (!this.checkIfEnoughFunds(trans.getBuyerID(), buyerAmount)) {
+                return false;
+            } else {
+                usedIDs.replace(trans.getBuyerID(), buyerAmount);
             }
         }
         return true;
@@ -205,30 +206,41 @@ public class BlockChain implements Runnable {
 
     public Boolean checkIfEnoughFunds(String buyerID, long amount) {
         if(!walletsMoney.containsKey(buyerID)){
-            logger.warning("Buyer" + buyerID+ " has never received funds");
+            logger.warning("Buyer" + buyerID + " has never received funds");
             return false;
         }
         Long buyerFunds=walletsMoney.get(buyerID);
         if(buyerFunds-amount<0) {
-            logger.warning("Buyer " + amount + " doesn't have enough funds");
+            logger.warning("Buyer " + buyerID + " doesn't have enough funds");
             return false;
         }
         else return true;
     }
 
     public Boolean checkAddBlock(Block newBlock){
-        if(!this.checkBlock(newBlock))return false;
-        //Add block to blockchain and update Hashmap
+        //make block checks
+        if(!newBlock.checkBlock()) return false;
+        //make block checks in relation to chain
+        if(!checkBlockInChain(newBlock)) return false;
+        //Add block to blockchain and update Hashmaps
         this.addBlock(newBlock);
         return true;
     }
 
-    public Boolean checkBlock(Block newBlock){
-        //check if transactions in block are valid
-        if(!newBlock.areSignaturesAndHashValid()) return false;
-        if(!areFundsSufficient(newBlock)) return false;
-        //check if miner reward with Transaction fees are valid
-        if(newBlock.getTransactionFeesTotal() == BlockchainUtils.getMinerReward() - newBlock.getMinersReward().getAmount()) return false;
+    public Boolean checkBlockInChain(Block block){
+        HashMap<String, Long> accumulativeSpends = new HashMap<>();
+        for(int i= 0; i<block.getNrTransactions(); i++) {
+            Transaction trans = block.getXData(i);
+            if(!this.areFundsSufficient(trans, accumulativeSpends)) return false;
+            if(this.confirmedTransactionHashes.contains(trans.getHash())){
+                logger.warning("Detected duplicated transaction");
+                return false;
+            }
+            if(this.registeredIDs.contains(trans.getItemID())){
+                logger.warning("already usedID");
+                return false;
+            }
+        }
         return true;
     }
 
@@ -239,7 +251,7 @@ public class BlockChain implements Runnable {
         this.blockchain.add(newBlock);
         this.lastBlockHash=newBlock.getHash();
         this.size ++;
-        this.work.add(newBlock.getBigDifficulty());
+        this.work = this.work.add(newBlock.getBigDifficulty());
         //add the block to block hashes
         this.blocksPreviousHashes.put(newBlock.getPreviousHash(), newBlock);
         //Add minersReward to HashMap
@@ -249,6 +261,8 @@ public class BlockChain implements Runnable {
             Transaction trans = newBlock.getXData(i);
             this.unconfirmedTransaction.remove(trans);
             this.confirmedTransactionHashes.add(trans.getHash());
+            //register the ID as used
+            this.registeredIDs.add(trans.getItemID());
             //Add Transaction to HashMap
             this.updateHashMapValues(trans);
         }
@@ -276,13 +290,15 @@ public class BlockChain implements Runnable {
         this.blockchain.remove(block);
         this.lastBlockHash= block.getPreviousHash();
         this.size--;
-        this.work.subtract(block.getBigDifficulty());
+        this.work = this.work.subtract(block.getBigDifficulty());
         this.blocksPreviousHashes.remove(block.getPreviousHash());
         this.removeMinerRewardFromHashMap(block.getMinersReward());
         for(int i= 0; i<block.getNrTransactions(); i++){
             Transaction trans = block.getXData(i);
             this.unconfirmedTransaction.add(trans);
             this.confirmedTransactionHashes.remove(trans.getHash());
+            //remove the registeredID
+            this.registeredIDs.remove(trans.getItemID());
             //Add Transaction to HashMap
             this.deUpdateHashMapValues(trans);
         }
@@ -357,41 +373,42 @@ public class BlockChain implements Runnable {
 
     public Block createBlock(Wallet minerWallet){
         this.mining = true;
-        HashMap<String, Long> usedIDs = new HashMap<>();
+        HashMap<String, Long> accumulativeSpends = new HashMap<>();
+        HashSet<Long> tempRegisteredIDs = (HashSet<Long>) this.registeredIDs.clone();
         Block newBlock =  new Block(this.getLastBlockHash(), this.work);
+        //theoretically no duplicated transaction or used transactions ever reached this point
         Iterator<Transaction> transIterator = this.unconfirmedTransaction.iterator();
 //        if (!transIterator.hasNext()) {
 //            logger.warning("No transactions in transaction Pool");
 //            return;
 //        }
+        List<Transaction> delTrans = new LinkedList<>();
         for(int i=0; i< BlockchainUtils.MAX_NR_TRANSACTIONS && transIterator.hasNext(); i++){
             Transaction trans = transIterator.next();
-            //if transaction cant be verified remove it
-            if(!trans.verifyTransaction()){
-                this.unconfirmedTransaction.remove(trans);
+            //check if ID exists, if it does, delete the trans
+            if(tempRegisteredIDs.contains(trans.getItemID())){
+                logger.warning("message with already used ID");
+                delTrans.add(trans);
                 i--;
                 continue;
             }
-            Long buyerAmount = usedIDs.get(trans.getBuyerID());
-            if(buyerAmount==null) {
-                if(!this.checkIfEnoughFunds(trans.getBuyerID(), trans.getAmount())){
-                    i--;
-                    continue;
-                } else {
-                    usedIDs.put(trans.getBuyerID(), trans.getAmount());
-                }
+            //if transaction cant be verified remove it
+            if(!trans.verifyTransaction()){
+                delTrans.add(trans);
+                i--;
+                continue;
             }
-            else{
-                buyerAmount += trans.getAmount();
-                if(!this.checkIfEnoughFunds(trans.getBuyerID(), buyerAmount)){
-                    i--;
-                    continue;
-                } else {
-                    usedIDs.replace(trans.getBuyerID(), buyerAmount);
-                }
+            //check if wallet has enough funds having into account transactions already in the block
+            if(!this.areFundsSufficient(trans, accumulativeSpends)){
+                i--;
+                continue;
             }
             //if transaction cant be added it is ignored
             newBlock.addTransaction(trans);
+            tempRegisteredIDs.add(trans.getItemID());
+        }
+        for(Transaction trans : delTrans){
+            this.unconfirmedTransaction.remove(trans);
         }
         if(newBlock.getNrTransactions()==0) return null;
         long transactionFeesTotal = newBlock.getTransactionFeesTotal();
@@ -407,7 +424,7 @@ public class BlockChain implements Runnable {
             this.unconfirmedTransaction.add(trans);
             return true;
         }else{
-            Boolean output = false;
+            boolean output = false;
             for (BlockChain unconfirmedBlockchain : this.unconfirmedBlockchains) {
                 output= output || unconfirmedBlockchain.addTransactionToCorrectChains(trans);
             }
@@ -454,7 +471,7 @@ public class BlockChain implements Runnable {
         return new Gson().fromJson(blockChainJson, BlockChain.class);
     }
 
-    public ArrayList<BlockChain> getUnconfirmedBlockchains() {
+    public ArrayList<BlockChain> getUnconfirmedBlockChains() {
         return unconfirmedBlockchains;
     }
 
@@ -503,5 +520,9 @@ public class BlockChain implements Runnable {
 
     public void setMining(Boolean mining) {
         this.mining = mining;
+    }
+
+    public HashSet<Long> getRegisteredIDs() {
+        return registeredIDs;
     }
 }

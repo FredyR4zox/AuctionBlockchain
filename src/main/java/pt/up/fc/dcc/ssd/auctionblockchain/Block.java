@@ -63,20 +63,43 @@ public class Block{
         return true;
     }
 
-    public Boolean areSignaturesAndHashValid(){
+    public Boolean checkTransactions(){
+        //also check transaction fees
+        long total = 0;
         for (int i=0; i<nrTransactions; i++) {
             Transaction trans = data[i];
             if(!trans.verifyTransaction()){
                 return false;
             }
+            total += trans.getTransactionFee();
+        }
+        //check if miner reward with Transaction fees are valid
+        if(this.getTransactionFeesTotal() == BlockchainUtils.getMinerReward() - this.getMinersReward().getAmount()){
+            logger.warning("transaction fee in miner transaction is doesn't match");
+            return false;
         }
         return true;
+    }
+
+    public long getTransactionFeesTotal() {
+        long total = 0;
+        for(int i= 0; i < nrTransactions; i++){
+            Transaction trans = data[i];
+            //Add Transaction fee to total
+            total += trans.getTransactionFee();
+        }
+        return total;
     }
 
     public String calculateHash() {
         return Utils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
     }
 
+    public Boolean checkBlock(){
+        if(!this.checkTransactions()){return false;}
+        if(!this.isHashValid()){return false;}
+        return true;
+    }
     public Boolean isHashValid() {
         //compare registered hash and calculated hash:
         if(!hash.equals(calculateHash()) ){
@@ -117,16 +140,6 @@ public class Block{
             this.hash = calculateHash();
         }
         return true;
-    }
-
-    public long getTransactionFeesTotal() {
-        long total = 0;
-        for(int i= 0; i < nrTransactions; i++){
-            Transaction trans = data[i];
-            //Add Transaction fee to total
-            total += trans.getTransactionFee();
-        }
-        return total;
     }
 
     public Boolean addTransaction(Transaction newtrans){
