@@ -118,6 +118,7 @@ public class BlockChain implements Runnable {
         BigInteger[] res = Utils.twoLargest(chainsWork);
         if((res[0].subtract(res[2])).compareTo(BlockchainUtils.WORK_RESOLVE_SPLIT)>=0){
             this.mergeChains(unconfirmedBlockchains.get(res[1].intValue()));
+            this.tryResolveForks();
         }
     }
 
@@ -228,18 +229,22 @@ public class BlockChain implements Runnable {
     }
 
     public Boolean checkBlockInChain(Block block){
+        HashSet<Long> tempRegisteredIDs = (HashSet<Long>) this.registeredIDs.clone();
+        HashSet<String> tempConfirmedTransactionHashes = (HashSet<String>) this.confirmedTransactionHashes.clone();
         HashMap<String, Long> accumulativeSpends = new HashMap<>();
         for(int i= 0; i<block.getNrTransactions(); i++) {
             Transaction trans = block.getXData(i);
             if(!this.areFundsSufficient(trans, accumulativeSpends)) return false;
-            if(this.confirmedTransactionHashes.contains(trans.getHash())){
+            if(tempConfirmedTransactionHashes.contains(trans.getHash())){
                 logger.warning("Detected duplicated transaction");
                 return false;
             }
-            if(this.registeredIDs.contains(trans.getItemID())){
+            if(tempRegisteredIDs.contains(trans.getItemID())){
                 logger.warning("already usedID");
                 return false;
             }
+            tempRegisteredIDs.add(trans.getItemID());
+            tempConfirmedTransactionHashes.add(trans.getHash());
         }
         return true;
     }

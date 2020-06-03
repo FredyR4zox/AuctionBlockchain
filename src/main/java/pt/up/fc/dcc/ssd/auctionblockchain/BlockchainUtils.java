@@ -9,7 +9,7 @@ public class BlockchainUtils {
     public static final int difficulty = 2;
     public static final long minerReward = 100;
     public static final int MIN_NR_TRANSACTIONS = 3 ;
-    public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(2);
+    public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(4);
     public static final BlockChain original = new BlockChain();
     private static Block newBlock;
 

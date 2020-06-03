@@ -67,18 +67,15 @@ public class Main {
 
                 //create mock for test
                 BlockChain original = BlockchainUtils.getOriginal();
-                Block lastBlock= original.getXBlock(original.getSize());
-                Block conflictingBlock = lastBlock.clone();
-                conflictingBlock.removeLastTransaction();
-                original.setMining(true);
-                Boolean output = conflictingBlock.mineBlock(original);
-                original.setMining(false);
+                Block conflictingBlock =  createFakeBlock(original);
                 //actual test
                 BlockchainUtils.addBlock(conflictingBlock);
                 //BlockchainUtils.addBlock(conflictingBlock);
 
                 Transaction trans30 = new Transaction(alice, bob.getAddress(), 10 , 1, ++id);
+                Transaction trans31 = new Transaction(alice, bob.getAddress(), 10 , 1, ++id);
                 BlockchainUtils.addTransaction(trans30);
+                BlockchainUtils.addTransaction(trans31);
                 BlockchainUtils.mineBlock(bob);
                 try {
                         sleep(1000);
@@ -86,8 +83,12 @@ public class Main {
                         e.printStackTrace();
                 }
 
+
                 Transaction trans40 = new Transaction(bob, creator.getAddress(), 30, 2,++id);
                 BlockchainUtils.addTransaction(trans40);
+                BlockChain big = original.getLongestChain();
+                conflictingBlock = createFakeBlock(big);
+                BlockchainUtils.addBlock(conflictingBlock);
                 BlockchainUtils.mineBlock(alice);
                 try {
                         sleep(1000);
@@ -95,6 +96,7 @@ public class Main {
                         e.printStackTrace();
                 }
 
+                Boolean output;
                 output = BlockchainUtils.addBlock(conflictingBlock);
                 System.out.println(output);
 
@@ -105,7 +107,15 @@ public class Main {
 //                Auction auction = new Auction(0, 60, creator);
 //                Boolean output= auction.verifyAuction();
 //                System.out.println(output);
-
+        }
+        public static Block createFakeBlock(BlockChain branch){
+                Block lastBlock= branch.getXBlock(branch.getBlockchain().size());
+                Block conflictingBlock = lastBlock.clone();
+                conflictingBlock.removeLastTransaction();
+                branch.setMining(true);
+                Boolean output = conflictingBlock.mineBlock(branch);
+                branch.setMining(false);
+                return conflictingBlock;
         }
 }
 

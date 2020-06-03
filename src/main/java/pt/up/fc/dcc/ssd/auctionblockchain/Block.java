@@ -74,7 +74,7 @@ public class Block{
             total += trans.getTransactionFee();
         }
         //check if miner reward with Transaction fees are valid
-        if(this.getTransactionFeesTotal() == BlockchainUtils.getMinerReward() - this.getMinersReward().getAmount()){
+        if(total == BlockchainUtils.getMinerReward() - this.getMinersReward().getAmount()){
             logger.warning("transaction fee in miner transaction is doesn't match");
             return false;
         }
@@ -100,10 +100,13 @@ public class Block{
         if(!this.isHashValid()){return false;}
         return true;
     }
+
     public Boolean isHashValid() {
         //compare registered hash and calculated hash:
-        if(!hash.equals(calculateHash()) ){
-            System.out.println("Current Hashes not equal");
+        //also check according to difficulty
+        String target = new String(new char[this.difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
+        if(!hash.equals(calculateHash()) || !this.hash.substring(0, this.difficulty).equals(target)){
+            logger.warning("Hash is not correct");
             return false;
         }
 
