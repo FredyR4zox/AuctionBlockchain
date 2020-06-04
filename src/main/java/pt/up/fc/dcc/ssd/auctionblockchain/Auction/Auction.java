@@ -1,9 +1,10 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Auction;
+
+import pt.up.fc.dcc.ssd.auctionblockchain.KademliaNode;
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
 import java.security.PublicKey;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 public class Auction {

@@ -1,6 +1,10 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockChain;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 
 import java.security.Security;
 

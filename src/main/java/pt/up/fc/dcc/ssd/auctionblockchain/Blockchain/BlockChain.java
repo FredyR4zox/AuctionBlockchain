@@ -1,7 +1,10 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Blockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -27,7 +30,7 @@ public class BlockChain implements Runnable {
         this.unconfirmedBlockchains = new ArrayList<>();
         this.walletsMoney = new HashMap<>();
         this.blocksPreviousHashes = new HashMap<>();
-        this.unconfirmedTransaction = new TreeSet<>(new Utils.transactionCompare());
+        this.unconfirmedTransaction = new TreeSet<>(new BlockchainUtils.transactionCompare());
         this.confirmedTransactionHashes = new HashSet<>();
         this.registeredIDs = new HashSet<>();
         size=0;

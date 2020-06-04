@@ -1,7 +1,8 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Blockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import pt.up.fc.dcc.ssd.auctionblockchain.*;
 
 import java.math.BigInteger;
 import java.util.Arrays;

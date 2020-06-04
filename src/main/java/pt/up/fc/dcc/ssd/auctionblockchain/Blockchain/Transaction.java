@@ -1,11 +1,12 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Blockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
-import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Logger;
 
@@ -36,6 +37,7 @@ public class Transaction {
     //create transaction and bid
     public Transaction(Wallet buyer, Wallet seller, long amount, long fee, String itemId){
         this.bid= new Bid(buyer, itemId, seller.getAddress(), amount, fee);
+        this.sellerPublicKey = seller.getPubKey();
         this.timeStamp = new Date().getTime();
         this.hash = this.getHashToBeSigned();
         this.signature = Wallet.signHash(seller.getPrivKey(), this.hash, logger);
