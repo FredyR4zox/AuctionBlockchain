@@ -18,15 +18,8 @@ public class KademliaServer {
 
     private final int port;
     private final Server server;
-//    private final KademliaNode myNode;
     private final KBucketManager bucketManager;
 
-//    public KademliaServer(int port) throws IOException {
-//        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
-//        Random random = new Random();
-//        random.nextBytes(rand);
-//        this(port, new KBucketManager(new KademliaNode(rand)));
-//    }
 
     public KademliaServer(int port, KBucketManager bucketManager) throws IOException {
         this(ServerBuilder.forPort(port), port, bucketManager);
@@ -36,7 +29,6 @@ public class KademliaServer {
         this.port = port;
         this.server = serverBuilder.addService(new AuctionBlockchainService(bucketManager))
                 .build();
-//        this.myNode = myNode;
         this.bucketManager = bucketManager;
     }
 
@@ -94,11 +86,9 @@ public class KademliaServer {
 
     private static class AuctionBlockchainService extends AuctionBlockchainGrpc.AuctionBlockchainImplBase {
         private final KBucketManager bucketManager;
-//        private final KademliaNode myNode;
 
         AuctionBlockchainService(KBucketManager bucketManager) {
             this.bucketManager = bucketManager;
-//            this.myNode = myNode;
         }
 
         @Override
