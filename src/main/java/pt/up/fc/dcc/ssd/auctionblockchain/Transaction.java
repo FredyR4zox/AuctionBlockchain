@@ -12,20 +12,11 @@ import java.util.logging.Logger;
 public class Transaction {
     private static final Logger logger = Logger.getLogger(Transaction.class.getName());
 
-    private final Bid bid;
+    private Bid bid;
     private PublicKey sellerPublicKey;
     private final long timeStamp;
     private final String hash;
     private final byte[] signature;
-
-    public Transaction(Bid bid, PublicKey sellerPublicKey, byte[] signature) {
-        this.bid = bid;
-        this.sellerPublicKey = sellerPublicKey;
-        this.timeStamp = new Date().getTime();
-        this.hash = this.getHashToBeSigned();
-        this.signature = signature;
-
-    }
 
     public Transaction(Bid bid, byte[] sellerPublicKey, long timeStamp, String hash, byte[] signature) {
         this.bid = bid;
@@ -35,22 +26,31 @@ public class Transaction {
         this.signature = signature;
     }
 
-    public Transaction(Wallet buyerWallet, Bid bid){
+    public Transaction(Wallet seller, Bid bid){
         this.bid=bid;
         this.timeStamp = new Date().getTime();
         this.hash = this.getHashToBeSigned();
-        this.signature = Wallet.signHash(buyerWallet.getPrivKey(), this.hash, logger);
+        this.signature = Wallet.signHash(seller.getPrivKey(), this.hash, logger);
+    }
+
+    //create transaction and bid
+    public Transaction(Wallet buyer, Wallet seller, long amount, long fee, String itemId){
+        this.bid= new Bid(buyer, itemId, seller.getAddress(), amount, fee);
+        this.timeStamp = new Date().getTime();
+        this.hash = this.getHashToBeSigned();
+        this.signature = Wallet.signHash(seller.getPrivKey(), this.hash, logger);
     }
 
     public Transaction(Transaction transaction){
         this.bid = transaction.getBid();
+        this.sellerPublicKey = transaction.getSellerPublicKey();
         this.hash = transaction.getHash();
         this.timeStamp = transaction.getTimeStamp();
         this.signature =transaction.getSignature();
     }
 
     //coinbase Transaction for miner reward
-    public Transaction(Wallet miner, String sellerID, long transactionFeesTotal) {
+    public Transaction(Wallet miner, long transactionFeesTotal) {
         this.bid = new Bid(miner.getAddress(), transactionFeesTotal);
         this.timeStamp = new Date().getTime();
         this.sellerPublicKey = miner.getPubKey();
@@ -103,6 +103,9 @@ public class Transaction {
 
     public Bid getBid() {
         return bid;
+    }
+    public void setBid(Bid bid){
+        this.bid=bid;
     }
 
     public PublicKey getSellerPublicKey() {

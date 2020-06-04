@@ -18,7 +18,7 @@ public class Block{
     private Transaction[] data;
     private int nrTransactions; //index of Transaction
     private final long timeStamp;
-    private int difficulty;
+    private final int difficulty;
     private long nonce;
 
     public Block(String hash, String previousHash, Transaction minersReward, Transaction[] data, int difficulty, long timeStamp, long nonce, BigInteger previousWork) {
@@ -52,17 +52,6 @@ public class Block{
         return newBlock;
     }
 
-    public Boolean areTransactionFeesValid(){
-        //check if miner reward with Transaction fees are valid
-        //Percorrer lista de transações e somar os fees
-        if(this.getTransactionFeesTotal() != (minersReward.getAmount() - BlockchainUtils.getMinerReward())) {
-            logger.warning("Transaction fee amount is invalid");
-            return false;
-        }
-
-        return true;
-    }
-
     public Boolean checkTransactions(){
         //also check transaction fees
         long total = 0;
@@ -71,10 +60,10 @@ public class Block{
             if(!trans.verifyTransaction()){
                 return false;
             }
-            total += trans.getTransactionFee();
+            total += trans.getBid().getFee();
         }
         //check if miner reward with Transaction fees are valid
-        if(total == BlockchainUtils.getMinerReward() - this.getMinersReward().getAmount()){
+        if(total == BlockchainUtils.getMinerReward() - this.getMinersReward().getBid().getAmount()){
             logger.warning("transaction fee in miner transaction is doesn't match");
             return false;
         }
@@ -86,7 +75,7 @@ public class Block{
         for(int i= 0; i < nrTransactions; i++){
             Transaction trans = data[i];
             //Add Transaction fee to total
-            total += trans.getTransactionFee();
+            total += trans.getBid().getFee();
         }
         return total;
     }
@@ -135,7 +124,7 @@ public class Block{
 
     public Boolean mineGenesisBlock(Wallet minerWallet) {
         long transactionFeesTotal = getTransactionFeesTotal();
-        this.minersReward = new Transaction(minerWallet.getAddress(), transactionFeesTotal);
+        this.minersReward = new Transaction(minerWallet, transactionFeesTotal);
 
         String target = new String(new char[difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
         while(!this.hash.substring(0, difficulty).equals(target)) {

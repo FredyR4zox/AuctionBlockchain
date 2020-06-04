@@ -17,7 +17,7 @@ public class BlockChain implements Runnable {
     private String lastBlockHash;
     private TreeSet<Transaction> unconfirmedTransaction;
     private HashSet<String> confirmedTransactionHashes;
-    private HashSet<Long> registeredIDs;
+    private HashSet<String> registeredIDs;
     private int size;
     private Boolean mining;
     private BigInteger work;
@@ -76,7 +76,7 @@ public class BlockChain implements Runnable {
         clone.blocksPreviousHashes = (HashMap<String, Block>) this.blocksPreviousHashes.clone();
         clone.unconfirmedTransaction = (TreeSet<Transaction>) this.unconfirmedTransaction.clone();
         clone.confirmedTransactionHashes = (HashSet<String>) this.confirmedTransactionHashes.clone();
-        clone.registeredIDs = (HashSet<Long>) this.registeredIDs.clone();
+        clone.registeredIDs = (HashSet<String>) this.registeredIDs.clone();
         if( split == clone.size-1) {
             return clone;
         } else{
@@ -188,18 +188,18 @@ public class BlockChain implements Runnable {
 
         Long buyerAmount = usedIDs.get(trans.getBid().getBuyerID());
         if(buyerAmount==null) {
-            if(!this.checkIfEnoughFunds(trans.getBid().getBuyerID(), trans.getAmount())){
+            if(!this.checkIfEnoughFunds(trans.getBid().getBuyerID(), trans.getBid().getAmount())){
                 return false;
             }else {
-                usedIDs.put(trans.getBid().getBuyerID(), trans.getAmount());
+                usedIDs.put(trans.getBid().getBuyerID(), trans.getBid().getAmount());
             }
         }
         else {
-            buyerAmount += trans.getAmount();
-            if (!this.checkIfEnoughFunds(trans.getBuyerID(), buyerAmount)) {
+            buyerAmount += trans.getBid().getAmount();
+            if (!this.checkIfEnoughFunds(trans.getBid().getBuyerID(), buyerAmount)) {
                 return false;
             } else {
-                usedIDs.replace(trans.getBuyerID(), buyerAmount);
+                usedIDs.replace(trans.getBid().getBuyerID(), buyerAmount);
             }
         }
         return true;
@@ -229,7 +229,7 @@ public class BlockChain implements Runnable {
     }
 
     public Boolean checkBlockInChain(Block block){
-        HashSet<Long> tempRegisteredIDs = (HashSet<Long>) this.registeredIDs.clone();
+        HashSet<String> tempRegisteredIDs = (HashSet<String>) this.registeredIDs.clone();
         HashSet<String> tempConfirmedTransactionHashes = (HashSet<String>) this.confirmedTransactionHashes.clone();
         HashMap<String, Long> accumulativeSpends = new HashMap<>();
         for(int i= 0; i<block.getNrTransactions(); i++) {
@@ -239,11 +239,11 @@ public class BlockChain implements Runnable {
                 logger.warning("Detected duplicated transaction");
                 return false;
             }
-            if(tempRegisteredIDs.contains(trans.getItemID())){
+            if(tempRegisteredIDs.contains(trans.getBid().getItemId())){
                 logger.warning("already usedID");
                 return false;
             }
-            tempRegisteredIDs.add(trans.getItemID());
+            tempRegisteredIDs.add(trans.getBid().getItemId());
             tempConfirmedTransactionHashes.add(trans.getHash());
         }
         return true;
@@ -260,30 +260,30 @@ public class BlockChain implements Runnable {
         //add the block to block hashes
         this.blocksPreviousHashes.put(newBlock.getPreviousHash(), newBlock);
         //Add minersReward to HashMap
-        this.addMinerRewardToHashMap(newBlock.getMinersReward());
+        this.addMinerRewardToHashMap(newBlock.getMinersReward().getBid());
         //updates hashmap
         for(int i= 0; i<newBlock.getNrTransactions(); i++){
             Transaction trans = newBlock.getXData(i);
             this.unconfirmedTransaction.remove(trans);
             this.confirmedTransactionHashes.add(trans.getHash());
             //register the ID as used
-            this.registeredIDs.add(trans.getItemID());
+            this.registeredIDs.add(trans.getBid().getItemId());
             //Add Transaction to HashMap
-            this.updateHashMapValues(trans);
+            this.updateHashMapValues(trans.getBid());
         }
     }
 
-    public void updateHashMapValues(Transaction t) {
+    public void updateHashMapValues(Bid b) {
 
-        if(this.walletsMoney.putIfAbsent(t.getSellerID(), t.getAmount()- t.getTransactionFee()) != null) {
-            long sellerNewValue = this.walletsMoney.get(t.getSellerID()) + t.getAmount() - t.getTransactionFee();
-            this.walletsMoney.replace(t.getSellerID(), sellerNewValue);
+        if(this.walletsMoney.putIfAbsent(b.getSellerID(), b.getAmount()- b.getFee()) != null) {
+            long sellerNewValue = this.walletsMoney.get(b.getSellerID()) + b.getAmount() - b.getFee();
+            this.walletsMoney.replace(b.getSellerID(), sellerNewValue);
         }
-        long buyerNewValue = this.walletsMoney.get(t.getBuyerID())-t.getAmount();
-        this.walletsMoney.replace(t.getBuyerID(), buyerNewValue);
+        long buyerNewValue = this.walletsMoney.get(b.getBuyerID())-b.getAmount();
+        this.walletsMoney.replace(b.getBuyerID(), buyerNewValue);
     }
 
-    public void addMinerRewardToHashMap(Transaction minersReward){
+    public void addMinerRewardToHashMap(Bid minersReward){
         //in case its a coinbase transfer
         if(this.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount())!= null) {
             Long minerNewValue = this.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount();
@@ -297,25 +297,25 @@ public class BlockChain implements Runnable {
         this.size--;
         this.work = this.work.subtract(block.getBigDifficulty());
         this.blocksPreviousHashes.remove(block.getPreviousHash());
-        this.removeMinerRewardFromHashMap(block.getMinersReward());
+        this.removeMinerRewardFromHashMap(block.getMinersReward().getBid());
         for(int i= 0; i<block.getNrTransactions(); i++){
             Transaction trans = block.getXData(i);
             this.unconfirmedTransaction.add(trans);
             this.confirmedTransactionHashes.remove(trans.getHash());
             //remove the registeredID
-            this.registeredIDs.remove(trans.getItemID());
+            this.registeredIDs.remove(trans.getBid().getItemId());
             //Add Transaction to HashMap
-            this.deUpdateHashMapValues(trans);
+            this.deUpdateHashMapValues(trans.getBid());
         }
     }
 
-    private void deUpdateHashMapValues(Transaction t) {
-        long buyerNewValue = this.walletsMoney.get(t.getBuyerID())+t.getAmount();
-        this.walletsMoney.replace(t.getBuyerID(), buyerNewValue);
+    private void deUpdateHashMapValues(Bid b) {
+        long buyerNewValue = this.walletsMoney.get(b.getBuyerID())+b.getAmount();
+        this.walletsMoney.replace(b.getBuyerID(), buyerNewValue);
     }
 
 
-    private void removeMinerRewardFromHashMap(Transaction minersReward) {
+    private void removeMinerRewardFromHashMap(Bid minersReward) {
         Long minerNewValue = this.walletsMoney.get(minersReward.getSellerID()) - minersReward.getAmount();
         this.walletsMoney.replace(minersReward.getSellerID(), minerNewValue);
     }
@@ -379,7 +379,7 @@ public class BlockChain implements Runnable {
     public Block createBlock(Wallet minerWallet){
         this.mining = true;
         HashMap<String, Long> accumulativeSpends = new HashMap<>();
-        HashSet<Long> tempRegisteredIDs = (HashSet<Long>) this.registeredIDs.clone();
+        HashSet<String> tempRegisteredIDs = (HashSet<String>) this.registeredIDs.clone();
         Block newBlock =  new Block(this.getLastBlockHash(), this.work);
         //theoretically no duplicated transaction or used transactions ever reached this point
         Iterator<Transaction> transIterator = this.unconfirmedTransaction.iterator();
@@ -391,7 +391,7 @@ public class BlockChain implements Runnable {
         for(int i=0; i< BlockchainUtils.MAX_NR_TRANSACTIONS && transIterator.hasNext(); i++){
             Transaction trans = transIterator.next();
             //check if ID exists, if it does, delete the trans
-            if(tempRegisteredIDs.contains(trans.getItemID())){
+            if(tempRegisteredIDs.contains(trans.getBid().getItemId())){
                 logger.warning("message with already used ID");
                 delTrans.add(trans);
                 i--;
@@ -410,14 +410,14 @@ public class BlockChain implements Runnable {
             }
             //if transaction cant be added it is ignored
             newBlock.addTransaction(trans);
-            tempRegisteredIDs.add(trans.getItemID());
+            tempRegisteredIDs.add(trans.getBid().getItemId());
         }
         for(Transaction trans : delTrans){
             this.unconfirmedTransaction.remove(trans);
         }
         if(newBlock.getNrTransactions()==0) return null;
         long transactionFeesTotal = newBlock.getTransactionFeesTotal();
-        newBlock.setMinersReward(new Transaction(minerWallet.getAddress(), transactionFeesTotal));
+        newBlock.setMinersReward(new Transaction(minerWallet, transactionFeesTotal));
         return newBlock;
     }
 
@@ -527,7 +527,7 @@ public class BlockChain implements Runnable {
         this.mining = mining;
     }
 
-    public HashSet<Long> getRegisteredIDs() {
+    public HashSet<String> getRegisteredIDs() {
         return registeredIDs;
     }
 }

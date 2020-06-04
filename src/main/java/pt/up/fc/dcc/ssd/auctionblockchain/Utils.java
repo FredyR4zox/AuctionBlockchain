@@ -60,15 +60,14 @@ public class Utils {
         }
         assert digest != null;
         byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-        String sha256hex = new String(Hex.encode(hash));
-        return sha256hex;
+        return new String(Hex.encode(hash));
     }
 
     static class transactionCompare implements Comparator<Transaction> {
         @Override
         public int compare(Transaction transaction, Transaction t1) {
             //check bigger transaction fee
-            int result = Long.compare(t1.getTransactionFee(), transaction.getTransactionFee());
+            int result = Long.compare(t1.getBid().getFee(), transaction.getBid().getFee());
             if (result == 0){
                 //check timestamp
                 return Long.compare(transaction.getTimeStamp(), t1.getTimeStamp());

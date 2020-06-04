@@ -11,7 +11,7 @@ public class Auction {
 
     private final String itemID;
     private final String sellerID;
-    KademliaNode buyerNode;
+    private final KademliaNode buyerNode;
     private long minAmount;
     private long minIncrement;
     private long fee;
@@ -20,23 +20,30 @@ public class Auction {
     private final String hash;
     private final byte[] signature;
 
+    public Auction(String itemID, String sellerID, KademliaNode buyerNode, long minAmount, long minIncrement, long fee, long timeout, PublicKey sellerPublicKey, String hash, byte[] signature) {
+        this.itemID = itemID;
+        this.sellerID = sellerID;
+        this.buyerNode = buyerNode;
+        this.minAmount = minAmount;
+        this.minIncrement = minIncrement;
+        this.fee = fee;
+        this.timeout = timeout;
+        this.sellerPublicKey = sellerPublicKey;
+        this.hash = hash;
+        this.signature = signature;
+    }
 
-    public Auction( long itemID, long time_to_end, Wallet seller){
+    public Auction(Wallet seller, String itemID, KademliaNode buyerNode, long minAmount, long minIncrement, long fee, long timeout){
         this.itemID=itemID;
         this.sellerID=seller.getAddress();
-        this.endTimeStamp= new Date().getTime() + time_to_end;
+        this.buyerNode = buyerNode;
+        this.minAmount=minAmount;
+        this.minIncrement=minIncrement;
+        this.fee = fee;
+        this.timeout = timeout;
         this.sellerPublicKey= seller.getPubKey();
         this.hash= this.getHashToBeSigned();
         this.signature = Wallet.signHash(seller.getPrivKey(), this.hash, logger);
-    }
-
-    public Auction(Auction auction) {
-        this.itemID = auction.getItemID();
-        this.sellerID = auction.getSellerID();
-        this.sellerPublicKey = auction.getSellerPublicKey();
-        this.endTimeStamp = auction.getEndTimeStamp();
-        this.hash = auction.getHash();
-        this.signature = auction.getSignature();
     }
 
     public Boolean verifyAuction(){
@@ -46,7 +53,7 @@ public class Auction {
     }
 
     private String getHashToBeSigned() {
-        return Utils.getsha256(this.itemID + this.sellerID + Wallet.getAddressFromPubKey(this.sellerPublicKey) + this.endTimeStamp);
+        return Utils.getsha256(this.itemID + this.sellerID + buyerNode.toString() + minAmount + minIncrement +fee + timeout + this.sellerPublicKey.hashCode());
     }
 
     private Boolean isHashValid() {
@@ -69,7 +76,7 @@ public class Auction {
         return signature;
     }
 
-    public long getItemID() {
+    public String getItemID() {
         return itemID;
     }
 
@@ -77,7 +84,23 @@ public class Auction {
         return sellerID;
     }
 
-    public long getEndTimeStamp() {
-        return endTimeStamp;
+    public KademliaNode getBuyerNode() {
+        return buyerNode;
+    }
+
+    public long getMinAmount() {
+        return minAmount;
+    }
+
+    public long getMinIncrement() {
+        return minIncrement;
+    }
+
+    public long getFee() {
+        return fee;
+    }
+
+    public long getTimeout() {
+        return timeout;
     }
 }

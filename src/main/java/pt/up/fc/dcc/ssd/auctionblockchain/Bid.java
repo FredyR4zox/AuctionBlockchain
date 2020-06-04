@@ -16,7 +16,7 @@ public class Bid {
     private String hash;
     private byte[] signature;
 
-    public Bid(Wallet buyer, String itemId, String sellerID, String buyerID, long amount, long fee) {
+    public Bid(Wallet buyer, String itemId, String sellerID, long amount, long fee) {
         this.itemId = itemId;
         this.sellerID = sellerID;
         this.buyerID = buyer.getAddress();
@@ -38,6 +38,7 @@ public class Bid {
         this.signature = signature;
     }
 
+    //coin base reward
     public Bid(String sellerID, long fee) {
         this.sellerID = sellerID;
         this.amount = BlockchainUtils.getMinerReward();

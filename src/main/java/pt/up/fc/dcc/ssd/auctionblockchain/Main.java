@@ -31,9 +31,9 @@ public class Main {
                 System.out.println();
 
 
-                Transaction trans10 = new Transaction(creator, wallet1.getAddress(), 10, 2, ++id);
-                Transaction trans11 = new Transaction(creator, wallet2.getAddress(), 20, 1, ++id);
-                Transaction trans12 = new Transaction(creator, bob.getAddress(), 20, 1, ++id);
+                Transaction trans10 = new Transaction(creator, wallet1, 10, 2, Utils.getsha256(String.valueOf(++id)));
+                Transaction trans11 = new Transaction(creator, wallet2, 20, 1, Utils.getsha256(String.valueOf(++id)));
+                Transaction trans12 = new Transaction(creator, bob, 20, 1, Utils.getsha256(String.valueOf(++id)));
 
                 BlockchainUtils.addTransaction(trans10);
                 BlockchainUtils.addTransaction(trans11);
@@ -51,9 +51,9 @@ public class Main {
                        // ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
                 }
 
-                Transaction trans20 = new Transaction(miner, alice.getAddress(), 30, 2, ++id);
+                Transaction trans20 = new Transaction(miner, alice, 30, 2, Utils.getsha256(String.valueOf(++id)));
                 BlockchainUtils.addTransaction(trans20);
-                Transaction trans21 = new Transaction(miner, alice.getAddress(), 60, 2, ++id);
+                Transaction trans21 = new Transaction(miner, alice, 60, 2, Utils.getsha256(String.valueOf(++id)));
                 BlockchainUtils.addTransaction(trans21);
 
                 BlockchainUtils.mineBlock(creator);
@@ -72,8 +72,8 @@ public class Main {
                 BlockchainUtils.addBlock(conflictingBlock);
                 //BlockchainUtils.addBlock(conflictingBlock);
 
-                Transaction trans30 = new Transaction(alice, bob.getAddress(), 10 , 1, ++id);
-                Transaction trans31 = new Transaction(alice, bob.getAddress(), 10 , 1, ++id);
+                Transaction trans30 = new Transaction(alice, bob, 10 , 1, Utils.getsha256(String.valueOf(++id)));
+                Transaction trans31 = new Transaction(alice, bob, 10 , 1, Utils.getsha256(String.valueOf(++id)));
                 BlockchainUtils.addTransaction(trans30);
                 BlockchainUtils.addTransaction(trans31);
                 BlockchainUtils.mineBlock(bob);
@@ -84,7 +84,7 @@ public class Main {
                 }
 
 
-                Transaction trans40 = new Transaction(bob, creator.getAddress(), 30, 2,++id);
+                Transaction trans40 = new Transaction(bob, creator, 30, 2,Utils.getsha256(String.valueOf(++id)));
                 BlockchainUtils.addTransaction(trans40);
                 BlockChain big = original.getLongestChain();
                 conflictingBlock = createFakeBlock(big);
