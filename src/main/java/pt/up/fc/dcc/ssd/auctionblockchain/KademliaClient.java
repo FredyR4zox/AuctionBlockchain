@@ -132,6 +132,15 @@ public class KademliaClient {
         }
     }
 
+    public void announceNewBlock(Block block){
+        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
+
+    }
+
 
 
     /***

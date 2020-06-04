@@ -49,7 +49,6 @@ public class KademliaNode {
         if (getClass() != obj.getClass())
             return false;
         KademliaNode node = (KademliaNode) obj;
-        // field comparison
 
 //        System.out.println("node1: ");
 //        for(int j=0; j<KademliaUtils.idSizeInBytes; j++)
@@ -61,6 +60,7 @@ public class KademliaNode {
 //            System.out.print(" " + node.getNodeID()[j]);
 //        System.out.println("\n\n");
 
+        // field comparison
         return Arrays.equals(nodeID, node.getNodeID());
     }
 

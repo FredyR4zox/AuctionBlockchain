@@ -27,6 +27,8 @@ public class Main {
         KademliaServer server = new KademliaServer(8080, manager);
         server.start();
 
+        Kadem
+
         Random random = new SecureRandom();
         rand = new byte[KademliaUtils.idSizeInBytes];
         random.nextBytes(rand);
