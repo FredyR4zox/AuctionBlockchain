@@ -107,7 +107,7 @@ message AuctionProto {
     bytes sellerId = 2;
     KademliaNodeProto node = 3;
     fixed64 minAmount = 4;
-    fixed32 minIncrement = 5;
+    float minIncrement = 5;
     fixed64 fee = 6;
     fixed64 timeout = 7;
     bytes hash = 8;

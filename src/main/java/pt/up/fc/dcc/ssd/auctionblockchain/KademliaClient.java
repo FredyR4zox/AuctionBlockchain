@@ -135,9 +135,8 @@ public class KademliaClient {
         Random random = new SecureRandom();
         random.nextBytes(rand);
 
-        if(store(rand, block)){
+        if(store(rand, block))
             logger.log(Level.INFO, "Announced new block.");
-        }
         else
             logger.log(Level.INFO, "Could not announce new block.");
     }
