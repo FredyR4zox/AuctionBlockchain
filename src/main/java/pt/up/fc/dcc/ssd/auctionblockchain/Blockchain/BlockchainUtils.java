@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Blockchain;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.KademliaClient;
 import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
@@ -16,6 +17,7 @@ public class BlockchainUtils {
     public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(4);
     public static final BlockChain original = new BlockChain();
     private static Block newBlock;
+    private static KademliaClient kademliaClient;
 
     public static Boolean addBlock(Block newBlock){
         return original.addBlockToCorrectChain(newBlock);
@@ -73,6 +75,10 @@ public class BlockchainUtils {
 
     public static BlockChain getOriginal() {
         return original;
+    }
+
+    public static KademliaClient getKademliaClient() {
+        return kademliaClient;
     }
 
     static class transactionCompare implements Comparator<Transaction> {

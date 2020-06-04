@@ -38,7 +38,7 @@ public class BlockChain implements Runnable {
         work= BigInteger.valueOf(0);
     }
 
-    public Boolean splitChain(Block newBlock){
+    private Boolean splitChain(Block newBlock){
         //if not forked create the fork
         //if fork is in a previous block do a normal split
         //get index of block previous to duplicate
@@ -57,7 +57,7 @@ public class BlockChain implements Runnable {
     }
 
     //create yet another split
-     public Boolean furtherSplitChain(Block newBlock){
+     private Boolean furtherSplitChain(Block newBlock){
          BlockChain newchain = this.chainClone(this.size-1);
          if(!newchain.checkAddBlock(newBlock)){
              logger.warning("block from split couldn't be confirmed");
@@ -96,7 +96,7 @@ public class BlockChain implements Runnable {
         }
     }
 
-    public void mergeChains(BlockChain joiner){
+    private void mergeChains(BlockChain joiner){
         this.blockchain.addAll(joiner.getBlockchain());
         this.unconfirmedBlockchains = joiner.getUnconfirmedBlockChains();
         this.confirmedTransactionHashes = joiner.getConfirmedTransactionHashes();
@@ -187,7 +187,7 @@ public class BlockChain implements Runnable {
         }
     }
 
-    public Boolean areFundsSufficient(Transaction trans, HashMap<String, Long> usedIDs){
+    private Boolean areFundsSufficient(Transaction trans, HashMap<String, Long> usedIDs){
 
         Long buyerAmount = usedIDs.get(trans.getBid().getBuyerID());
         if(buyerAmount==null) {
@@ -231,7 +231,7 @@ public class BlockChain implements Runnable {
         return true;
     }
 
-    public Boolean checkBlockInChain(Block block){
+    private Boolean checkBlockInChain(Block block){
         HashSet<String> tempRegisteredIDs = (HashSet<String>) this.registeredIDs.clone();
         HashSet<String> tempConfirmedTransactionHashes = (HashSet<String>) this.confirmedTransactionHashes.clone();
         HashMap<String, Long> accumulativeSpends = new HashMap<>();
@@ -276,7 +276,7 @@ public class BlockChain implements Runnable {
         }
     }
 
-    public void updateHashMapValues(Bid b) {
+    private void updateHashMapValues(Bid b) {
 
         if(this.walletsMoney.putIfAbsent(b.getSellerID(), b.getAmount()- b.getFee()) != null) {
             long sellerNewValue = this.walletsMoney.get(b.getSellerID()) + b.getAmount() - b.getFee();
@@ -286,7 +286,7 @@ public class BlockChain implements Runnable {
         this.walletsMoney.replace(b.getBuyerID(), buyerNewValue);
     }
 
-    public void addMinerRewardToHashMap(Bid minersReward){
+    private void addMinerRewardToHashMap(Bid minersReward){
         //in case its a coinbase transfer
         if(this.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount())!= null) {
             Long minerNewValue = this.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount();
@@ -365,7 +365,7 @@ public class BlockChain implements Runnable {
         return true;
     }*/
 
-    public Boolean areHashesValid(Block currentBlock, Block previousBlock){
+    private Boolean areHashesValid(Block currentBlock, Block previousBlock){
         //compare registered hash and calculated hash:
         if(!currentBlock.isHashValid()){
             logger.warning("Current Hashes not equal");
@@ -449,11 +449,12 @@ public class BlockChain implements Runnable {
             logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
             this.removeTransactionsFromTransPool(newBlock);
             this.setMining(false);
+            BlockchainUtils.getKademliaClient().announceNewBlock(newBlock);
         }
         this.setMining(false);
     }
 
-    public void removeTransactionsFromTransPool(Block block) {
+    private void removeTransactionsFromTransPool(Block block) {
         Transaction[] data = block.getData();
         for (int i =0; i < block.getNrTransactions(); i++){
             Transaction trans = data[i];
