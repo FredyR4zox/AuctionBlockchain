@@ -1,9 +1,11 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import com.google.protobuf.ByteString;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

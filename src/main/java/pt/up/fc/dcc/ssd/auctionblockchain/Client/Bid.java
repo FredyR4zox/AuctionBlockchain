@@ -1,4 +1,8 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Client;
+
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
 import java.security.PublicKey;
 import java.util.Arrays;

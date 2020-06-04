@@ -1,6 +1,10 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Blockchain;
+
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
 import java.math.BigInteger;
+import java.util.Comparator;
 import java.util.logging.Logger;
 
 public class BlockchainUtils {
@@ -69,5 +73,18 @@ public class BlockchainUtils {
 
     public static BlockChain getOriginal() {
         return original;
+    }
+
+    static class transactionCompare implements Comparator<Transaction> {
+        @Override
+        public int compare(Transaction transaction, Transaction t1) {
+            //check bigger transaction fee
+            int result = Long.compare(t1.getBid().getFee(), transaction.getBid().getFee());
+            if (result == 0){
+                //check timestamp
+                return Long.compare(transaction.getTimeStamp(), t1.getTimeStamp());
+            }
+            else return result;
+        }
     }
 }

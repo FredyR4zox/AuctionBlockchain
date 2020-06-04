@@ -1,9 +1,11 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
-import com.google.protobuf.ByteString;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 
 import java.io.IOException;
 import java.security.MessageDigest;
