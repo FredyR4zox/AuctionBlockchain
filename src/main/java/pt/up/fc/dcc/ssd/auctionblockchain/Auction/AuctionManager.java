@@ -24,12 +24,16 @@ public class AuctionManager implements Runnable{
         this.bids_status= AuctionsState.getAuctionBidsTreeSet(auction.getItemID());
     }
 
-    public AuctionManager createAuction(Wallet seller, long minAmount, float minIncrement, long fee, long timeout){
+    public AuctionManager(Wallet seller, long minAmount, float minIncrement, long fee, long timeout){
+        this.seller = seller;
         String randomString = Utils.randomString(20);
         Auction auction = new Auction(seller, randomString, minAmount, minIncrement, fee, timeout);
         this.auction = auction;
         AuctionsState.addAuction(auction);
-        return this;
+        this.bids_status = AuctionsState.getAuctionBidsTreeSet(randomString);
+        //publishAuction()
+        Thread thread = new Thread(this);
+        thread.start();
     }
 
     private Transaction createTransaction(Bid winBid) {
@@ -46,11 +50,11 @@ public class AuctionManager implements Runnable{
                 e.printStackTrace();
             }
         }
-        Bid tempBid=this.bids_status.last();
+        Bid winBid = this.bids_status.last();
         long timestamp = new Date().getTime();
         while((new Date().getTime())-timestamp<this.auction.getTimeout()){
-            if (this.bids_status.last()!=tempBid){
-                tempBid=this.bids_status.last();
+            if (this.bids_status.last()!=winBid){
+                winBid=this.bids_status.last();
                 timestamp = new Date().getTime();
             }else{
                 try {
@@ -60,7 +64,12 @@ public class AuctionManager implements Runnable{
                 }
             }
         }
-        Transaction trans = createTransaction(this.bids_status.last());
+        logger.info("Auction has ended");
+        Transaction trans = createTransaction(winBid);
         //BlockchainUtils.getKademliaClient().publishTransaction(trans);
+    }
+
+    public Auction getAuction() {
+        return auction;
     }
 }

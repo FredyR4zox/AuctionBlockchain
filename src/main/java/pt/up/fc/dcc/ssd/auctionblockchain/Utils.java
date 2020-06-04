@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
+import java.util.logging.Logger;
 
 public class Utils {
     public static BigInteger[] twoLargest(BigInteger values[]){
@@ -86,5 +87,16 @@ public class Utils {
         }
 
         return sb.toString();
+    }
+
+    public static Boolean verifyAmountIncrement(long prevValue, long newValue, float incPercentage, Logger logger) {
+        long increment = newValue-prevValue;
+        long minIncrement= (long) (incPercentage * prevValue)/100;
+        if(increment>=minIncrement){
+            return true;
+        }else{
+            logger.warning("Bid doesn't have sufficient increment");
+            return false;
+        }
     }
 }

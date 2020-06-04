@@ -2,12 +2,17 @@ package pt.up.fc.dcc.ssd.auctionblockchain.Auction;
 
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 public class AuctionsState {
+    private static final Logger logger = Logger.getLogger(AuctionsState.class.getName());
+
     private static final HashMap<String, AuctionState> auctionStates = new HashMap<>();
     //state of how much money wallets have spent on Auctions
     private static final HashMap<String, Long> walletsTrans = new HashMap<>();
@@ -21,8 +26,8 @@ public class AuctionsState {
 
     public static void updateBid(Bid bid){
         updateAuctionsState();
-        if(!checkAuctionGoing(bid.getItemId())){
-            checkWinningBid(bid);
+        if(checkAuctionGoing(bid.getItemId())){
+            if(!checkWinningBid(bid)) return;
             AuctionState auctionUpdate = auctionStates.get(bid.getItemId());
             Bid previousBid = auctionUpdate.updateBids(bid);
             if(previousBid == null){
@@ -56,26 +61,27 @@ public class AuctionsState {
     }
 
     private static boolean verifyBidInChain(Bid bid) {
-        long amountInOtherAuctions= walletsTrans.get(bid.getBuyerID());
+        long amountInOtherAuctions= walletsTrans.getOrDefault(bid.getBuyerID(), 0L);
         return BlockchainUtils.getOriginal().checkIfEnoughFunds(bid.getBuyerID(), bid.getAmount() +amountInOtherAuctions);
     }
 
     private static boolean verifyBidInAuction(Bid bid, Auction auction) {
         //check if bid corresponds to this auction
-        Boolean output = bid.getItemId().equals(auction.getItemID());
+        boolean output = bid.getItemId().equals(auction.getItemID());
         output &= bid.getSellerID().equals(auction.getSellerID());
         output &= bid.getFee() == auction.getFee();
+        if(!output){
+            logger.warning("bid parameters aren't valid");
+            return false;
+        }
         //check if its first bid
-        if(auctionStates.get(bid.getItemId()).getLatestBid()==null){
-            return output;
+        Bid prevBid= auctionStates.get(bid.getItemId()).getLatestBid();
+        if(prevBid==null){
+            return true;
         }
         //check if minimum increment was followed
-        output &= verifyAmountIncrement(bid.getAmount());
+        output = Utils.verifyAmountIncrement(prevBid.getAmount(), bid.getAmount(), auction.getMinIncrement(), logger);
         return output;
-    }
-
-    private static Boolean verifyAmountIncrement(long amount) {
-        return true;
     }
 
     private static void addToWalletTrans(Bid bid) {
@@ -100,6 +106,10 @@ public class AuctionsState {
     public static TreeSet<Bid> getAuctionBidsTreeSet(String itemId){
         return auctionStates.get(itemId).getBids();
     }
+
+    public static Auction getAuction(String itemId) {
+        return auctionStates.get(itemId).getAuction();
+    }
 }
 class AuctionState{
     Auction auction;
@@ -111,9 +121,13 @@ class AuctionState{
 
     //return previous latest bid
     public Bid updateBids(Bid bid){
-        Bid previousBid = bids.last();
+        Bid previousBid = null;
+        try{
+            previousBid = bids.last();
+        } catch (NoSuchElementException ignored){}
         bids.add(bid);
         return previousBid;
+
     }
 
     public Auction getAuction() {
@@ -125,14 +139,18 @@ class AuctionState{
     }
 
     public Bid getLatestBid() {
-        return bids.last();
+        if(bids.isEmpty()){
+            return null;
+        }else{
+            return bids.last();
+        }
     }
 
     static class BidCompare implements Comparator<Bid> {
         @Override
         public int compare(Bid bid, Bid b1) {
             //check bigger amount
-            int result = Long.compare(b1.getAmount(), bid.getAmount());
+            int result = Long.compare(bid.getAmount(), b1.getAmount());
             if (bid.getHash().equals(b1.getHash())){
                 return 0;
             }
