@@ -16,10 +16,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
-        for(int i = 0; i < KademliaUtils.idSizeInBytes; i++)
+        byte[] rand = new byte[pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes];
+        for(int i = 0; i < pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes; i++)
             rand[i] = 0;
-        rand[KademliaUtils.idSizeInBytes-1] = 1;
+        rand[pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes-1] = 1;
 
         KademliaNode myNode = new KademliaNode("127.0.0.1", 8080, rand);
         KBucketManager manager = new KBucketManager(myNode);
@@ -30,7 +30,7 @@ public class Main {
         Kadem
 
         Random random = new SecureRandom();
-        rand = new byte[KademliaUtils.idSizeInBytes];
+        rand = new byte[pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes];
         random.nextBytes(rand);
 
         KademliaNode node = new KademliaNode("127.0.0.1", 8081, rand);
@@ -41,7 +41,7 @@ public class Main {
         KademliaServer server2 = new KademliaServer(8081, manager2);
         server2.start();
 
-        rand = new byte[KademliaUtils.idSizeInBytes];
+        rand = new byte[pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes];
         random.nextBytes(rand);
         KademliaNode node3 = new KademliaNode("127.0.0.1", 8081, rand);
         manager2.insertNode(node3);

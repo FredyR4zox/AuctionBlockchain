@@ -16,10 +16,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
-        for(int i = 0; i < KademliaUtils.idSizeInBytes; i++)
+        byte[] rand = new byte[pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes];
+        for(int i = 0; i < pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes; i++)
             rand[i] = 0;
-        rand[KademliaUtils.idSizeInBytes-1] = 1;
+        rand[pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes-1] = 1;
 
         KademliaNode myNode = new KademliaNode("127.0.0.1", 8080, rand);
         KBucketManager manager = new KBucketManager(myNode);
@@ -32,12 +32,12 @@ public class Main {
         Random random = new SecureRandom();
 
         for(int i = 0; i < 100; i++){
-            rand = new byte[KademliaUtils.idSizeInBytes];
+            rand = new byte[pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes];
             random.nextBytes(rand);
             for(int j = 0; j < 10; j++)
                 rand[j] = 0;
             for(int j = 0; j < 10; j++)
-                rand[abs(random.nextInt()) % KademliaUtils.idSizeInBytes] = 0;
+                rand[abs(random.nextInt()) % pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes] = 0;
 
             KademliaNode node = new KademliaNode("127.0.0.1", 8080+i+1, rand);
 
@@ -47,7 +47,7 @@ public class Main {
 //            System.out.println();
 
             manager.insertNode(node);
-            managers[i] = new KBucketManager(new KademliaNode("127.0.0.1", 8080+i+1, Arrays.copyOf(rand, KademliaUtils.idSizeInBytes)));
+            managers[i] = new KBucketManager(new KademliaNode("127.0.0.1", 8080+i+1, Arrays.copyOf(rand, pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes)));
 
             KademliaServer server2 = new KademliaServer(8080+i+1, managers[i]);
             server2.start();
@@ -66,7 +66,7 @@ public class Main {
             for(int j = 0; j < KademliaUtils.idSizeInBits; j++){
                 List<KademliaNode> nodes = buckets[j].getNodes();
                 for(KademliaNode node : nodes)
-                    managers[i].insertNode(new KademliaNode("127.0.0.1", 8080, Arrays.copyOf(node.getNodeID(), KademliaUtils.idSizeInBytes)));
+                    managers[i].insertNode(new KademliaNode("127.0.0.1", 8080, Arrays.copyOf(node.getNodeID(), pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes)));
             }
         }
 

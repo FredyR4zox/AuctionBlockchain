@@ -77,8 +77,8 @@ message FindValueResponse {
         BlockProto block = 2;
         MempoolProto transactions = 3;
         KBucketProto bucket = 4;
-        AuctionList auctions = 5;
-        BidList bids = 6;
+        AuctionListProto auctions = 5;
+        BidListProto bids = 6;
     }
 }
 
@@ -119,11 +119,11 @@ message AuctionProto {
 }
 
 
-message AuctionList {
+message AuctionListProto {
     repeated AuctionProto auctions = 1;
 }
 
-message BidList {
+message BidListProto {
     repeated BidProto bids = 1;
 }
 

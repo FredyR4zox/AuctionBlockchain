@@ -10,6 +10,10 @@ import java.util.Comparator;
 import java.util.logging.Logger;
 
 public class Utils {
+    public static final String hashAlgorithm = "SHA-1";
+    public static final int hashAlgorithmLengthInBits = 160;
+    public static final int hashAlgorithmLengthInBytes = hashAlgorithmLengthInBits/8;
+
     public static BigInteger[] twoLargest(BigInteger values[]){
         BigInteger largestA = BigInteger.valueOf(Integer.MIN_VALUE), largestB = BigInteger.valueOf(Integer.MIN_VALUE);
         BigInteger posA = BigInteger.valueOf(-1), posB = BigInteger.valueOf(-1);
@@ -52,10 +56,10 @@ public class Utils {
         return largestIndex;
     }
 
-    public static String getsha256(String input){
+    public static String getHash(String input){
         MessageDigest digest = null;
         try {
-            digest = MessageDigest.getInstance("SHA-256");
+            digest = MessageDigest.getInstance(hashAlgorithm);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }

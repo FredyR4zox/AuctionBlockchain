@@ -82,7 +82,7 @@ public class Transaction {
     }
 
     private String getHashToBeSigned(){
-        return Utils.getsha256(this.bid.getHashWithSig() + this.sellerPublicKey.hashCode() + this.timeStamp);
+        return Utils.getHash(this.bid.getHashWithSig() + this.sellerPublicKey.hashCode() + this.timeStamp);
     }
     public String makeJson(){
         return new GsonBuilder().setPrettyPrinting().create().toJson(this);

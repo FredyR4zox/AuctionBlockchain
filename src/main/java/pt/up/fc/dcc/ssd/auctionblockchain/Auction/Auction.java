@@ -51,7 +51,7 @@ public class Auction {
     }
 
     private String getHashToBeSigned() {
-        return Utils.getsha256(this.itemID + this.sellerID + minAmount + minIncrement + fee + timeout + this.sellerPublicKey.hashCode());
+        return Utils.getHash(this.itemID + this.sellerID + minAmount + minIncrement + fee + timeout + this.sellerPublicKey.hashCode());
     }
 
     private Boolean isHashValid() {

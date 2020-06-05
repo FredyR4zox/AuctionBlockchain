@@ -4,10 +4,7 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class AuctionsState {
@@ -16,26 +13,36 @@ public class AuctionsState {
     private static final HashMap<String, AuctionState> auctionStates = new HashMap<>();
     //state of how much money wallets have spent on Auctions
     private static final HashMap<String, Long> walletsTrans = new HashMap<>();
-    public static void addAuction(Auction auction){
-            if(!auction.verifyAuction()){
-                return;
-            }
-            AuctionState newAuctionState = new AuctionState(auction);
-            auctionStates.put(auction.getItemID(), newAuctionState);
+
+    public static boolean addAuction(Auction auction){
+        if(!auction.verifyAuction()){
+            return false;
+        }
+
+        AuctionState newAuctionState = new AuctionState(auction);
+        auctionStates.put(auction.getItemID(), newAuctionState);
+
+        return true;
     }
 
-    public static void updateBid(Bid bid){
+    public static boolean updateBid(Bid bid){
         updateAuctionsState();
         if(checkAuctionGoing(bid.getItemId())){
-            if(!checkWinningBid(bid)) return;
+            if(!checkWinningBid(bid))
+                return false;
+
             AuctionState auctionUpdate = auctionStates.get(bid.getItemId());
             Bid previousBid = auctionUpdate.updateBids(bid);
+
             if(previousBid == null){
                 addToWalletTrans(bid);
-            }else {
+            }
+            else {
                 updateWalletTrans(bid, previousBid);
             }
         }
+
+        return true;
     }
 
     private static boolean checkAuctionGoing(String itemId) {
@@ -103,14 +110,31 @@ public class AuctionsState {
         
     }
 
-    
+    public static List<Auction> getAuctions(){
+        List<Auction> auctions = new ArrayList<>();
+
+        for(AuctionState auction : auctionStates.values())
+            auctions.add(auction.auction);
+
+        return auctions;
+    }
 
     public static TreeSet<Bid> getAuctionBidsTreeSet(String itemId){
-        return auctionStates.get(itemId).getBids();
+        AuctionState state = auctionStates.get(itemId);
+
+        if(state == null)
+            return null;
+
+        return state.getBids();
     }
 
     public static Auction getAuction(String itemId) {
-        return auctionStates.get(itemId).getAuction();
+        AuctionState state = auctionStates.get(itemId);
+
+        if(state == null)
+            return null;
+
+        return state.getAuction();
     }
 }
 class AuctionState{

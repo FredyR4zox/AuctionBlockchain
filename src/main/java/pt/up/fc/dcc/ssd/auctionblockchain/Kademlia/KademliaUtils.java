@@ -3,6 +3,7 @@ package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 import com.google.protobuf.ByteString;
 import pt.up.fc.dcc.ssd.auctionblockchain.*;
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
@@ -20,13 +21,11 @@ public class KademliaUtils {
 
     public static final Charset charset = Charset.forName("ASCII");
     public static final int alpha = 3;
-    public static final int idSizeInBits = 160;
-    public static final int idSizeInBytes = idSizeInBits/8;
     public static final int k = 20;
-    public static final String hashAlgorithm = "SHA-1";
     public static final String mempoolText = "mempool";
     public static final String auctionsText = "auctions";
 
+    public static final byte[] bootstrapNodeID = "00000000000000000001".getBytes(charset);
     public static final String bootstrapNodeIP = "127.0.0.1";
     public static final int bootstrapNodePort = 1337;
 
@@ -73,10 +72,10 @@ public class KademliaUtils {
         byte[] mempoolKey;
 
         try {
-            MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-            mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
+            MessageDigest messageDigest = MessageDigest.getInstance(Utils.hashAlgorithm);
+            mempoolKey = messageDigest.digest(mempoolText.getBytes(charset));
         } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + Utils.hashAlgorithm);
             e.printStackTrace();
             return null;
         }
@@ -84,6 +83,20 @@ public class KademliaUtils {
         return mempoolKey;
     }
 
+    public static byte[] auctionsHash() {
+        byte[] auctionsKey;
+
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance(Utils.hashAlgorithm);
+            auctionsKey = messageDigest.digest(auctionsText.getBytes(charset));
+        } catch (NoSuchAlgorithmException e) {
+            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + Utils.hashAlgorithm);
+            e.printStackTrace();
+            return null;
+        }
+
+        return auctionsKey;
+    }
 
 
     public static BlockProto BlockToBlockProto(Block block){
@@ -155,6 +168,24 @@ public class KademliaUtils {
                 auctionProto.getSignature().toByteArray());
     }
 
+    public static List<Auction> AuctionListProtoToAuctionList(AuctionListProto auctionListProto){
+        List<Auction> ret = new ArrayList<>();
+
+        for(AuctionProto auction : auctionListProto.getAuctionsList())
+            ret.add(AuctionProtoToAuction(auction));
+
+        return ret;
+    }
+
+    public static AuctionListProto AuctionListToAuctionListProto(List<Auction> auctions){
+        AuctionListProto.Builder builder = AuctionListProto.newBuilder();
+
+        for(Auction auction : auctions)
+            builder.addAuctions(AuctionToAuctionProto(auction));
+
+        return builder.build();
+    }
+
     public static BidProto BidToBidProto(Bid bid){
         return BidProto.newBuilder()
                 .setItemId(ByteString.copyFrom(bid.getItemId(), charset))
@@ -178,6 +209,24 @@ public class KademliaUtils {
                 bidProto.getBuyerPublicKey().toByteArray(),
                 bidProto.getHash().toString(charset),
                 bidProto.getSignature().toByteArray());
+    }
+
+    public static List<Bid> BidListProtoToBidList(BidListProto bidListProto){
+        List<Bid> ret = new ArrayList<>();
+
+        for(BidProto bid : bidListProto.getBidsList())
+            ret.add(BidProtoToBid(bid));
+
+        return ret;
+    }
+
+    public static BidListProto BidListToBidListProto(List<Bid> bids){
+        BidListProto.Builder builder = BidListProto.newBuilder();
+
+        for(Bid bid : bids)
+            builder.addBids(BidToBidProto(bid));
+
+        return builder.build();
     }
 
     public static TransactionProto TransactionToTransactionProto(Transaction transaction){

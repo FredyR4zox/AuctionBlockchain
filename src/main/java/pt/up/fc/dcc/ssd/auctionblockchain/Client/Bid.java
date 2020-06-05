@@ -60,7 +60,7 @@ public class Bid {
         this.amount = BlockchainUtils.getMinerReward();
         this.fee = fee;
         buyerPublicKey = null;
-        this.hash = Utils.getsha256(sellerID + amount + fee);
+        this.hash = Utils.getHash(sellerID + amount + fee);
     }
 
     public Boolean verifyBid() {
@@ -79,12 +79,12 @@ public class Bid {
     }
 
     public String getHashToBeSigned(){
-        return Utils.getsha256(this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode());
+        return Utils.getHash(this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode());
     }
 
     public String getHashWithSig() {
         if (signature != null){
-            return Utils.getsha256(this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode()+ Arrays.toString(this.signature));
+            return Utils.getHash(this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode()+ Arrays.toString(this.signature));
         }else{
             return this.hash;
         }

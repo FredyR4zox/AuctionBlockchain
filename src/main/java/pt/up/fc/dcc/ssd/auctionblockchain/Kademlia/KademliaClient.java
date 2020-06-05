@@ -53,19 +53,12 @@ public class KademliaClient {
     }
 
     public <T> List<Transaction> getMempool(){
-        byte[] mempoolKey;
+        byte[] mempoolKey = KademliaUtils.mempoolHash();
 
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-            mempoolKey = messageDigest.digest(KademliaUtils.mempoolText.getBytes(KademliaUtils.charset));
-        } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
-            e.printStackTrace();
-
+        if(mempoolKey == null)
             return new ArrayList<>();
-        }
 
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
@@ -86,19 +79,12 @@ public class KademliaClient {
     }
 
     public <T> List<Auction> getAuctions(){
-        byte[] auctionsKey;
+        byte[] auctionsKey = KademliaUtils.auctionsHash();
 
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-            auctionsKey = messageDigest.digest(KademliaUtils.auctionsText.getBytes(KademliaUtils.charset));
-        } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
-            e.printStackTrace();
-
+        if(auctionsKey == null)
             return new ArrayList<>();
-        }
 
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
@@ -119,7 +105,7 @@ public class KademliaClient {
     }
 
     public <T> List<Bid> getBidsFromAuction(Auction auction){
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
@@ -187,7 +173,7 @@ public class KademliaClient {
     }
 
     public boolean announceNewBlock(Block block){
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
@@ -203,7 +189,7 @@ public class KademliaClient {
     }
 
     public boolean announceNewTransaction(Transaction transaction){
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
@@ -219,7 +205,7 @@ public class KademliaClient {
     }
 
     public boolean announceNewBid(Bid bid){
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
@@ -235,7 +221,7 @@ public class KademliaClient {
     }
 
     public boolean announceNewAuction(Auction auction){
-        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
@@ -397,17 +383,23 @@ public class KademliaClient {
         }
 
         List<T> ret = new ArrayList<>();
-        if (response.getBlockOrTransactionsOrNodesCase() == FindValueResponse.BlockOrTransactionsOrNodesCase.BLOCK) {
+        if (response.getBlockOrTransactionsOrNodesOrAuctionsOrBidsCase() == FindValueResponse.BlockOrTransactionsOrNodesOrAuctionsOrBidsCase.BLOCK) {
             ret.add((T)KademliaUtils.BlockProtoToBlock(response.getBlock()));
         }
-        else if (response.getBlockOrTransactionsOrNodesCase() == FindValueResponse.BlockOrTransactionsOrNodesCase.TRANSACTIONS) {
+        else if (response.getBlockOrTransactionsOrNodesOrAuctionsOrBidsCase() == FindValueResponse.BlockOrTransactionsOrNodesOrAuctionsOrBidsCase.TRANSACTIONS) {
             ret.addAll((List<T>)KademliaUtils.MempoolProtoToTransactionList(response.getTransactions()));
         }
-        else if (response.getBlockOrTransactionsOrNodesCase() == FindValueResponse.BlockOrTransactionsOrNodesCase.BUCKET) {
+        else if (response.getBlockOrTransactionsOrNodesOrAuctionsOrBidsCase() == FindValueResponse.BlockOrTransactionsOrNodesOrAuctionsOrBidsCase.BUCKET) {
             ret.addAll((List<T>)KademliaUtils.KBucketProtoToKademliaNodeList(response.getBucket()));
         }
+        else if (response.getBlockOrTransactionsOrNodesOrAuctionsOrBidsCase() == FindValueResponse.BlockOrTransactionsOrNodesOrAuctionsOrBidsCase.AUCTIONS) {
+            ret.addAll((List<T>)KademliaUtils.AuctionListProtoToAuctionList(response.getAuctions()));
+        }
+        else if (response.getBlockOrTransactionsOrNodesOrAuctionsOrBidsCase() == FindValueResponse.BlockOrTransactionsOrNodesOrAuctionsOrBidsCase.BIDS) {
+            ret.addAll((List<T>)KademliaUtils.BidListProtoToBidList(response.getBids()));
+        }
         else
-            logger.log(Level.SEVERE, "Error: findValueResponse without BlockOrTransactionsOrNodesCase");
+            logger.log(Level.SEVERE, "Error: findValueResponse without BlockOrTransactionsOrNodesOrAuctionsOrBidsCase");
 
         closeChannel(channel);
 

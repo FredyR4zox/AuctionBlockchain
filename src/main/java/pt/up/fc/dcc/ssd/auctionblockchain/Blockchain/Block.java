@@ -82,7 +82,7 @@ public class Block{
     }
 
     public String calculateHash() {
-        return Utils.getsha256(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
+        return Utils.getHash(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
     }
 
     public Boolean checkBlock(){

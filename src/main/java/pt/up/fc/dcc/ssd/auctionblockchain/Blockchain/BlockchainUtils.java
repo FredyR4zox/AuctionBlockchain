@@ -1,6 +1,6 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Blockchain;
 
-import pt.up.fc.dcc.ssd.auctionblockchain.KademliaClient;
+import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.KademliaClient;
 import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 

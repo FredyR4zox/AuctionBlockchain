@@ -83,7 +83,7 @@ public class KademliaNode {
     public String toString() {
         StringBuffer buf = new StringBuffer();
 
-        for(int i=0; i<KademliaUtils.idSizeInBytes; i++)
+        for(int i=0; i<pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes; i++)
             buf.append(nodeID[i]);
 
         buf.append(" " + ipAddress + ":" + port);

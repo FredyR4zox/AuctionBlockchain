@@ -10,6 +10,7 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -116,18 +117,40 @@ public class KademliaServer {
 
             StoreResponse.Builder response = StoreResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
-            StoreRequest.BlockOrTransactionCase type = request.getBlockOrTransactionCase();
+            StoreRequest.BlockOrTransactionOrAuctionOrBidCase type = request.getBlockOrTransactionOrAuctionOrBidCase();
             boolean result = false;
 
-            if(type == StoreRequest.BlockOrTransactionCase.TRANSACTION){
+            if(type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.TRANSACTION){
                 Transaction transaction = KademliaUtils.TransactionProtoToTransaction(request.getTransaction());
 
                 result = BlockchainUtils.addTransaction(transaction);
+
+                if(!result)
+                    logger.log(Level.WARNING, "Could not add transaction");
             }
-            else if(type == StoreRequest.BlockOrTransactionCase.BLOCK){
+            else if(type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.BLOCK){
                 Block block = KademliaUtils.BlockProtoToBlock(request.getBlock());
 
                 result = BlockchainUtils.addBlock(block);
+
+                if(!result)
+                    logger.log(Level.WARNING, "Could not add block");
+            }
+            else if(type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.AUCTION){
+                Auction auction = KademliaUtils.AuctionProtoToAuction(request.getAuction());
+
+                result = AuctionsState.addAuction(auction);
+
+                if(!result)
+                    logger.log(Level.WARNING, "Could not add auction");
+            }
+            else if(type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.BID){
+                Bid bid = KademliaUtils.BidProtoToBid(request.getBid());
+
+                result = AuctionsState.updateBid(bid);
+
+                if(!result)
+                    logger.log(Level.WARNING, "Could not add bid");
             }
             else
                 logger.log(Level.SEVERE, "Error: Type of store request not known");
@@ -141,15 +164,29 @@ public class KademliaServer {
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
             bucketManager.insertNode(node);
 
-            if(type == StoreRequest.BlockOrTransactionCase.TRANSACTION){
-                Transaction transaction = KademliaUtils.TransactionProtoToTransaction(request.getTransaction());
+            if(result) {
+                if (type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.TRANSACTION) {
+                    Transaction transaction = KademliaUtils.TransactionProtoToTransaction(request.getTransaction());
 
-                kademliaClient.announceNewTransaction(transaction);
-            }
-            else if(type == StoreRequest.BlockOrTransactionCase.BLOCK) {
-                Block block = KademliaUtils.BlockProtoToBlock(request.getBlock());
+                    kademliaClient.announceNewTransaction(transaction);
+                }
+                else if (type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.BLOCK) {
+                    Block block = KademliaUtils.BlockProtoToBlock(request.getBlock());
 
-                kademliaClient.announceNewBlock(block);
+                    kademliaClient.announceNewBlock(block);
+                }
+                else if (type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.AUCTION) {
+                    Auction auction = KademliaUtils.AuctionProtoToAuction(request.getAuction());
+
+                    kademliaClient.announceNewAuction(auction);
+                }
+                else if (type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.BID) {
+                    Bid bid = KademliaUtils.BidProtoToBid(request.getBid());
+
+                    kademliaClient.announceNewBid(bid);
+                }
+                else
+                    logger.log(Level.SEVERE, "Error: Type of store request not known");
             }
 
 
@@ -187,45 +224,8 @@ public class KademliaServer {
 
             FindValueResponse.Builder responseBuilder = FindValueResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
-            byte[] mempoolKey;
-            byte[] auctionsKey;
-//            byte[] lastBlocksKey;
-
-            try {
-                MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-                mempoolKey = messageDigest.digest(KademliaUtils.mempoolText.getBytes(KademliaUtils.charset));
-            } catch (NoSuchAlgorithmException e) {
-                logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
-                e.printStackTrace();
-
-                responseObserver.onNext(responseBuilder.build());
-                responseObserver.onCompleted();
-                return;
-            }
-
-            try {
-                MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-                auctionsKey = messageDigest.digest(KademliaUtils.auctionsText.getBytes(KademliaUtils.charset));
-            } catch (NoSuchAlgorithmException e) {
-                logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
-                e.printStackTrace();
-
-                responseObserver.onNext(responseBuilder.build());
-                responseObserver.onCompleted();
-                return;
-            }
-
-//            try {
-//                MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-//                lastBlocksKey = messageDigest.digest("lastBlock".getBytes(KademliaUtils.charset));
-//            } catch (NoSuchAlgorithmException e) {
-//                logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
-//                e.printStackTrace();
-//
-//                responseObserver.onNext(responseBuilder.build());
-//                responseObserver.onCompleted();
-//                return;
-//            }
+            byte[] mempoolKey = KademliaUtils.mempoolHash();
+            byte[] auctionsKey = KademliaUtils.auctionsHash();
 
 
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
@@ -235,25 +235,25 @@ public class KademliaServer {
                 responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
             }
             else if(auctionsKey != null && Arrays.equals(key, auctionsKey)) {
-                List<Auction> auctions = new ArrayList<>(AuctionsState.get);
-                responseBuilder.setAuctions(KademliaUtils.TransactionListToMempoolProto(transactions));
+                List<Auction> auctions = new ArrayList<>(AuctionsState.getAuctions());
+                responseBuilder.setAuctions(KademliaUtils.AuctionListToAuctionListProto(auctions));
             }
-//            else if(lastBlocksKey != null && Arrays.equals(key, lastBlocksKey)) {
-//                Block lastBlock = BlockChain.getBlockWithHash(BlockChain.getLastHash());
-//
-//                if(lastBlock != null)
-//                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(lastBlock));
-//            }
+            // Its not a special key so it must be a block or an auction (bids of that auction)
             else {
                 Block block = BlockchainUtils.getBlockWithPreviousHash(new String(key));
-                logger.log(Level.INFO, "Could not get block with hash " + new String(key));
+                Auction auction = AuctionsState.getAuction(key.toString());
 
-                if(block == null){
-                    List<KademliaNode> nodes = bucketManager.getClosestNodes(node.getNodeID(), key, KademliaUtils.k);
-                    responseBuilder.setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes));
+                logger.log(Level.INFO, "Could not get block with hash " + new String(key));
+                if(block != null) {
+                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(block));
+                }
+                else if(auction != null) {
+                    List<Bid> bids = new ArrayList<>(AuctionsState.getAuctionBidsTreeSet(key.toString()));
+                    responseBuilder.setBids(KademliaUtils.BidListToBidListProto(bids));
                 }
                 else {
-                    responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(block));
+                    List<KademliaNode> nodes = bucketManager.getClosestNodes(node.getNodeID(), key, KademliaUtils.k);
+                    responseBuilder.setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes));
                 }
             }
 

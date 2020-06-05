@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import java.lang.Math;
 import com.google.common.math.BigIntegerMath;
 import pt.up.fc.dcc.ssd.auctionblockchain.Pair;
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 
 public class KBucketManager {
     private static final Logger logger = Logger.getLogger(KBucketManager.class.getName());
@@ -21,8 +22,8 @@ public class KBucketManager {
     public KBucketManager(KademliaNode myNode) {
         this.myNode = myNode;
 
-        this.buckets = new KBucket[KademliaUtils.idSizeInBits];
-        for(int i = 0; i < KademliaUtils.idSizeInBits; i++)
+        this.buckets = new KBucket[Utils.hashAlgorithmLengthInBits];
+        for(int i = 0; i < Utils.hashAlgorithmLengthInBits; i++)
             buckets[i] = new KBucket();
     }
 
@@ -103,10 +104,10 @@ public class KBucketManager {
                 ret.add(node);
         }
 
-        for(int i = 1; ret.size() < maxNodes && (bucketLocation + i < KademliaUtils.idSizeInBits || bucketLocation - i >= 0); i++) {
+        for(int i = 1; ret.size() < maxNodes && (bucketLocation + i < Utils.hashAlgorithmLengthInBits || bucketLocation - i >= 0); i++) {
             KBucket bucket;
 
-            if(bucketLocation + i < KademliaUtils.idSizeInBits) {
+            if(bucketLocation + i < Utils.hashAlgorithmLengthInBits) {
                 bucket = buckets[bucketLocation + i];
                 if (bucket != null) {
                     for (KademliaNode node : bucket.getNodes()) {

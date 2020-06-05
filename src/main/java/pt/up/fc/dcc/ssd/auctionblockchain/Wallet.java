@@ -44,7 +44,7 @@ public class Wallet {
         }
     }
     public static String getAddressFromPubKey(PublicKey pubKey){
-        return Utils.getsha256(Base64.getEncoder().encodeToString(pubKey.getEncoded()));
+        return Utils.getHash(Base64.getEncoder().encodeToString(pubKey.getEncoded()));
     }
 
     public void printKeys(){
