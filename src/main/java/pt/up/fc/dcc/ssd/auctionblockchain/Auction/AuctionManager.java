@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Auction;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
@@ -17,6 +18,7 @@ public class AuctionManager implements Runnable{
     private Auction auction;
     Wallet seller;
     TreeSet<Bid> bids_status;
+    Thread runningAuction;
     String lastHashUpdate;
 
     public AuctionManager(Auction auction) {
@@ -32,8 +34,8 @@ public class AuctionManager implements Runnable{
         AuctionsState.addAuction(auction);
         this.bids_status = AuctionsState.getAuctionBidsTreeSet(randomString);
         //publishAuction()
-        Thread thread = new Thread(this);
-        thread.start();
+        runningAuction = new Thread(this);
+        runningAuction.start();
     }
 
     private Transaction createTransaction(Bid winBid) {
@@ -66,10 +68,15 @@ public class AuctionManager implements Runnable{
         }
         logger.info("Auction has ended");
         Transaction trans = createTransaction(winBid);
+        BlockchainUtils.addTransaction(trans);
         //BlockchainUtils.getKademliaClient().publishTransaction(trans);
     }
 
     public Auction getAuction() {
         return auction;
+    }
+
+    public Thread getRunningAuction() {
+        return runningAuction;
     }
 }

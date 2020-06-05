@@ -101,7 +101,7 @@ public class AuctionsState {
     private static void updateWalletTrans(Bid newBid, Bid previousBid) {
         long newAmount = walletsTrans.get(previousBid.getBuyerID()) - previousBid.getAmount() ;
         walletsTrans.replace(previousBid.getBuyerID(), newAmount);
-        newAmount = walletsTrans.get(newBid.getBuyerID()) + previousBid.getAmount() ;
+        newAmount = walletsTrans.get(newBid.getBuyerID()) + newBid.getAmount() ;
         walletsTrans.replace(newBid.getBuyerID(), newAmount);
     }
 

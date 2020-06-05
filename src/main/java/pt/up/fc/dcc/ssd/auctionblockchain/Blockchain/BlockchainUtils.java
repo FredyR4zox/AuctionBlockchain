@@ -18,6 +18,7 @@ public class BlockchainUtils {
     public static final BlockChain original = new BlockChain();
     private static Block newBlock;
     private static KademliaClient kademliaClient;
+    private static Thread miningThread;
 
     public static Boolean addBlock(Block newBlock){
         return original.addBlockToCorrectChain(newBlock);
@@ -31,8 +32,8 @@ public class BlockchainUtils {
             longest.setMining(false);
             return;
         }
-        Thread thread = new Thread(longest);
-        thread.start();
+        miningThread = new Thread(longest);
+        miningThread.start();
     }
 
     public static Block getBlockWithPreviousHash(String hash){
@@ -79,6 +80,10 @@ public class BlockchainUtils {
 
     public static KademliaClient getKademliaClient() {
         return kademliaClient;
+    }
+
+    public static Thread getMiningThread() {
+        return miningThread;
     }
 
     static class transactionCompare implements Comparator<Transaction> {
