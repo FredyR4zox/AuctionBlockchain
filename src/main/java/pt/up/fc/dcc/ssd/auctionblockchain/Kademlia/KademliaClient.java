@@ -141,7 +141,7 @@ public class KademliaClient {
         return null;
     }
 
-    public void getBlockChain(){
+    public void bootstrapBlockchain(){
         String lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash();
 
         while(true){
