@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 public class Wallet {
     private static final Logger logger = Logger.getLogger(Wallet.class.getName());
-    public static final String WALLETS_PATH="./wallets";
+    public static final String WALLETS_PATH="./wallets/";
     private String address;
     private PrivateKey privKey;
     private PublicKey pubKey;
