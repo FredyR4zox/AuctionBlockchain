@@ -21,10 +21,11 @@ public class Main {
 
         Wallet creator= new Wallet();
         System.out.println("creator address:" + creator.getAddress());
+
         BlockchainUtils.createGenesisBlock(creator);
         Wallet miner = new Wallet();
         System.out.println("miner address:" + miner.getAddress());
-        Wallet alice = new Wallet();
+        Wallet alice = Wallet.createWalletFromFile("wallets/alice");
         System.out.println("alice address:" + alice.getAddress());
 
         AuctionManager auction = new AuctionManager(alice, 10, 10, 2, 10000);
