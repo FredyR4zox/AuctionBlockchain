@@ -37,7 +37,6 @@ public class KBucket {
     }
 
     public boolean insertNode(KademliaNode node){
-        // TODO: Don't change the whole object, only update the last time seen
         // This function inserts the element at the end of the list, assuming the
         // last time seen is the most recent (without checking the lastTimeSeen variable)
         if (nodes.contains(node)) {
@@ -62,8 +61,6 @@ public class KBucket {
         }
 
         nodes.addLast(node);
-//        nodeIDs.add(Arrays.copyOf(node.getNodeID(), node.getNodeID().length));
-//        System.out.println("Bucket now has length of " + nodes.size());
         logger.log(Level.INFO, "Added node to bucket and now has length of " + nodes.size());
         return true;
     }
@@ -76,18 +73,7 @@ public class KBucket {
         return nodes.size();
     }
 
-//    public KademliaNode getNode(int i) {
-//        if(i < 0 || i >= nodes.size())
-//            return null;
-//
-//        return nodes. (i);
-//    }
-
     public List<KademliaNode> getNodes(){
         return new ArrayList<>(nodes);
     }
-//
-//    public Set<byte[]> getNodeIDs(){
-//        return new HashSet<>(nodeIDs);
-//    }
 }

@@ -1,5 +1,7 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.Pair;
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -9,8 +11,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.lang.Math;
 import com.google.common.math.BigIntegerMath;
-import pt.up.fc.dcc.ssd.auctionblockchain.Pair;
-import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 
 public class KBucketManager {
     private static final Logger logger = Logger.getLogger(KBucketManager.class.getName());
@@ -52,7 +52,6 @@ public class KBucketManager {
                 return true;
             }
 
-            //When the TreeSet is converted to List, the order is maintained
             List<KademliaNode> nodes = buckets[i].getNodes();
             KademliaNode first = nodes.get(0);
 
@@ -66,7 +65,7 @@ public class KBucketManager {
                 return true;
             } else {
                 buckets[i].removeNode(first);
-//                first.updateLastSeen(Instant.now().getEpochSecond());
+
                 buckets[i].insertNode(ret.getFirst());
 
                 logger.log(Level.INFO, "Updated first node " + new BigInteger(ret.getFirst().getNodeID()));
@@ -83,13 +82,6 @@ public class KBucketManager {
     public KBucket[] getBuckets() {
         return buckets;
     }
-//
-//    public KBucket getBucket(int i){
-//        if(i < 0 || i >= KademliaUtils.idSizeInBits)
-//            return null;
-//
-//        return buckets[i];
-//    }
 
     public List<KademliaNode> getClosestNodes(byte[] requestorID, byte[] requestedID, int maxNodes) {
         List<KademliaNode> ret = new ArrayList<>();

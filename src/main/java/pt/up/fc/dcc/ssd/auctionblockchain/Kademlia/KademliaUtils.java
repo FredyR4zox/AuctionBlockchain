@@ -3,18 +3,25 @@ package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 import com.google.protobuf.ByteString;
 import pt.up.fc.dcc.ssd.auctionblockchain.*;
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
-import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
+import java.nio.charset.MalformedInputException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 
 public class KademliaUtils {
     private static final Logger logger = Logger.getLogger(KademliaUtils.class.getName());
@@ -36,25 +43,36 @@ public class KademliaUtils {
     }
 
     public static BigInteger distanceTo(byte[] nodeID1, byte[] nodeID2){
-//        byte[] distance = new byte[KademliaUtils.idSizeInBytes];
-//
-//        for (int i = 0; i < KademliaUtils.idSizeInBytes; i++) {
-//            distance[i] = (byte) ((int) nodeID1[i] ^ (int) nodeID2[i]);
-//            if (distance[i] < 0)
-//                distance[i] += 256; // Two's complement stuff
-//        }
-
         BigInteger distance = new BigInteger(nodeID1);
         distance = distance.xor(new BigInteger(nodeID2));
         return distance.abs();
-
-//        return BigIntegerMath.log2(distance, RoundingMode.FLOOR);
     }
 
+    public static String getMyIpAddress(){
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.ALWAYS)
+                    .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://ifconfig.me/all.json"))
+                    .timeout(Duration.ofSeconds(10))
+                    .GET()
+                    .build();
 
-//    public static double log2(double d) {
-//        return Math.log(d)/Math.log(2.0);
-//    }
+            HttpResponse<String> response = client.send(request,
+                    HttpResponse.BodyHandlers.ofString());
+
+            JSONObject obj = new JSONObject(response.body());
+            return obj.getString("ip_addr");
+        }
+        catch (IOException e){
+            return null;
+        }
+        catch (InterruptedException e){
+            return null;
+        }
+    }
+
 
     static class KademliaNodeCompare implements Comparator<KademliaNode>
     {
@@ -63,8 +81,6 @@ public class KademliaUtils {
             if (k1.getLastSeen() < k2.getLastSeen()) return -1;
             if (k1.getLastSeen() > k2.getLastSeen()) return 1;
             else return 0;
-//            if (k1.getLastSeen() < k2.getLastSeen()) return -1;
-//            else return 1;
         }
     }
 
