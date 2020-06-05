@@ -18,6 +18,7 @@ public class BlockchainUtils {
     public static final BlockChain original = new BlockChain();
     private static Block newBlock;
     private static KademliaClient kademliaClient;
+    public static Wallet miner;
     private static Thread miningThread;
 
     public static Boolean addBlock(Block newBlock){
@@ -43,7 +44,12 @@ public class BlockchainUtils {
 
     //adds transactions to all chains terminations
     public static Boolean addTransaction(Transaction trans){
-        return original.addTransactionToCorrectChains(trans);
+        Boolean output = original.addTransactionToCorrectChains(trans);
+        BlockChain longestChain = original.getLongestChain();
+        if (!longestChain.getUnconfirmedTransaction().isEmpty() && !longestChain.isMining()){
+            BlockchainUtils.mineBlock(BlockchainUtils.miner);
+        }
+        return output;
     }
 
     public static void createGenesisBlock(Wallet creator){
@@ -86,6 +92,10 @@ public class BlockchainUtils {
         return miningThread;
     }
 
+    public static void setMiner(Wallet miner) {
+        BlockchainUtils.miner = miner;
+    }
+
     static class transactionCompare implements Comparator<Transaction> {
         @Override
         public int compare(Transaction transaction, Transaction t1) {
@@ -98,4 +108,5 @@ public class BlockchainUtils {
             else return result;
         }
     }
+
 }

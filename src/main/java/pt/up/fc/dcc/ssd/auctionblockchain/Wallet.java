@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 public class Wallet {
     private static final Logger logger = Logger.getLogger(Wallet.class.getName());
+    public static final String WALLETS_PATH="./wallets";
     private String address;
     private PrivateKey privKey;
     private PublicKey pubKey;
@@ -153,11 +154,10 @@ public class Wallet {
         String pubKeyEncoded = Base64.getEncoder().encodeToString(Wallet.getEncodedPublicKey(wallet.getPubKey()));
         String privKeyEncoded = Base64.getEncoder().encodeToString(Wallet.getEncodedPrivateKey(wallet.getPrivKey()));
         String addressEncoded = Base64.getEncoder().encodeToString(wallet.getAddress().getBytes());
-        String filePath = "./";
-        File myWallet = new File(filePath + filename);
+        File myWallet = new File(WALLETS_PATH + filename);
         try {
             if(!myWallet.createNewFile()) return null;
-            FileWriter writeF = new FileWriter(filePath + filename);
+            FileWriter writeF = new FileWriter(WALLETS_PATH + filename);
             writeF.write(pubKeyEncoded + " " + privKeyEncoded + " " + addressEncoded);
             writeF.close();
         } catch (IOException e) {
@@ -167,8 +167,7 @@ public class Wallet {
     }
 
     public static Wallet createWalletFromFile(String filename){
-        String filePath = "./";
-        File myObj = new File(filePath + filename);
+        File myObj = new File(WALLETS_PATH + filename);
         try {
             Scanner myReader = new Scanner(myObj);
             String stringWallet = myReader.nextLine();
