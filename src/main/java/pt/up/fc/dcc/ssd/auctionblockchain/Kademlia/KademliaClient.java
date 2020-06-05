@@ -1,26 +1,23 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import pt.up.fc.dcc.ssd.auctionblockchain.*;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
+import pt.up.fc.dcc.ssd.auctionblockchain.AuctionBlockchainGrpc.AuctionBlockchainBlockingStub;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import pt.up.fc.dcc.ssd.auctionblockchain.*;
-import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
-import pt.up.fc.dcc.ssd.auctionblockchain.AuctionBlockchainGrpc.AuctionBlockchainBlockingStub;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
-import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 
 public class KademliaClient {
     private static final Logger logger = Logger.getLogger(KademliaClient.class.getName());
@@ -141,7 +138,7 @@ public class KademliaClient {
         return null;
     }
 
-    public void getBlockChain(){
+    public void bootstrapBlockchain(){
         String lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash();
 
         while(true){
@@ -475,8 +472,6 @@ public class KademliaClient {
 
 
     private <T> boolean store(byte[] serviceKey, T value) {
-        KademliaNode myNode = bucketManager.getMyNode();
-
         TreeSet<KademliaNodeWrapper> shortList = new TreeSet<>(new KademliaNodeWrapperCompare());
         TreeSet<KademliaNodeWrapper> probedNodes = new TreeSet<>(new KademliaNodeWrapperCompare());
 
@@ -534,8 +529,6 @@ public class KademliaClient {
     }
 
     private <T> List<T> findNode(byte[] key) {
-        KademliaNode myNode = bucketManager.getMyNode();
-
         TreeSet<KademliaNodeWrapper> shortList = new TreeSet<>(new KademliaNodeWrapperCompare());
         TreeSet<KademliaNodeWrapper> probedNodes = new TreeSet<>(new KademliaNodeWrapperCompare());
 
@@ -578,8 +571,6 @@ public class KademliaClient {
     }
 
     private <T> List<T> findValue(byte[] nodeKey, byte[] key) {
-        KademliaNode myNode = bucketManager.getMyNode();
-
         TreeSet<KademliaNodeWrapper> shortList = new TreeSet<>(new KademliaNodeWrapperCompare());
         TreeSet<KademliaNodeWrapper> probedNodes = new TreeSet<>(new KademliaNodeWrapperCompare());
 

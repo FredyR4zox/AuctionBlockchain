@@ -5,7 +5,6 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auctionblockchain.*;
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
-import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionManager;
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
@@ -13,8 +12,6 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -28,7 +25,7 @@ public class KademliaServer {
     private final KBucketManager bucketManager;
 
 
-    public KademliaServer(int port, KBucketManager bucketManager) throws IOException {
+    public KademliaServer(int port, KBucketManager bucketManager) {
         this(ServerBuilder.forPort(port), port, bucketManager);
     }
 
@@ -74,21 +71,6 @@ public class KademliaServer {
         }
     }
 
-
-    /**
-     * Main method.  This comment makes the linter happy.
-     */
-//    public static void main(String[] args) throws Exception {
-//        byte[] myNodeID = {00, 00, 00, 00, 01, 00, 00, 00, 00, 01, 00, 00, 00, 00, 01, 00, 00, 00, 00, 01};
-//
-//        KademliaNode myNode = new KademliaNode("127.0.0.1", 1337, myNodeID);
-//        KBucketManager bucketManager = new KBucketManager(myNode);
-//
-//        KademliaServer server = new KademliaServer(8980, myNode, bucketManager);
-//
-//        server.start();
-//        server.blockUntilShutdown();
-//    }
 
 
     private static class AuctionBlockchainService extends AuctionBlockchainGrpc.AuctionBlockchainImplBase {
