@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -10,6 +10,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.*;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
 import pt.up.fc.dcc.ssd.auctionblockchain.AuctionBlockchainGrpc.AuctionBlockchainBlockingStub;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
@@ -18,6 +20,7 @@ import io.grpc.StatusRuntimeException;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 
 public class KademliaClient {
     private static final Logger logger = Logger.getLogger(KademliaClient.class.getName());
@@ -141,6 +144,24 @@ public class KademliaClient {
             logger.log(Level.INFO, "Could not announce new block.");
     }
 
+    public void announceNewTransaction(Transaction transaction){
+        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
+        if(store(rand, transaction))
+            logger.log(Level.INFO, "Announced new transaction.");
+        else
+            logger.log(Level.INFO, "Could not announce new transaction.");
+    }
+
+    public boolean announceNewBid(Bid bid, Auction auction){
+        KademliaNode node = auction.getBuyerNode();
+
+        storeGRPC(node, bid.getHash().getBytes(), bid);
+    }
+
 
 
     /***
@@ -186,6 +207,12 @@ public class KademliaClient {
             request.setTransaction(KademliaUtils.TransactionToTransactionProto((Transaction) info));
         }
         else if(info.getClass() == Block.class) {
+            request.setBlock(KademliaUtils.BlockToBlockProto((Block) info));
+        }
+        else if(info.getClass() == Auction.class) {
+            request.setAuction(KademliaUtils.((Block) info));
+        }
+        else if(info.getClass() == Bid.class) {
             request.setBlock(KademliaUtils.BlockToBlockProto((Block) info));
         }
         else {

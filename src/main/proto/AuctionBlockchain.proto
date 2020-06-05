@@ -42,6 +42,8 @@ message StoreRequest {
     oneof BlockOrTransaction {
         BlockProto block = 3;
         TransactionProto transaction = 4;
+        AuctionProto auction = 5;
+        BidProto bid = 6;
     }
 }
 
@@ -110,8 +112,9 @@ message AuctionProto {
     float minIncrement = 5;
     fixed64 fee = 6;
     fixed64 timeout = 7;
-    bytes hash = 8;
-    bytes signature = 9;
+    bytes sellerPublicKey = 8;
+    bytes hash = 9;
+    bytes signature = 10;
 }
 
 

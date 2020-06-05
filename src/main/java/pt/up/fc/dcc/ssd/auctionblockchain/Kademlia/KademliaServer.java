@@ -1,8 +1,9 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import pt.up.fc.dcc.ssd.auctionblockchain.*;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
@@ -88,9 +89,11 @@ public class KademliaServer {
 
     private static class AuctionBlockchainService extends AuctionBlockchainGrpc.AuctionBlockchainImplBase {
         private final KBucketManager bucketManager;
+        private final KademliaClient kademliaClient;
 
         AuctionBlockchainService(KBucketManager bucketManager) {
             this.bucketManager = bucketManager;
+            this.kademliaClient = new KademliaClient(bucketManager);
         }
 
         @Override
@@ -134,6 +137,18 @@ public class KademliaServer {
 
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
             bucketManager.insertNode(node);
+
+            if(type == StoreRequest.BlockOrTransactionCase.TRANSACTION){
+                Transaction transaction = KademliaUtils.TransactionProtoToTransaction(request.getTransaction());
+
+                kademliaClient.announceNewTransaction(transaction);
+            }
+            else if(type == StoreRequest.BlockOrTransactionCase.BLOCK) {
+                Block block = KademliaUtils.BlockProtoToBlock(request.getBlock());
+
+                kademliaClient.announceNewBlock(block);
+            }
+
 
             logger.log(Level.INFO, "Processed STORE RPC from " + node);
         }

@@ -1,8 +1,7 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.lang.Math;
 import com.google.common.math.BigIntegerMath;
+import pt.up.fc.dcc.ssd.auctionblockchain.Pair;
 
 public class KBucketManager {
     private static final Logger logger = Logger.getLogger(KBucketManager.class.getName());

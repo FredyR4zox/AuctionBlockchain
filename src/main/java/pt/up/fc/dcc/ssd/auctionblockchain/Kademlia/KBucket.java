@@ -1,6 +1,5 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;

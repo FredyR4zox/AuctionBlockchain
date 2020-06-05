@@ -1,6 +1,8 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
 import com.google.protobuf.ByteString;
+import pt.up.fc.dcc.ssd.auctionblockchain.*;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
@@ -123,6 +125,34 @@ public class KademliaUtils {
                 new BigInteger(blockHeader.getPreviousWork().toByteArray()));
 
         return block;
+    }
+
+    public static AuctionProto AuctionToAuctinProto(Auction auction){
+        return AuctionProto.newBuilder()
+                .setItemId(ByteString.copyFrom(auction.getItemID(), charset))
+                .setSellerId(ByteString.copyFrom(auction.getSellerID(), charset))
+                .setNode(KademliaNodeToKademliaNodeProto(auction.getBuyerNode()))
+                .setMinAmount(auction.getMinAmount())
+                .setMinIncrement(auction.getMinIncrement())
+                .setFee(auction.getFee())
+                .setTimeout(auction.getTimeout())
+                .setHash(ByteString.copyFrom(auction.getHash(), charset))
+                .setSignature(ByteString.copyFrom(auction.getSignature()))
+                .build();
+    }
+
+    public static Auction AuctionProtoToAuction(AuctionProto auctionProto){
+        return new Auction(
+                auctionProto.getItemId().toString(charset),
+                auctionProto.getItemId().toString(charset),
+                KademliaNodeProtoToKademliaNode(auctionProto.getNode()),
+                auctionProto.getMinAmount(),
+                auctionProto.getMinIncrement(),
+                auctionProto.getFee(),
+                auctionProto.getTimeout(),
+                Wallet.getPublicKeyFromBytes(auctionProto.getSellerPublicKey().toByteArray()),
+                auctionProto.getHash().toString(charset),
+                auctionProto.getSignature().toByteArray());
     }
 
     public static BidProto BidToBidProto(Bid bid){

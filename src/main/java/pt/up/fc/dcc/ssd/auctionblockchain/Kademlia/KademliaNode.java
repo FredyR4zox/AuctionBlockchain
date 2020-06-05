@@ -1,13 +1,8 @@
-package pt.up.fc.dcc.ssd.auctionblockchain;
+package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
-import java.lang.reflect.Array;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Objects;
-import java.util.Random;
 import java.util.logging.Logger;
-import java.math.BigInteger;
 
 public class KademliaNode {
     private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
