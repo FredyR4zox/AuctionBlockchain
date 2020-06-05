@@ -57,7 +57,7 @@ public class KademliaClient {
 
         try {
             MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-            mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
+            mempoolKey = messageDigest.digest(KademliaUtils.mempoolText.getBytes(KademliaUtils.charset));
         } catch (NoSuchAlgorithmException e) {
             logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
             e.printStackTrace();
@@ -80,6 +80,60 @@ public class KademliaClient {
             }
             else
                 logger.log(Level.SEVERE, "Error: Received information different than a transaction.");
+        }
+
+        return retList;
+    }
+
+    public <T> List<Auction> getAuctions(){
+        byte[] auctionsKey;
+
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
+            auctionsKey = messageDigest.digest(KademliaUtils.auctionsText.getBytes(KademliaUtils.charset));
+        } catch (NoSuchAlgorithmException e) {
+            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+            e.printStackTrace();
+
+            return new ArrayList<>();
+        }
+
+        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
+        List<T> auctions = findValue(rand, auctionsKey);
+
+        List<Auction> retList = new ArrayList<>();
+        for(T tmp : auctions){
+            if(tmp.getClass() == Auction.class){
+                logger.log(Level.INFO, "Added a auction to the list.");
+                retList.add((Auction) tmp);
+            }
+            else
+                logger.log(Level.SEVERE, "Error: Received information different than a auction.");
+        }
+
+        return retList;
+    }
+
+    public <T> List<Bid> getBidsFromAuction(Auction auction){
+        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
+        List<T> bids = findValue(rand, auction.getItemID().getBytes(KademliaUtils.charset));
+
+        List<Bid> retList = new ArrayList<>();
+        for(T tmp : bids){
+            if(tmp.getClass() == Bid.class){
+                logger.log(Level.INFO, "Added a bid to the list.");
+                retList.add((Bid) tmp);
+            }
+            else
+                logger.log(Level.SEVERE, "Error: Received information different than a bid.");
         }
 
         return retList;
@@ -132,34 +186,68 @@ public class KademliaClient {
         }
     }
 
-    public void announceNewBlock(Block block){
+    public boolean announceNewBlock(Block block){
         byte[] rand = new byte[KademliaUtils.idSizeInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
 
-        if(store(rand, block))
+        if(store(rand, block)) {
             logger.log(Level.INFO, "Announced new block.");
-        else
+            return true;
+        }
+        else {
             logger.log(Level.INFO, "Could not announce new block.");
+            return false;
+        }
     }
 
-    public void announceNewTransaction(Transaction transaction){
+    public boolean announceNewTransaction(Transaction transaction){
         byte[] rand = new byte[KademliaUtils.idSizeInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
 
-        if(store(rand, transaction))
+        if(store(rand, transaction)){
             logger.log(Level.INFO, "Announced new transaction.");
-        else
+            return true;
+        }
+        else{
             logger.log(Level.INFO, "Could not announce new transaction.");
+            return false;
+        }
     }
 
-    public boolean announceNewBid(Bid bid, Auction auction){
-        KademliaNode node = auction.getBuyerNode();
+    public boolean announceNewBid(Bid bid){
+        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
 
-        storeGRPC(node, bid.getHash().getBytes(), bid);
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
+        if(store(rand, bid)) {
+            logger.log(Level.INFO, "Announced new bid.");
+            return true;
+        }
+        else {
+            logger.log(Level.INFO, "Could not announce new bid.");
+            return false;
+        }
+    }
+
+    public boolean announceNewAuction(Auction auction){
+        byte[] rand = new byte[KademliaUtils.idSizeInBytes];
+
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
+        if(store(rand, auction)) {
+            logger.log(Level.INFO, "Announced new auction.");
+            return true;
+        }
+        else {
+            logger.log(Level.INFO, "Could not announce new auction.");
+            return false;
+        }
     }
 
 
@@ -210,10 +298,10 @@ public class KademliaClient {
             request.setBlock(KademliaUtils.BlockToBlockProto((Block) info));
         }
         else if(info.getClass() == Auction.class) {
-            request.setAuction(KademliaUtils.((Block) info));
+            request.setAuction(KademliaUtils.AuctionToAuctionProto((Auction) info));
         }
         else if(info.getClass() == Bid.class) {
-            request.setBlock(KademliaUtils.BlockToBlockProto((Block) info));
+            request.setBid(KademliaUtils.BidToBidProto((Bid) info));
         }
         else {
             logger.log(Level.SEVERE, "Error: store value type not valid - " + info.getClass());

@@ -12,19 +12,17 @@ public class Auction {
 
     private final String itemID;
     private final String sellerID;
-    private final KademliaNode buyerNode;
     private long minAmount;
-    private long minIncrement;
+    private float minIncrement;
     private long fee;
     private long timeout;
     private final PublicKey sellerPublicKey;
     private final String hash;
     private final byte[] signature;
 
-    public Auction(String itemID, String sellerID, KademliaNode buyerNode, long minAmount, long minIncrement, long fee, long timeout, PublicKey sellerPublicKey, String hash, byte[] signature) {
+    public Auction(String itemID, String sellerID, long minAmount, float minIncrement, long fee, long timeout, PublicKey sellerPublicKey, String hash, byte[] signature) {
         this.itemID = itemID;
         this.sellerID = sellerID;
-        this.buyerNode = buyerNode;
         this.minAmount = minAmount;
         this.minIncrement = minIncrement;
         this.fee = fee;
@@ -34,10 +32,9 @@ public class Auction {
         this.signature = signature;
     }
 
-    public Auction(Wallet seller, String itemID, KademliaNode buyerNode, long minAmount, long minIncrement, long fee, long timeout){
+    public Auction(Wallet seller, String itemID, long minAmount, float minIncrement, long fee, long timeout){
         this.itemID=itemID;
         this.sellerID=seller.getAddress();
-        this.buyerNode = buyerNode;
         this.minAmount=minAmount;
         this.minIncrement=minIncrement;
         this.fee = fee;
@@ -54,7 +51,7 @@ public class Auction {
     }
 
     private String getHashToBeSigned() {
-        return Utils.getsha256(this.itemID + this.sellerID + buyerNode.toString() + minAmount + minIncrement +fee + timeout + this.sellerPublicKey.hashCode());
+        return Utils.getsha256(this.itemID + this.sellerID + minAmount + minIncrement + fee + timeout + this.sellerPublicKey.hashCode());
     }
 
     private Boolean isHashValid() {
@@ -85,15 +82,11 @@ public class Auction {
         return sellerID;
     }
 
-    public KademliaNode getBuyerNode() {
-        return buyerNode;
-    }
-
     public long getMinAmount() {
         return minAmount;
     }
 
-    public long getMinIncrement() {
+    public float getMinIncrement() {
         return minIncrement;
     }
 

@@ -39,7 +39,7 @@ message KBucketProto {
 message StoreRequest {
     KademliaNodeProto node = 1;
     bytes key = 2;
-    oneof BlockOrTransaction {
+    oneof BlockOrTransactionOrAuctionOrBid {
         BlockProto block = 3;
         TransactionProto transaction = 4;
         AuctionProto auction = 5;
@@ -73,10 +73,12 @@ message FindValueRequest {
 
 message FindValueResponse {
     KademliaNodeProto node = 1;
-    oneof BlockOrTransactionsOrNodes {
+    oneof BlockOrTransactionsOrNodesOrAuctionsOrBids {
         BlockProto block = 2;
         MempoolProto transactions = 3;
         KBucketProto bucket = 4;
+        AuctionList auctions = 5;
+        BidList bids = 6;
     }
 }
 
@@ -107,7 +109,6 @@ message TransactionProto {
 message AuctionProto {
     bytes itemId = 1;
     bytes sellerId = 2;
-    KademliaNodeProto node = 3;
     fixed64 minAmount = 4;
     float minIncrement = 5;
     fixed64 fee = 6;
@@ -118,7 +119,13 @@ message AuctionProto {
 }
 
 
+message AuctionList {
+    repeated AuctionProto auctions = 1;
+}
 
+message BidList {
+    repeated BidProto bids = 1;
+}
 
 
 

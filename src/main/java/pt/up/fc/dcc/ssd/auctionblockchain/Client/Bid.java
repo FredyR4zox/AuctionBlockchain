@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Client;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
@@ -40,6 +41,17 @@ public class Bid {
         this.buyerPublicKey = Wallet.getPublicKeyFromBytes(buyerPublicKey);
         this.hash = hash;
         this.signature = signature;
+    }
+
+    public Bid(Wallet buyer, Auction auction, long amount){
+        this.itemId = auction.getItemID();
+        this.sellerID = auction.getSellerID();
+        this.buyerID = buyer.getAddress();
+        this.amount = amount;
+        this.fee = auction.getFee();
+        this.buyerPublicKey = buyer.getPubKey();
+        this.hash = this.getHashToBeSigned();
+        this.signature = Wallet.signHash(buyer.getPrivKey(), this.hash, logger);
     }
 
     //coin base reward

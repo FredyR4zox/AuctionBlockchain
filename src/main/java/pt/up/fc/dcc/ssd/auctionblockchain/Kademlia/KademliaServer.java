@@ -4,6 +4,9 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auctionblockchain.*;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionManager;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
@@ -185,11 +188,24 @@ public class KademliaServer {
             FindValueResponse.Builder responseBuilder = FindValueResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
             byte[] mempoolKey;
+            byte[] auctionsKey;
 //            byte[] lastBlocksKey;
 
             try {
                 MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
-                mempoolKey = messageDigest.digest("mempool".getBytes(KademliaUtils.charset));
+                mempoolKey = messageDigest.digest(KademliaUtils.mempoolText.getBytes(KademliaUtils.charset));
+            } catch (NoSuchAlgorithmException e) {
+                logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
+                e.printStackTrace();
+
+                responseObserver.onNext(responseBuilder.build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            try {
+                MessageDigest messageDigest = MessageDigest.getInstance(KademliaUtils.hashAlgorithm);
+                auctionsKey = messageDigest.digest(KademliaUtils.auctionsText.getBytes(KademliaUtils.charset));
             } catch (NoSuchAlgorithmException e) {
                 logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + KademliaUtils.hashAlgorithm);
                 e.printStackTrace();
@@ -217,6 +233,10 @@ public class KademliaServer {
             if(mempoolKey != null && Arrays.equals(key, mempoolKey)) {
                 List<Transaction> transactions = new ArrayList<>(BlockchainUtils.getLongestChain().getUnconfirmedTransaction());
                 responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
+            }
+            else if(auctionsKey != null && Arrays.equals(key, auctionsKey)) {
+                List<Auction> auctions = new ArrayList<>(AuctionsState.get);
+                responseBuilder.setAuctions(KademliaUtils.TransactionListToMempoolProto(transactions));
             }
 //            else if(lastBlocksKey != null && Arrays.equals(key, lastBlocksKey)) {
 //                Block lastBlock = BlockChain.getBlockWithHash(BlockChain.getLastHash());

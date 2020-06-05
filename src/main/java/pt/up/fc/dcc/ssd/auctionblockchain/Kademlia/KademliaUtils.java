@@ -24,6 +24,8 @@ public class KademliaUtils {
     public static final int idSizeInBytes = idSizeInBits/8;
     public static final int k = 20;
     public static final String hashAlgorithm = "SHA-1";
+    public static final String mempoolText = "mempool";
+    public static final String auctionsText = "auctions";
 
     public static final String bootstrapNodeIP = "127.0.0.1";
     public static final int bootstrapNodePort = 1337;
@@ -127,11 +129,10 @@ public class KademliaUtils {
         return block;
     }
 
-    public static AuctionProto AuctionToAuctinProto(Auction auction){
+    public static AuctionProto AuctionToAuctionProto(Auction auction){
         return AuctionProto.newBuilder()
                 .setItemId(ByteString.copyFrom(auction.getItemID(), charset))
                 .setSellerId(ByteString.copyFrom(auction.getSellerID(), charset))
-                .setNode(KademliaNodeToKademliaNodeProto(auction.getBuyerNode()))
                 .setMinAmount(auction.getMinAmount())
                 .setMinIncrement(auction.getMinIncrement())
                 .setFee(auction.getFee())
@@ -145,7 +146,6 @@ public class KademliaUtils {
         return new Auction(
                 auctionProto.getItemId().toString(charset),
                 auctionProto.getItemId().toString(charset),
-                KademliaNodeProtoToKademliaNode(auctionProto.getNode()),
                 auctionProto.getMinAmount(),
                 auctionProto.getMinIncrement(),
                 auctionProto.getFee(),

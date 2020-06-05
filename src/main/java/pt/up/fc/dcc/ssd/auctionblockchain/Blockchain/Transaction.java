@@ -30,6 +30,7 @@ public class Transaction {
     public Transaction(Wallet seller, Bid bid){
         this.bid=bid;
         this.timeStamp = new Date().getTime();
+        this.sellerPublicKey=seller.getPubKey();
         this.hash = this.getHashToBeSigned();
         this.signature = Wallet.signHash(seller.getPrivKey(), this.hash, logger);
     }

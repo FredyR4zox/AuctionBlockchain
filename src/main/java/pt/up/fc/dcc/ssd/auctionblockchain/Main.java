@@ -1,10 +1,12 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionManager;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockChain;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Client;
 
 import java.security.Security;
 
@@ -13,14 +15,23 @@ import static java.lang.Thread.sleep;
 public class Main {
 
 
-        public static void main(String[] args) {
+        public static void main(String[] args) throws InterruptedException {
                 Security.addProvider(new BouncyCastleProvider());
                 long id = 0;
 
                 Wallet creator= new Wallet();
                 System.out.println("creator address:" + creator.getAddress());
+                BlockchainUtils.createGenesisBlock(creator);
                 Wallet miner = new Wallet();
                 System.out.println("miner address:" + miner.getAddress());
+
+                AuctionManager auction = new AuctionManager(miner, 10, 10, 2, 8000);
+                auction.getAuction().verifyAuction();
+
+                Client.bet(creator, auction.getAuction().getItemID(), 30);
+                sleep(3000);
+                Client.bet(creator, auction.getAuction().getItemID(), 30);
+                /*
                 Wallet wallet1 = new Wallet();
                 System.out.println("wallet1 address:" + wallet1.getAddress());
                 Wallet wallet2 = new Wallet();
@@ -30,7 +41,7 @@ public class Main {
                 Wallet bob = new Wallet();
                 System.out.println("bob address:" + bob.getAddress());
 
-                BlockchainUtils.createGenesisBlock(creator);
+
                 BlockchainUtils.getOriginal().printHashMap();
                 System.out.println();
 
@@ -111,6 +122,7 @@ public class Main {
 //                Auction auction = new Auction(0, 60, creator);
 //                Boolean output= auction.verifyAuction();
 //                System.out.println(output);
+                 */
         }
         public static Block createFakeBlock(BlockChain branch){
                 Block lastBlock= branch.getXBlock(branch.getBlockchain().size());
