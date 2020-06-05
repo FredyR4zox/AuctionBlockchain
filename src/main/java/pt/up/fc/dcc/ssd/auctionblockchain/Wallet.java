@@ -2,12 +2,18 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 public class Wallet {
@@ -19,6 +25,12 @@ public class Wallet {
     public Wallet() {
         generateKeys();
         createAddress();
+    }
+
+    public Wallet(String address, PublicKey pubKey, PrivateKey privKey) {
+        this.address=address;
+        this.privKey=privKey;
+        this.pubKey=pubKey;
     }
 
     public PrivateKey getPrivKey() {
@@ -117,5 +129,58 @@ public class Wallet {
 
     public static byte[] getEncodedPublicKey(PublicKey publicKey){
         return publicKey.getEncoded();
+    }
+
+    public static PrivateKey getPrivateKeyFromBytes(byte[] pKey){
+        PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(pKey);
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+            return keyFactory.generatePrivate(privKeySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        logger.warning("Couldn't retrieve private key from bytes");
+        return null;
+    }
+
+    public static byte[] getEncodedPrivateKey(PrivateKey privKey){
+        return privKey.getEncoded();
+    }
+
+
+    //returns file name
+    public static String createFileWithWallet(String filename, Wallet wallet){
+        String pubKeyEncoded = Base64.getEncoder().encodeToString(Wallet.getEncodedPublicKey(wallet.getPubKey()));
+        String privKeyEncoded = Base64.getEncoder().encodeToString(Wallet.getEncodedPrivateKey(wallet.getPrivKey()));
+        String addressEncoded = Base64.getEncoder().encodeToString(wallet.getAddress().getBytes());
+        String filePath = "./";
+        File myWallet = new File(filePath + filename);
+        try {
+            if(!myWallet.createNewFile()) return null;
+            FileWriter writeF = new FileWriter(filePath + filename);
+            writeF.write(pubKeyEncoded + " " + privKeyEncoded + " " + addressEncoded);
+            writeF.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Wallet createWalletFromFile(String filename){
+        String filePath = "./";
+        File myObj = new File(filePath + filename);
+        try {
+            Scanner myReader = new Scanner(myObj);
+            String stringWallet = myReader.nextLine();
+            String[] components = stringWallet.split(" ");
+            PublicKey pubKey =  Wallet.getPublicKeyFromBytes(Base64.getDecoder().decode(components[0]));
+            PrivateKey privKey =  Wallet.getPrivateKeyFromBytes(Base64.getDecoder().decode(components[1]));
+            String address = new String(Base64.getDecoder().decode(components[2]));
+            Wallet result = new Wallet(address, pubKey, privKey);
+            return result;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
