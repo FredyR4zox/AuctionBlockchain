@@ -1,12 +1,18 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.KBucketManager;
 import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.KademliaNode;
 import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.KademliaServer;
 import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.KademliaUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import java.security.SecureRandom;
 import java.security.Security;
+import java.util.Random;
 
 
 public class Main {
@@ -31,7 +37,35 @@ public class Main {
         System.out.println("Creator public key: " + creator.getPubKey().toString());
         System.out.println("Creator private key: " + creator.getPrivKey().toString());
 
+        BlockchainUtils.setMiner(creator);
         BlockchainUtils.createGenesisBlock(creator);
+
+
+
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
+        Wallet alice = Wallet.createWalletFromFile("alice");
+        Bid bid = new Bid(creator, new String(rand), alice.getAddress(), BlockchainUtils.minerReward/2, 5);
+        Transaction transaction = new Transaction(alice, bid);
+
+        BlockchainUtils.addTransaction(transaction);
+
+
+        random.nextBytes(rand);
+        Wallet bob = Wallet.createWalletFromFile("bob");
+        bid = new Bid(creator, new String(rand), bob.getAddress(), BlockchainUtils.minerReward/2, 5);
+        transaction = new Transaction(bob, bid);
+
+        BlockchainUtils.addTransaction(transaction);
+
+
+
+
+        Thread.sleep(10000);
+
+        System.out.println(BlockchainUtils.getLongestChain().makeJson());
 
         server.blockUntilShutdown();
     }
