@@ -163,11 +163,7 @@ public class KademliaClient {
         String lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash();
 
         while(true){
-            byte[] lastBlockHashBytes;
-            if(lastBlockHash == null)
-                lastBlockHashBytes = new byte[Utils.hashAlgorithmLengthInBytes];
-            else
-                lastBlockHashBytes = lastBlockHash.getBytes(Utils.charset);
+            byte[] lastBlockHashBytes = lastBlockHash.getBytes(Utils.charset);
 
             List<Block> blocks = findValue(lastBlockHashBytes, lastBlockHashBytes);
 
