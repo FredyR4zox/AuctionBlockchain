@@ -1,147 +1,76 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.MinerUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
+import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionManager;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.*;
-import pt.up.fc.dcc.ssd.auctionblockchain.Client.Client;
 
+import java.security.SecureRandom;
 import java.security.Security;
+import java.util.Random;
 
-import static java.lang.Thread.sleep;
 
 public class Main {
-
-
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, java.io.IOException {
         Security.addProvider(new BouncyCastleProvider());
-        long id = 0;
 
-        Wallet creator= new Wallet();
-        System.out.println("creator address:" + creator.getAddress());
+        String myIpAddress = KademliaUtils.getMyIpAddress();
+        if(myIpAddress == null){
+            System.out.println("Error getting IP address");
+            return;
+        }
+        System.out.println("My IP address is " + myIpAddress);
+
+        KademliaNode myNode = new KademliaNode(myIpAddress, KademliaUtils.bootstrapNodePort, KademliaUtils.bootstrapNodeID);
+        KBucketManager manager = new KBucketManager(myNode);
+
+        KademliaServer server = new KademliaServer(KademliaUtils.bootstrapNodePort, manager);
+        server.start();
+
+        Wallet creator = new Wallet();
+        System.out.println("Creator address: " + creator.getAddress());
+        System.out.println("Creator public key: " + creator.getPubKey().toString());
+        System.out.println("Creator private key: " + creator.getPrivKey().toString());
+
+        MinerUtils.startMining(creator);
+
+        KademliaClient client = new KademliaClient(manager);
+        BlockchainUtils.setKademliaClient(client);
 
         BlockchainUtils.createGenesisBlock(creator);
-        System.out.println(BlockchainUtils.getOriginal().getLastBlockHash());
-        Wallet miner = new Wallet();
-        MinerUtils.startMining(miner);
-        System.out.println("miner address:" + miner.getAddress());
+
+
+
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
         Wallet alice = Wallet.createWalletFromFile("alice");
-        System.out.println("alice address:" + alice.getAddress());
+        Bid bid = new Bid(creator, new String(rand), alice.getAddress(), BlockchainUtils.minerReward/2, 5);
+        Transaction transaction = new Transaction(alice, bid);
 
-        AuctionManager auction = new AuctionManager(alice, 10, 10, 2, 3000);
-        AuctionManager auction2 = new AuctionManager(alice, 10, 10, 2, 5000);
-
-        Client.bet(creator, auction.getAuction().getItemID(), 30);
-        sleep(1000);
-        Client.bet(creator, auction.getAuction().getItemID(), 50);
-        sleep(500);
-        Client.bet(creator, auction2.getAuction().getItemID(), 60);
-        auction.getRunningAuction().join();
-        sleep(1000);
-
-        Client.bet(creator, auction2.getAuction().getItemID(), 30);
-        auction2.getRunningAuction().join();
-        sleep(2000);
-        MinerUtils.stopMining();
-        BlockchainUtils.getOriginal().printHashMap();
-                /*
-                Wallet wallet1 = new Wallet();
-                System.out.println("wallet1 address:" + wallet1.getAddress());
-                Wallet wallet2 = new Wallet();
-                System.out.println("wallet2 address:" + wallet2.getAddress());
-
-                Wallet bob = new Wallet();
-                System.out.println("bob address:" + bob.getAddress());
+        BlockchainUtils.addTransaction(transaction);
+        client.announceNewTransaction(transaction);
 
 
-                BlockchainUtils.getOriginal().printHashMap();
-                System.out.println();
+        random.nextBytes(rand);
+        Wallet bob = Wallet.createWalletFromFile("bob");
+        bid = new Bid(creator, new String(rand), bob.getAddress(), BlockchainUtils.minerReward/2, 5);
+        transaction = new Transaction(bob, bid);
+
+        BlockchainUtils.addTransaction(transaction);
+        client.announceNewTransaction(transaction);
 
 
-                Transaction trans10 = new Transaction(creator, wallet1, 10, 2, Utils.getsha256(String.valueOf(++id)));
-                Transaction trans11 = new Transaction(creator, wallet2, 20, 1, Utils.getsha256(String.valueOf(++id)));
-                Transaction trans12 = new Transaction(creator, bob, 20, 1, Utils.getsha256(String.valueOf(++id)));
-
-                BlockchainUtils.addTransaction(trans10);
-                BlockchainUtils.addTransaction(trans11);
-                BlockchainUtils.addTransaction(trans12);
-
-                BlockchainUtils.mineBlock(miner);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-                //BlockchainUtils.getOriginal().printHashMap();
-
-                for(int i=0; i<0;i++) {
-                       // ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
-                }
-
-                Transaction trans20 = new Transaction(miner, alice, 30, 2, Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans20);
-                Transaction trans21 = new Transaction(miner, alice, 60, 2, Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans21);
-
-                BlockchainUtils.mineBlock(creator);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-
-                //BlockchainUtils.getOriginal().printHashMap();
-
-                //create mock for test
-                BlockChain original = BlockchainUtils.getOriginal();
-                Block conflictingBlock =  createFakeBlock(original);
-                //actual test
-                BlockchainUtils.addBlock(conflictingBlock);
-                //BlockchainUtils.addBlock(conflictingBlock);
-
-                Transaction trans30 = new Transaction(alice, bob, 10 , 1, Utils.getsha256(String.valueOf(++id)));
-                Transaction trans31 = new Transaction(alice, bob, 10 , 1, Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans30);
-                BlockchainUtils.addTransaction(trans31);
-                BlockchainUtils.mineBlock(bob);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
 
 
-                Transaction trans40 = new Transaction(bob, creator, 30, 2,Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans40);
-                BlockChain big = original.getLongestChain();
-                conflictingBlock = createFakeBlock(big);
-                BlockchainUtils.addBlock(conflictingBlock);
-                BlockchainUtils.mineBlock(alice);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
+//        Thread.sleep(10000);
 
-                Boolean output;
-                output = BlockchainUtils.addBlock(conflictingBlock);
-                System.out.println(output);
+//        System.out.println(BlockchainUtils.getLongestChain().makeJson());
 
-                original.tryResolveForks();
-                //String BlockChainJson = BlockChain.makeJson();
-                //System.out.println(BlockChainJson);
-
-//                Auction auction = new Auction(0, 60, creator);
-//                Boolean output= auction.verifyAuction();
-//                System.out.println(output);
-                 */
-    }
-    public static Block createFakeBlock(BlockChain branch){
-        Block lastBlock= branch.getXBlock(branch.getBlockchain().size());
-        Block conflictingBlock = lastBlock.clone();
-        conflictingBlock.removeLastTransaction();
-        branch.setMining(true);
-        Boolean output = conflictingBlock.mineBlock(branch);
-        branch.setMining(false);
-        return conflictingBlock;
+        server.blockUntilShutdown();
     }
 }
