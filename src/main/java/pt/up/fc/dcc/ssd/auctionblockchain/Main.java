@@ -33,7 +33,7 @@ public class Main {
 
         int port = random.nextInt(65535-1001) + 1001; // random port
 
-        KademliaNode myNode = new KademliaNode("127.0.0.1", port, randomNodeID);
+        KademliaNode myNode = new KademliaNode(myIpAddress, port, randomNodeID);
 
         KBucketManager bucketManager = new KBucketManager(myNode);
 
