@@ -35,7 +35,7 @@ public class BlockChain{
         this.registeredIDs = new HashSet<>();
         size=0;
         this.mining = false;
-        this.lastBlockHash= Utils.getStandardString();
+        this.lastBlockHash = Utils.getStandardString();
         work= BigInteger.valueOf(0);
     }
 

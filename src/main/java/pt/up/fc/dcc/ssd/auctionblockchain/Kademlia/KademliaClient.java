@@ -38,13 +38,12 @@ public class KademliaClient {
 
         Pair<KademliaNode, Boolean> response = KademliaClient.ping(bucketManager.getMyNode(), bootstrappingNode);
 
-        bucketManager.insertNode(bootstrappingNode);
-        bucketManager.insertNode(response.getFirst());
-
         if(!response.getSecond().booleanValue()){
             logger.log(Level.SEVERE, "Bootstrap failed. Could not contact node " + bootstrappingNode + " for bootstrap.");
             return false;
         }
+
+        bucketManager.insertNode(response.getFirst());
 
         if(findNode(bucketManager.getMyNode().getNodeID()).isEmpty()){
             logger.log(Level.SEVERE, "Bootstrap failed. Received an empty list while performing a node lookup for own node ID.");

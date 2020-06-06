@@ -1,147 +1,230 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionManager;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.*;
+import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Client;
+import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.*;
 
+import java.security.SecureRandom;
 import java.security.Security;
+import java.util.List;
+import java.util.Random;
 
 import static java.lang.Thread.sleep;
 
 public class Main {
+    public static void main(String[] args) throws InterruptedException, java.io.IOException {
+        if(args.length < 1){
+            printUsage();
+            return;
+        }
 
-
-    public static void main(String[] args) throws InterruptedException {
         Security.addProvider(new BouncyCastleProvider());
-        long id = 0;
 
-        Wallet creator= new Wallet();
-        System.out.println("creator address:" + creator.getAddress());
+        String myIpAddress = KademliaUtils.getMyIpAddress();
+        if(myIpAddress == null){
+            System.out.println("Error getting IP address");
+            return;
+        }
+        System.out.println("My IP address is " + myIpAddress);
+
+        if(args[0].equals("bootstrap")){
+            int port;
+            if(args.length > 1)
+                port = Integer.parseInt(args[1]);
+            else
+                port = KademliaUtils.bootstrapNodePort;
+
+            startBootstrap(myIpAddress, port);
+        }
+
+        else if(args[0].equals("listener")){
+            if(args.length < 2){
+                printUsage();
+                return;
+            }
+
+            int port = Integer.parseInt(args[1]);
+
+            String defaultBootstrapNodeIP = KademliaUtils.bootstrapNodeIP;
+            if(args.length >= 3)
+                defaultBootstrapNodeIP = args[2];
+
+            int defaultBootstrapNodePort = KademliaUtils.bootstrapNodePort;
+            if(args.length >= 4)
+                defaultBootstrapNodePort = Integer.parseInt(args[3]);
+
+            startListener(myIpAddress, port, defaultBootstrapNodeIP, defaultBootstrapNodePort);
+        }
+
+        else if(args[0].equals("miner")){
+            if(args.length < 2){
+                printUsage();
+                return;
+            }
+
+            int port = Integer.parseInt(args[1]);
+
+            String defaultBootstrapNodeIP = KademliaUtils.bootstrapNodeIP;
+            if(args.length >= 3)
+                defaultBootstrapNodeIP = args[2];
+
+            int defaultBootstrapNodePort = KademliaUtils.bootstrapNodePort;
+            if(args.length >= 4)
+                defaultBootstrapNodePort = Integer.parseInt(args[3]);
+
+            startMiner(myIpAddress, port, defaultBootstrapNodeIP, defaultBootstrapNodePort);
+        }
+    }
+
+    public static void printUsage(){
+        System.out.println("Usage: java -jar AuctionBlockchain.jar nodeType [options]");
+
+        System.out.println("Node types: bootstrap");
+        System.out.println("            listener");
+        System.out.println("            miner");
+        System.out.println("            auctioneer");
+
+        System.out.println("Example for bootstrap:    java -jar AuctionBlockchain.jar bootstrap    [grpcPort]");
+        System.out.println("Example for listener:     java -jar AuctionBlockchain.jar listener     grpcPort [bootstrapNodeIpAddress bootstrapNodePort]");
+        System.out.println("Example for miner:        java -jar AuctionBlockchain.jar miner        grpcPort [bootstrapNodeIpAddress bootstrapNodePort]");
+        System.out.println("Example for auctioneer:   java -jar AuctionBlockchain.jar auctioneer   grpcPort [bootstrapNodeIpAddress bootstrapNodePort]");
+
+        System.out.println("Default values for: bootstrapNodeIpAddress              34.105.188.87");
+        System.out.println("                    bootstrapNodePort                   1337");
+        System.out.println("                    grpcPort option in bootstrap type   1337");
+    }
+
+    public static void startBootstrap(String myIpAddress, int grpcPort) throws InterruptedException, java.io.IOException {
+        KademliaNode myNode = new KademliaNode(myIpAddress, grpcPort, KademliaUtils.bootstrapNodeID);
+        KBucketManager manager = new KBucketManager(myNode);
+
+        KademliaServer server = new KademliaServer(grpcPort, manager);
+        server.start();
+
+        Wallet creator = new Wallet();
+        System.out.println("Creator address: " + creator.getAddress());
+        System.out.println("Creator public key: " + creator.getPubKey().toString());
+        System.out.println("Creator private key: " + creator.getPrivKey().toString());
+
+
+        KademliaClient client = new KademliaClient(manager);
+        BlockchainUtils.setKademliaClient(client);
 
         BlockchainUtils.createGenesisBlock(creator);
-        System.out.println(BlockchainUtils.getOriginal().getLastBlockHash());
-        Wallet miner = new Wallet();
-        MinerUtils.startMining(miner);
-        System.out.println("miner address:" + miner.getAddress());
+
+
+
+        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
+        Random random = new SecureRandom();
+        random.nextBytes(rand);
+
         Wallet alice = Wallet.createWalletFromFile("alice");
-        System.out.println("alice address:" + alice.getAddress());
+        Bid bid = new Bid(creator, Utils.bytesToHexString(rand), alice.getAddress(), BlockchainUtils.minerReward/2, 5);
+        Transaction transaction = new Transaction(alice, bid);
 
-        AuctionManager auction = new AuctionManager(alice, 10, 10, 2, 3000);
-        AuctionManager auction2 = new AuctionManager(alice, 10, 10, 2, 5000);
-
-        Client.bet(creator, auction.getAuction().getItemID(), 30);
-        sleep(1000);
-        Client.bet(creator, auction.getAuction().getItemID(), 50);
-        sleep(500);
-        Client.bet(creator, auction2.getAuction().getItemID(), 60);
-        auction.getRunningAuction().join();
-        sleep(1000);
-
-        Client.bet(creator, auction2.getAuction().getItemID(), 30);
-        auction2.getRunningAuction().join();
-        sleep(2000);
-        MinerUtils.stopMining();
-        BlockchainUtils.getOriginal().printHashMap();
-                /*
-                Wallet wallet1 = new Wallet();
-                System.out.println("wallet1 address:" + wallet1.getAddress());
-                Wallet wallet2 = new Wallet();
-                System.out.println("wallet2 address:" + wallet2.getAddress());
-
-                Wallet bob = new Wallet();
-                System.out.println("bob address:" + bob.getAddress());
+        BlockchainUtils.addTransaction(transaction);
+        client.announceNewTransaction(transaction);
 
 
-                BlockchainUtils.getOriginal().printHashMap();
-                System.out.println();
+        random.nextBytes(rand);
+        Wallet bob = Wallet.createWalletFromFile("bob");
+        bid = new Bid(creator, Utils.bytesToHexString(rand), bob.getAddress(), BlockchainUtils.minerReward/2, 5);
+        transaction = new Transaction(bob, bid);
 
+        BlockchainUtils.addTransaction(transaction);
+        client.announceNewTransaction(transaction);
 
-                Transaction trans10 = new Transaction(creator, wallet1, 10, 2, Utils.getsha256(String.valueOf(++id)));
-                Transaction trans11 = new Transaction(creator, wallet2, 20, 1, Utils.getsha256(String.valueOf(++id)));
-                Transaction trans12 = new Transaction(creator, bob, 20, 1, Utils.getsha256(String.valueOf(++id)));
-
-                BlockchainUtils.addTransaction(trans10);
-                BlockchainUtils.addTransaction(trans11);
-                BlockchainUtils.addTransaction(trans12);
-
-                BlockchainUtils.mineBlock(miner);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-                //BlockchainUtils.getOriginal().printHashMap();
-
-                for(int i=0; i<0;i++) {
-                       // ableToAdd = minerAddition.addTransactionIfValidToPool(trans11);
-                }
-
-                Transaction trans20 = new Transaction(miner, alice, 30, 2, Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans20);
-                Transaction trans21 = new Transaction(miner, alice, 60, 2, Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans21);
-
-                BlockchainUtils.mineBlock(creator);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-
-                //BlockchainUtils.getOriginal().printHashMap();
-
-                //create mock for test
-                BlockChain original = BlockchainUtils.getOriginal();
-                Block conflictingBlock =  createFakeBlock(original);
-                //actual test
-                BlockchainUtils.addBlock(conflictingBlock);
-                //BlockchainUtils.addBlock(conflictingBlock);
-
-                Transaction trans30 = new Transaction(alice, bob, 10 , 1, Utils.getsha256(String.valueOf(++id)));
-                Transaction trans31 = new Transaction(alice, bob, 10 , 1, Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans30);
-                BlockchainUtils.addTransaction(trans31);
-                BlockchainUtils.mineBlock(bob);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-
-
-                Transaction trans40 = new Transaction(bob, creator, 30, 2,Utils.getsha256(String.valueOf(++id)));
-                BlockchainUtils.addTransaction(trans40);
-                BlockChain big = original.getLongestChain();
-                conflictingBlock = createFakeBlock(big);
-                BlockchainUtils.addBlock(conflictingBlock);
-                BlockchainUtils.mineBlock(alice);
-                try {
-                        sleep(1000);
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                }
-
-                Boolean output;
-                output = BlockchainUtils.addBlock(conflictingBlock);
-                System.out.println(output);
-
-                original.tryResolveForks();
-                //String BlockChainJson = BlockChain.makeJson();
-                //System.out.println(BlockChainJson);
-
-//                Auction auction = new Auction(0, 60, creator);
-//                Boolean output= auction.verifyAuction();
-//                System.out.println(output);
-                 */
+        server.blockUntilShutdown();
     }
-    public static Block createFakeBlock(BlockChain branch){
-        Block lastBlock= branch.getXBlock(branch.getBlockchain().size());
-        Block conflictingBlock = lastBlock.clone();
-        conflictingBlock.removeLastTransaction();
-        branch.setMining(true);
-        Boolean output = conflictingBlock.mineBlock(branch);
-        branch.setMining(false);
-        return conflictingBlock;
+
+    public static void startListener(String myIpAddress, int grpcPort, String defaultBootstrapNodeIP, int defaultBootstrapNodePort) throws InterruptedException, java.io.IOException {
+        byte[] randomNodeID = new byte[Utils.hashAlgorithmLengthInBytes];
+        Random random = new SecureRandom();
+        random.nextBytes(randomNodeID);
+
+        KademliaNode myNode = new KademliaNode(myIpAddress, grpcPort, randomNodeID);
+
+        KBucketManager bucketManager = new KBucketManager(myNode);
+
+
+        KademliaServer server = new KademliaServer(grpcPort, bucketManager);
+        server.start();
+
+
+//            Wallet alice = Wallet.createWalletFromFile("alice");
+//            MinerUtils.startMining(alice);
+
+        KademliaClient client = new KademliaClient(bucketManager);
+//            BlockchainUtils.setKademliaClient(client);
+
+        random.nextBytes(randomNodeID);
+        KademliaNode bootstrapNode = new KademliaNode(defaultBootstrapNodeIP, defaultBootstrapNodePort, KademliaUtils.bootstrapNodeID);
+
+        client.bootstrap(bootstrapNode);
+
+        client.bootstrapBlockchain();
+
+        List<Transaction> mempool = client.getMempool();
+        for(Transaction trans : mempool)
+            BlockchainUtils.addTransaction(trans);
+
+        List<Auction> auctions = client.getAuctions();
+        for(Auction auction : auctions) {
+            AuctionsState.addAuction(auction);
+
+            List<Bid> bids = client.getBidsFromAuction(auction);
+            for(Bid bid : bids)
+                AuctionsState.updateBid(bid);
+        }
+
+        server.blockUntilShutdown();
+    }
+
+    public static void startMiner(String myIpAddress, int grpcPort, String defaultBootstrapNodeIP, int defaultBootstrapNodePort) throws InterruptedException, java.io.IOException {
+        byte[] randomNodeID = new byte[Utils.hashAlgorithmLengthInBytes];
+        Random random = new SecureRandom();
+        random.nextBytes(randomNodeID);
+
+        KademliaNode myNode = new KademliaNode(myIpAddress, grpcPort, randomNodeID);
+
+        KBucketManager bucketManager = new KBucketManager(myNode);
+
+
+        KademliaServer server = new KademliaServer(grpcPort, bucketManager);
+        server.start();
+
+
+        Wallet alice = Wallet.createWalletFromFile("alice");
+        MinerUtils.startMining(alice);
+
+        KademliaClient client = new KademliaClient(bucketManager);
+        BlockchainUtils.setKademliaClient(client);
+
+        random.nextBytes(randomNodeID);
+        KademliaNode bootstrapNode = new KademliaNode(defaultBootstrapNodeIP, defaultBootstrapNodePort, KademliaUtils.bootstrapNodeID);
+
+        client.bootstrap(bootstrapNode);
+
+        client.bootstrapBlockchain();
+
+        List<Transaction> mempool = client.getMempool();
+        for(Transaction trans : mempool)
+            BlockchainUtils.addTransaction(trans);
+
+        List<Auction> auctions = client.getAuctions();
+        for(Auction auction : auctions) {
+            AuctionsState.addAuction(auction);
+
+            List<Bid> bids = client.getBidsFromAuction(auction);
+            for(Bid bid : bids)
+                AuctionsState.updateBid(bid);
+        }
+
+        server.blockUntilShutdown();
     }
 }
