@@ -124,7 +124,7 @@ public class KademliaClient {
         Random random = new SecureRandom();
         random.nextBytes(rand);
 
-        List<T> bids = findValue(rand, auction.getItemID().getBytes(Utils.charset));
+        List<T> bids = findValue(rand, Utils.hexStringToBytes(auction.getItemID()));
 
         List<Bid> retList = new ArrayList<>();
         for(T tmp : bids){
@@ -142,7 +142,7 @@ public class KademliaClient {
     public <T> Block findBlockWithPreviousHash(String hash){
         logger.log(Level.INFO, "Trying to find block with previous hash " + hash);
 
-        byte[] hashBytes = hash.getBytes(Utils.charset);
+        byte[] hashBytes = Utils.hexStringToBytes(hash);
 
         List<T> values = findValue(hashBytes, hashBytes);
 

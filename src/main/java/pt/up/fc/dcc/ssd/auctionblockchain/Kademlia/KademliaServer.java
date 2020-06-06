@@ -235,15 +235,17 @@ public class KademliaServer {
             }
             // Its not a special key so it must be a block or an auction (bids of that auction)
             else {
-                Block block = BlockchainUtils.getBlockWithPreviousHash(new String(key));
-                Auction auction = AuctionsState.getAuction(key.toString());
+                String keyString = Utils.bytesToHexString(key);
 
-                logger.log(Level.INFO, "Could not get block with hash " + new String(key));
+                Block block = BlockchainUtils.getBlockWithPreviousHash(keyString);
+                Auction auction = AuctionsState.getAuction(keyString);
+
+                logger.log(Level.INFO, "Could not get block with hash " + keyString);
                 if(block != null) {
                     responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(block));
                 }
                 else if(auction != null) {
-                    List<Bid> bids = new ArrayList<>(AuctionsState.getAuctionBidsTreeSet(key.toString()));
+                    List<Bid> bids = new ArrayList<>(AuctionsState.getAuctionBidsTreeSet(keyString));
                     responseBuilder.setBids(KademliaUtils.BidListToBidListProto(bids));
                 }
                 else {

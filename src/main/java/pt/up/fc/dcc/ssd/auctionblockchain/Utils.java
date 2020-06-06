@@ -1,6 +1,7 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.util.encoders.Hex;
+import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.KBucketManager;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -9,10 +10,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Utils {
-    public static final Charset charset = Charset.forName("ASCII");
+    private static final Logger logger = Logger.getLogger(Utils.class.getName());
+
+    public static final Charset charset = StandardCharsets.US_ASCII;
     public static final String hashAlgorithm = "SHA-1";
     public static final int hashAlgorithmLengthInBits = 160;
     public static final int hashAlgorithmLengthInBytes = hashAlgorithmLengthInBits/8;
@@ -62,14 +66,31 @@ public class Utils {
 
     public static String getHash(String input){
         MessageDigest digest = null;
+
         try {
             digest = MessageDigest.getInstance(hashAlgorithm);
         } catch (NoSuchAlgorithmException e) {
+            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + Utils.hashAlgorithm);
             e.printStackTrace();
+            return null;
         }
-        assert digest != null;
-        byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+
+        byte[] hash = digest.digest(input.getBytes(charset));
         return new String(Hex.encode(hash));
+    }
+
+    public static byte[] getHash(byte[] input){
+        MessageDigest digest = null;
+
+        try {
+            digest = MessageDigest.getInstance(hashAlgorithm);
+        } catch (NoSuchAlgorithmException e) {
+            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + Utils.hashAlgorithm);
+            e.printStackTrace();
+            return null;
+        }
+
+        return digest.digest(input);
     }
 
     public static String randomString(int size){
@@ -122,7 +143,7 @@ public class Utils {
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
 
-        return new String(hexChars, StandardCharsets.US_ASCII);
+        return new String(hexChars, charset);
     }
 
     public static byte[] hexStringToBytes(String string) {

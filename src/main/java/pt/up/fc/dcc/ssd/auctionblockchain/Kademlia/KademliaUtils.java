@@ -31,7 +31,7 @@ public class KademliaUtils {
     public static final String mempoolText = "mempool";
     public static final String auctionsText = "auctions";
 
-    public static final byte[] bootstrapNodeID = "00000000000000000001".getBytes(Utils.charset);
+    public static final byte[] bootstrapNodeID = new byte[Utils.hashAlgorithmLengthInBytes];
     public static final String bootstrapNodeIP = "34.105.188.87";
     public static final int bootstrapNodePort = 1337;
 
@@ -89,33 +89,11 @@ public class KademliaUtils {
     }
 
     public static byte[] mempoolHash() {
-        byte[] mempoolKey;
-
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(Utils.hashAlgorithm);
-            mempoolKey = messageDigest.digest(mempoolText.getBytes(Utils.charset));
-        } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + Utils.hashAlgorithm);
-            e.printStackTrace();
-            return null;
-        }
-
-        return mempoolKey;
+        return Utils.hexStringToBytes(Utils.getHash(mempoolText));
     }
 
     public static byte[] auctionsHash() {
-        byte[] auctionsKey;
-
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(Utils.hashAlgorithm);
-            auctionsKey = messageDigest.digest(auctionsText.getBytes(Utils.charset));
-        } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Error: Could not find hash algorithm " + Utils.hashAlgorithm);
-            e.printStackTrace();
-            return null;
-        }
-
-        return auctionsKey;
+        return Utils.hexStringToBytes(Utils.getHash(auctionsText));
     }
 
 
@@ -213,7 +191,7 @@ public class KademliaUtils {
                 .setBuyerID(ByteString.copyFrom(Utils.hexStringToBytes(bid.getBuyerID())))
                 .setAmount(bid.getAmount())
                 .setFee(bid.getFee())
-                .setBuyerPublicKey(ByteString.copyFrom(Utils.hexStringToBytes(bid.getBuyerPublicKey().toString())))
+                .setBuyerPublicKey(ByteString.copyFrom(bid.getBuyerPublicKey().getEncoded()))
                 .setHash(ByteString.copyFrom(Utils.hexStringToBytes(bid.getHash())))
                 .setSignature(ByteString.copyFrom(bid.getSignature()))
                 .build();
@@ -252,7 +230,7 @@ public class KademliaUtils {
     public static TransactionProto TransactionToTransactionProto(Transaction transaction){
         return TransactionProto.newBuilder()
                 .setBid(BidToBidProto(transaction.getBid()))
-                .setSellerPublicKey(ByteString.copyFrom(Utils.hexStringToBytes(transaction.getSellerPublicKey().toString())))
+                .setSellerPublicKey(ByteString.copyFrom(transaction.getSellerPublicKey().getEncoded()))
                 .setTimestamp(transaction.getTimeStamp())
                 .setHash(ByteString.copyFrom(Utils.hexStringToBytes(transaction.getHash())))
                 .setSignature(ByteString.copyFrom(transaction.getSignature()))

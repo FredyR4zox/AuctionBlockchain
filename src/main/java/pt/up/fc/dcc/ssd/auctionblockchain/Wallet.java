@@ -57,7 +57,7 @@ public class Wallet {
         }
     }
     public static String getAddressFromPubKey(PublicKey pubKey){
-        return Utils.getHash(Base64.getEncoder().encodeToString(pubKey.getEncoded()));
+        return Utils.bytesToHexString(Utils.getHash(pubKey.getEncoded()));
     }
 
     public void printKeys(){
@@ -84,7 +84,7 @@ public class Wallet {
         try {
             Signature ecdsaSign = Signature.getInstance("SHA256withECDSA");
             ecdsaSign.initSign(privKey);
-            ecdsaSign.update(hash.getBytes(StandardCharsets.UTF_8));
+            ecdsaSign.update(Utils.hexStringToBytes(hash));
             signature = ecdsaSign.sign();
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             logger.warning("There was an error signing the hash");
@@ -103,7 +103,7 @@ public class Wallet {
         try {
             Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
             ecdsaVerify.initVerify(pubKey);
-            ecdsaVerify.update(hash.getBytes(StandardCharsets.UTF_8));
+            ecdsaVerify.update(Utils.hexStringToBytes(hash));
             ecdsaVerify.verify(signature);
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             logger.severe("Signatures don't match");

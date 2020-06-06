@@ -28,7 +28,7 @@ public class AuctionManager implements Runnable{
 
     public AuctionManager(Wallet seller, long minAmount, float minIncrement, long fee, long timeout){
         this.seller = seller;
-        String randomString = Utils.randomString(20);
+        String randomString = Utils.randomString(Utils.hashAlgorithmLengthInBytes);
         Auction auction = new Auction(seller, randomString, minAmount, minIncrement, fee, timeout);
         this.auction = auction;
         AuctionsState.addAuction(auction);
