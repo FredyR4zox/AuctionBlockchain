@@ -33,7 +33,7 @@ public class AuctionManager implements Runnable{
         this.auction = auction;
         AuctionsState.addAuction(auction);
         this.bids_status = AuctionsState.getAuctionBidsTreeSet(randomString);
-        //BlockchainUtils.getKademliaClient().announceNewAuction(auction);
+        BlockchainUtils.getKademliaClient().announceNewAuction(auction);
         runningAuction = new Thread(this);
         runningAuction.start();
     }
@@ -69,7 +69,7 @@ public class AuctionManager implements Runnable{
         logger.info("Auction has ended");
         Transaction trans = createTransaction(winBid);
         BlockchainUtils.addTransaction(trans);
-        //BlockchainUtils.getKademliaClient().announceNewTransaction(trans);
+        BlockchainUtils.getKademliaClient().announceNewTransaction(trans);
     }
 
     public Auction getAuction() {
