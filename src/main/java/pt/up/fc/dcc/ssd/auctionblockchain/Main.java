@@ -20,6 +20,7 @@ public class Main {
         System.out.println("creator address:" + creator.getAddress());
 
         BlockchainUtils.createGenesisBlock(creator);
+        System.out.println(BlockchainUtils.getOriginal().getLastBlockHash());
         Wallet miner = new Wallet();
         MinerUtils.startMining(miner);
         System.out.println("miner address:" + miner.getAddress());

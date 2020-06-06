@@ -35,6 +35,7 @@ public class BlockChain{
         this.registeredIDs = new HashSet<>();
         size=0;
         this.mining = false;
+        this.lastBlockHash= Utils.getStandardString();
         work= BigInteger.valueOf(0);
     }
 
@@ -288,8 +289,8 @@ public class BlockChain{
 
     private void addMinerRewardToHashMap(Bid minersReward){
         //in case its a coinbase transfer
-        if(this.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount())!= null) {
-            Long minerNewValue = this.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount();
+        if(this.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount() + minersReward.getFee())!= null) {
+            Long minerNewValue = this.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount() + minersReward.getFee();
             this.walletsMoney.replace(minersReward.getSellerID(), minerNewValue);
         }
     }

@@ -44,7 +44,7 @@ public class Block{
         this.difficulty = BlockchainUtils.difficulty;
         this.previousWork=previousWork;
         //cant initialize with zeroes
-        this.hash = "11111111";
+        this.hash = this.calculateHash();
     }
 
     @Override

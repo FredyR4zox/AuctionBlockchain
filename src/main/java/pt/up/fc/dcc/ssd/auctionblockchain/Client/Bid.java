@@ -57,17 +57,17 @@ public class Bid {
     //coin base reward
     public Bid(String sellerID, long fee) {
         this.sellerID = sellerID;
+        this.buyerID = Utils.getStandardString();
         this.amount = BlockchainUtils.getMinerReward();
         this.fee = fee;
         buyerPublicKey = null;
-        this.hash = Utils.getHash(sellerID + amount + fee);
+        this.hash = Utils.getHash(this.sellerID + this.buyerID + this.amount + this.fee);
     }
 
     public Boolean verifyBid() {
         return this.isHashValid()
                 && Wallet.verifySignature(this.signature,this.hash, this.buyerPublicKey, logger)
                 && Wallet.checkAddress(this.buyerPublicKey, this.buyerID);
-
     }
 
     private Boolean isHashValid() {

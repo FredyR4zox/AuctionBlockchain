@@ -46,7 +46,7 @@ public class AuctionsState {
     }
 
     private static boolean checkAuctionGoing(String itemId) {
-        return auctionStates.get(itemId).isRunning();
+        return auctionStates.get(itemId) != null;
     }
 
     public static Boolean checkWinningBid(Bid bid){
@@ -109,18 +109,26 @@ public class AuctionsState {
     //TODO check if blockchain updates change winning bids
     //end auctions that already have transactions
     public static void updateAuctionsState(){
-        Set<String> auctions = auctionStates.keySet();
-        for(String auction : auctions){
-            if(BlockchainUtils.getOriginal().getRegisteredIDs().contains(auction)){
-                Bid winBid = auctionStates.get(auction).endAuction();
+        Set<String> auctionIds = auctionStates.keySet();
+        List<String> removeAuctionIds = new LinkedList<>();
+        for(String auctionId : auctionIds){
+            if(BlockchainUtils.getOriginal().getRegisteredIDs().contains(auctionId)){
+                Bid winBid = auctionStates.get(auctionId).getLatestBid();
                 if(winBid==null){
                     continue;
                 }
                 else{
                     removeFromWalletTrans(winBid);
+                    //cant remove auctions here becuz of concurrency problems
+                    removeAuctionIds.add(auctionId);
                 }
             }
         }
+        //remove auctions that have finished
+        for(String removeId : removeAuctionIds){
+            auctionStates.remove(removeId);
+        }
+
     }
 
     public static List<Auction> getAuctions(){
@@ -153,20 +161,9 @@ public class AuctionsState {
 class AuctionState{
     Auction auction;
     TreeSet<Bid> bids = new TreeSet<>(new BidCompare());
-    Boolean running;
 
     public AuctionState(Auction auction) {
         this.auction = auction;
-        this.running=true;
-    }
-
-    //returns winning bid
-    public Bid endAuction(){
-        if (!this.running) return null;
-        else {
-            this.running = false;
-            return bids.last();
-        }
     }
 
     //return previous latest bid
@@ -194,10 +191,6 @@ class AuctionState{
         }else{
             return bids.last();
         }
-    }
-
-    public boolean isRunning() {
-        return running;
     }
 
     static class BidCompare implements Comparator<Bid> {

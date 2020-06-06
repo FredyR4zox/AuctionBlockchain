@@ -104,4 +104,8 @@ public class Utils {
             return false;
         }
     }
+
+    public static String getStandardString(){
+        return "00000000000000000000";
+    }
 }

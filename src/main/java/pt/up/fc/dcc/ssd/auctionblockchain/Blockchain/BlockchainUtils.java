@@ -5,17 +5,16 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.logging.Logger;
-
-import static java.lang.Thread.sleep;
 
 public class BlockchainUtils{
     private static final Logger logger = Logger.getLogger(BlockchainUtils.class.getName());
     public static final int MAX_NR_TRANSACTIONS = 5;
-    public static final int difficulty = 2;
+    public static final int difficulty = 5;
     public static final long minerReward = 100;
-    public static final int MIN_NR_TRANSACTIONS = 1;
+    public static final int MIN_NR_TRANSACTIONS = 2;
     public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(4);
     public static final BlockChain original = new BlockChain();
     private static KademliaClient kademliaClient;
@@ -35,7 +34,7 @@ public class BlockchainUtils{
     }
 
     public static void createGenesisBlock(Wallet creator){
-        Block genesis= new Block("0", BigInteger.valueOf(0));
+        Block genesis= new Block(Arrays.toString(new byte[Utils.hashAlgorithmLengthInBytes]), BigInteger.valueOf(0));
         //Mine block
         genesis.mineGenesisBlock(creator);
         original.addBlock(genesis);
