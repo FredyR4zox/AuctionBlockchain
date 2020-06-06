@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public class BlockchainUtils{
     private static final Logger logger = Logger.getLogger(BlockchainUtils.class.getName());
-    public static final int MAX_NR_TRANSACTIONS = 5;
+    public static final int MAX_NR_TRANSACTIONS = 3;
     public static final int difficulty = 5;
     public static final long minerReward = 100;
     public static final int MIN_NR_TRANSACTIONS = 2;
@@ -30,6 +30,9 @@ public class BlockchainUtils{
 
     //adds transactions to all chains terminations
     public static Boolean addTransaction(Transaction trans){
+        if(!trans.verifyTransaction()){
+            return false;
+        }
         return original.addTransactionToCorrectChains(trans);
     }
 
