@@ -43,6 +43,7 @@ public class Main {
         sleep(2000);
         MinerUtils.stopMining();
         BlockchainUtils.getOriginal().printHashMap();
+
                 /*
                 Wallet wallet1 = new Wallet();
                 System.out.println("wallet1 address:" + wallet1.getAddress());

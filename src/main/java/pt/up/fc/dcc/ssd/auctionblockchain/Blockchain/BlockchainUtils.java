@@ -4,19 +4,24 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.KademliaClient;
 import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class BlockchainUtils{
     private static final Logger logger = Logger.getLogger(BlockchainUtils.class.getName());
+
+    public static  final String CHAIN_FILEPATH = "./chain/";
     public static final int MAX_NR_TRANSACTIONS = 3;
-    public static final int difficulty = 5;
+    public static final int difficulty = 3;
     public static final long minerReward = 100;
     public static final int MIN_NR_TRANSACTIONS = 2;
     public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(4);
-    public static final BlockChain original = new BlockChain();
+    public static BlockChain original = new BlockChain();
     private static KademliaClient kademliaClient;
 
     public static Boolean addBlock(Block newBlock){
@@ -37,12 +42,12 @@ public class BlockchainUtils{
     }
 
     public static void createGenesisBlock(Wallet creator){
-        Block genesis= new Block(Arrays.toString(new byte[Utils.hashAlgorithmLengthInBytes]), BigInteger.valueOf(0));
+        Block genesis= new Block(Utils.getStandardString(), BigInteger.valueOf(0));
         //Mine block
         genesis.mineGenesisBlock(creator);
         original.addBlock(genesis);
         logger.info("created genesis block");
-        BlockchainUtils.getKademliaClient().announceNewBlock(genesis);
+        //BlockchainUtils.getKademliaClient().announceNewBlock(genesis);
     }
 
     public static BlockChain getLongestChain(){
@@ -91,4 +96,52 @@ public class BlockchainUtils{
         }
     }
 
+    public static Boolean createBlockChain(List<Block> chain){
+        original = new BlockChain();
+        Block currentBlock = null;
+        Block previousBlock;
+        //loop through chain
+        for(Block block: chain) {
+            previousBlock=currentBlock;
+            currentBlock=block;
+            //Do Hashes check
+            if (previousBlock==null){
+                if(!currentBlock.isHashValid()) return false;
+            }
+            else{
+                if (!original.areHashesValid(currentBlock, previousBlock)) return false;
+            }
+            if(!original.checkAddBlock(currentBlock)){
+                logger.severe("Errors in saved blockchain");
+            }
+        }
+        logger.info("Chain was validated\n");
+        return true;
+    }
+
+    public static Boolean saveBlockchainInFile(String filename){
+        File mychain = new File(CHAIN_FILEPATH + filename);
+        try {
+            mychain.createNewFile();
+            FileWriter writeF = new FileWriter(CHAIN_FILEPATH + filename);
+            writeF.write(original.makeJson());
+            writeF.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+    //TODO fix this function
+    public static void makeBlockchainFromFile(String filename){
+        File mychain = new File(CHAIN_FILEPATH + filename);
+        try {
+            Scanner myReader = new Scanner(mychain);
+            String chain = myReader.nextLine();
+            ArrayList<Block> blockchain = original.makeFromJson(chain);
+            createBlockChain(blockchain);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }
