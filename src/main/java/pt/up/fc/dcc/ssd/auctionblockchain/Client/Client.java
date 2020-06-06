@@ -20,10 +20,8 @@ public class Client implements Runnable{
 
     public static void bet(Wallet buyer, String itemId, long amount){
         Auction auction = AuctionsState.getAuction(itemId);
+        assert auction != null;
         Bid myBid = new Bid(buyer, auction, amount);
-        if(!AuctionsState.checkWinningBid(myBid)){
-            return;
-        }
         AuctionsState.updateBid(myBid);
         /*if(interactive){
             bidsParticipated.add(new Pair(myBid, AuctionsState.getAuctionBidsTreeSet(itemId)));

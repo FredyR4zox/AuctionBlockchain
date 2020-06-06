@@ -15,7 +15,7 @@ public class BlockchainUtils{
     public static final int MAX_NR_TRANSACTIONS = 5;
     public static final int difficulty = 2;
     public static final long minerReward = 100;
-    public static final int MIN_NR_TRANSACTIONS = 2;
+    public static final int MIN_NR_TRANSACTIONS = 1;
     public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(4);
     public static final BlockChain original = new BlockChain();
     private static KademliaClient kademliaClient;
@@ -65,6 +65,10 @@ public class BlockchainUtils{
 
     public static KademliaClient getKademliaClient() {
         return kademliaClient;
+    }
+
+    public static int getMinNrTransactions() {
+        return MIN_NR_TRANSACTIONS;
     }
 
     static class transactionCompare implements Comparator<Transaction> {

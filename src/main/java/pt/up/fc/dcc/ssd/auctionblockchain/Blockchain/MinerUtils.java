@@ -39,7 +39,9 @@ public class MinerUtils implements Runnable {
             //if its the first one and has more than 2 transactions
 
             //or if the previous thread finishes and has more than two transactions
-            Boolean enoughSize = longestChain.getUnconfirmedTransaction().size()>=BlockchainUtils.MIN_NR_TRANSACTIONS;
+            int size = longestChain.getUnconfirmedTransaction().size();
+            int size2 = BlockchainUtils.getMinNrTransactions();
+            boolean enoughSize = size>=size2;
             if (miningThread==null && enoughSize) {
                 System.out.println(longestChain.getUnconfirmedTransaction().size());
                 Runnable r = new Mine(longestChain);
