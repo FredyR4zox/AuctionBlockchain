@@ -222,4 +222,8 @@ public class Block{
     public void setPreviousWork(BigInteger previousWork) {
         this.previousWork = previousWork;
     }
+
+    public void setNonce(long nonce) {
+        this.nonce = nonce;
+    }
 }

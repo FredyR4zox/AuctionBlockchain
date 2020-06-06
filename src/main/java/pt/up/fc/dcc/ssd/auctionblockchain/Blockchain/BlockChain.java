@@ -10,7 +10,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class BlockChain implements Runnable {
+public class BlockChain{
     private static final Logger logger = Logger.getLogger(BlockChain.class.getName());
 
     private final List<Block> blockchain;
@@ -210,7 +210,7 @@ public class BlockChain implements Runnable {
 
     public Boolean checkIfEnoughFunds(String buyerID, long amount) {
         if(!walletsMoney.containsKey(buyerID)){
-            logger.warning("Buyer" + buyerID + " has never received funds");
+            logger.warning("Buyer " + buyerID + " has never received funds");
             return false;
         }
         Long buyerFunds=walletsMoney.get(buyerID);
@@ -380,7 +380,6 @@ public class BlockChain implements Runnable {
     }
 
     public Block createBlock(Wallet minerWallet){
-        this.mining = true;
         HashMap<String, Long> accumulativeSpends = new HashMap<>();
         HashSet<String> tempRegisteredIDs = (HashSet<String>) this.registeredIDs.clone();
         Block newBlock =  new Block(this.getLastBlockHash(), this.work);
@@ -415,12 +414,16 @@ public class BlockChain implements Runnable {
             newBlock.addTransaction(trans);
             tempRegisteredIDs.add(trans.getBid().getItemId());
         }
+        //remove transactions with already used itemIDs
+        //remove invalid transactions
         for(Transaction trans : delTrans){
             this.unconfirmedTransaction.remove(trans);
         }
         if(newBlock.getNrTransactions()==0) return null;
         long transactionFeesTotal = newBlock.getTransactionFeesTotal();
         newBlock.setMinersReward(new Transaction(minerWallet, transactionFeesTotal));
+        Random random = new Random();
+        newBlock.setNonce(random.nextInt());
         return newBlock;
     }
 
@@ -440,21 +443,7 @@ public class BlockChain implements Runnable {
         }
     }
 
-    @Override
-    public void run() {
-        logger.info("Trying to mine a block\n");
-        Block newBlock = BlockchainUtils.getNewBlock();
-        if (newBlock.mineBlock(this)){
-            this.addBlock(newBlock);
-            logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
-            this.removeTransactionsFromTransPool(newBlock);
-            this.setMining(false);
-            BlockchainUtils.getKademliaClient().announceNewBlock(newBlock);
-        }
-        this.setMining(false);
-    }
-
-    private void removeTransactionsFromTransPool(Block block) {
+    public void removeTransactionsFromTransPool(Block block) {
         Transaction[] data = block.getData();
         for (int i =0; i < block.getNrTransactions(); i++){
             Transaction trans = data[i];

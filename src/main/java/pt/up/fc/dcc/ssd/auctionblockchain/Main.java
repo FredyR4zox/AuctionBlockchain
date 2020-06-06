@@ -2,6 +2,7 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.MinerUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.*;
@@ -34,9 +35,11 @@ public class Main {
         System.out.println("Creator public key: " + creator.getPubKey().toString());
         System.out.println("Creator private key: " + creator.getPrivKey().toString());
 
+        MinerUtils.startMining(creator);
+
         KademliaClient client = new KademliaClient(manager);
-        BlockchainUtils.setMiner(creator);
         BlockchainUtils.setKademliaClient(client);
+
         BlockchainUtils.createGenesisBlock(creator);
 
 
@@ -62,9 +65,9 @@ public class Main {
 
 
 
-        Thread.sleep(10000);
+//        Thread.sleep(10000);
 
-        System.out.println(BlockchainUtils.getLongestChain().makeJson());
+//        System.out.println(BlockchainUtils.getLongestChain().makeJson());
 
         server.blockUntilShutdown();
     }
