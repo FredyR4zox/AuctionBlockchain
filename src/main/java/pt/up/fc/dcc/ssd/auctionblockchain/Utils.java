@@ -109,7 +109,7 @@ public class Utils {
     }
 
     public static String getStandardString() {
-        return "00000000000000000000";
+        return bytesToHexString(new byte[Utils.hashAlgorithmLengthInBytes]);
     }
 
     public static String bytesToHexString(byte[] bytes) {
