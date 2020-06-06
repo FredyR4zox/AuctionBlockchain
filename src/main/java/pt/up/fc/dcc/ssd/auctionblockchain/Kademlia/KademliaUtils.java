@@ -32,7 +32,7 @@ public class KademliaUtils {
     public static final String auctionsText = "auctions";
 
     public static final byte[] bootstrapNodeID = "00000000000000000001".getBytes(Utils.charset);
-    public static final String bootstrapNodeIP = "127.0.0.1";
+    public static final String bootstrapNodeIP = "34.105.188.87";
     public static final int bootstrapNodePort = 1337;
 
 
