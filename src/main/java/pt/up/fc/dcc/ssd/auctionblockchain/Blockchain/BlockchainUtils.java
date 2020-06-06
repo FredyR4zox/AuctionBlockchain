@@ -8,33 +8,20 @@ import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.logging.Logger;
 
-public class BlockchainUtils {
+import static java.lang.Thread.sleep;
+
+public class BlockchainUtils{
     private static final Logger logger = Logger.getLogger(BlockchainUtils.class.getName());
     public static final int MAX_NR_TRANSACTIONS = 5;
     public static final int difficulty = 2;
     public static final long minerReward = 100;
-    public static final int MIN_NR_TRANSACTIONS = 3 ;
+    public static final int MIN_NR_TRANSACTIONS = 2;
     public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(4);
     public static final BlockChain original = new BlockChain();
-    private static Block newBlock;
     private static KademliaClient kademliaClient;
-    public static Wallet miner;
-    private static Thread miningThread;
 
     public static Boolean addBlock(Block newBlock){
         return original.addBlockToCorrectChain(newBlock);
-    }
-
-    public static void mineBlock(Wallet miner){
-        original.tryResolveForks();
-        BlockChain longest= getLongestChain();
-        newBlock = longest.createBlock(miner);
-        if (newBlock==null){
-            longest.setMining(false);
-            return;
-        }
-        miningThread = new Thread(longest);
-        miningThread.start();
     }
 
     public static Block getBlockWithPreviousHash(String hash){
@@ -44,12 +31,7 @@ public class BlockchainUtils {
 
     //adds transactions to all chains terminations
     public static Boolean addTransaction(Transaction trans){
-        Boolean output = original.addTransactionToCorrectChains(trans);
-        BlockChain longestChain = original.getLongestChain();
-        if (!longestChain.getUnconfirmedTransaction().isEmpty() && !longestChain.isMining()){
-            BlockchainUtils.mineBlock(BlockchainUtils.miner);
-        }
-        return output;
+        return original.addTransactionToCorrectChains(trans);
     }
 
     public static void createGenesisBlock(Wallet creator){
@@ -57,6 +39,7 @@ public class BlockchainUtils {
         //Mine block
         genesis.mineGenesisBlock(creator);
         original.addBlock(genesis);
+        logger.info("created genesis block");
     }
 
     public static BlockChain getLongestChain(){
@@ -76,24 +59,12 @@ public class BlockchainUtils {
         return chains[largestIndex];
     }
 
-    public static Block getNewBlock() {
-        return newBlock;
-    }
-
     public static BlockChain getOriginal() {
         return original;
     }
 
     public static KademliaClient getKademliaClient() {
         return kademliaClient;
-    }
-
-    public static Thread getMiningThread() {
-        return miningThread;
-    }
-
-    public static void setMiner(Wallet miner) {
-        BlockchainUtils.miner = miner;
     }
 
     static class transactionCompare implements Comparator<Transaction> {

@@ -2,10 +2,7 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionManager;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockChain;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.*;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Client;
 
 import java.security.Security;
@@ -24,28 +21,26 @@ public class Main {
 
         BlockchainUtils.createGenesisBlock(creator);
         Wallet miner = new Wallet();
+        MinerUtils.startMining(miner);
         System.out.println("miner address:" + miner.getAddress());
         Wallet alice = Wallet.createWalletFromFile("alice");
         System.out.println("alice address:" + alice.getAddress());
 
-        AuctionManager auction = new AuctionManager(alice, 10, 10, 2, 10000);
-        AuctionManager auction2 = new AuctionManager(alice, 10, 10, 2, 15000);
+        AuctionManager auction = new AuctionManager(alice, 10, 10, 2, 3000);
+        AuctionManager auction2 = new AuctionManager(alice, 10, 10, 2, 5000);
 
         Client.bet(creator, auction.getAuction().getItemID(), 30);
-        sleep(2000);
-        Client.bet(creator, auction.getAuction().getItemID(), 50);
         sleep(1000);
+        Client.bet(creator, auction.getAuction().getItemID(), 50);
+        sleep(500);
         Client.bet(creator, auction2.getAuction().getItemID(), 60);
         auction.getRunningAuction().join();
+        sleep(1000);
 
-        BlockchainUtils.mineBlock(miner);
-        BlockchainUtils.getMiningThread().join();
-
-        Client.bet(miner, auction2.getAuction().getItemID(), 60);
+        Client.bet(creator, auction2.getAuction().getItemID(), 30);
         auction2.getRunningAuction().join();
-
-        BlockchainUtils.mineBlock(miner);
-        BlockchainUtils.getMiningThread().join();
+        sleep(2000);
+        MinerUtils.stopMining();
         BlockchainUtils.getOriginal().printHashMap();
                 /*
                 Wallet wallet1 = new Wallet();
