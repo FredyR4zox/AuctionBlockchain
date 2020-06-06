@@ -8,6 +8,8 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.List;
@@ -31,7 +33,7 @@ public class Main {
 
         int port = random.nextInt(65535-1001) + 1001; // random port
 
-        KademliaNode myNode = new KademliaNode(myIpAddress, port, randomNodeID);
+        KademliaNode myNode = new KademliaNode("127.0.0.1", port, randomNodeID);
 
         KBucketManager bucketManager = new KBucketManager(myNode);
 
@@ -46,6 +48,7 @@ public class Main {
         KademliaClient client = new KademliaClient(bucketManager);
         BlockchainUtils.setKademliaClient(client);
 
+        random.nextBytes(randomNodeID);
         KademliaNode bootstrapNode = new KademliaNode(KademliaUtils.bootstrapNodeIP, KademliaUtils.bootstrapNodePort, KademliaUtils.bootstrapNodeID);
 
         client.bootstrap(bootstrapNode);
