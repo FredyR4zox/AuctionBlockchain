@@ -289,8 +289,8 @@ public class BlockChain{
 
     private void addMinerRewardToHashMap(Bid minersReward){
         //in case its a coinbase transfer
-        if(this.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount() + minersReward.getFee())!= null) {
-            Long minerNewValue = this.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount() + minersReward.getFee();
+        if(this.walletsMoney.putIfAbsent(minersReward.getSellerID(), minersReward.getAmount())!= null) {
+            Long minerNewValue = this.walletsMoney.get(minersReward.getSellerID()) + minersReward.getAmount();
             this.walletsMoney.replace(minersReward.getSellerID(), minerNewValue);
         }
     }

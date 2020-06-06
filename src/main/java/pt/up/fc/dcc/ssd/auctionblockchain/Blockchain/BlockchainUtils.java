@@ -113,6 +113,7 @@ public class BlockchainUtils{
             }
             if(!original.checkAddBlock(currentBlock)){
                 logger.severe("Errors in saved blockchain");
+                return false;
             }
         }
         logger.info("Chain was validated\n");
