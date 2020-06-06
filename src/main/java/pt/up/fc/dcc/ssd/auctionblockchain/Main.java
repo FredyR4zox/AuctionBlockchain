@@ -35,7 +35,7 @@ public class Main {
         System.out.println("Creator public key: " + creator.getPubKey().toString());
         System.out.println("Creator private key: " + creator.getPrivKey().toString());
 
-        MinerUtils.startMining(creator);
+//        MinerUtils.startMining(creator);
 
         KademliaClient client = new KademliaClient(manager);
         BlockchainUtils.setKademliaClient(client);
