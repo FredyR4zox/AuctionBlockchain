@@ -1,6 +1,7 @@
 package pt.up.fc.dcc.ssd.auctionblockchain;
 
-import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Block;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
+import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.MinerUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
@@ -8,8 +9,10 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Kademlia.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.util.List;
 import java.util.Random;
 
 
@@ -24,53 +27,48 @@ public class Main {
         }
         System.out.println("My IP address is " + myIpAddress);
 
-        KademliaNode myNode = new KademliaNode(myIpAddress, KademliaUtils.bootstrapNodePort, KademliaUtils.bootstrapNodeID);
-        KBucketManager manager = new KBucketManager(myNode);
+        byte[] randomNodeID = new byte[Utils.hashAlgorithmLengthInBytes];
+        Random random = new SecureRandom();
+        random.nextBytes(randomNodeID);
 
-        KademliaServer server = new KademliaServer(KademliaUtils.bootstrapNodePort, manager);
+        int port = random.nextInt(65535-1001) + 1001; // random port
+
+        KademliaNode myNode = new KademliaNode("127.0.0.1", port, randomNodeID);
+
+        KBucketManager bucketManager = new KBucketManager(myNode);
+
+
+        KademliaServer server = new KademliaServer(port, bucketManager);
         server.start();
 
-        Wallet creator = new Wallet();
-        System.out.println("Creator address: " + creator.getAddress());
-        System.out.println("Creator public key: " + creator.getPubKey().toString());
-        System.out.println("Creator private key: " + creator.getPrivKey().toString());
-
-        MinerUtils.startMining(creator);
-
-        KademliaClient client = new KademliaClient(manager);
-        BlockchainUtils.setKademliaClient(client);
-
-        BlockchainUtils.createGenesisBlock(creator);
-
-
-
-        byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
-        Random random = new SecureRandom();
-        random.nextBytes(rand);
 
         Wallet alice = Wallet.createWalletFromFile("alice");
-        Bid bid = new Bid(creator, new String(rand), alice.getAddress(), BlockchainUtils.minerReward/2, 5);
-        Transaction transaction = new Transaction(alice, bid);
+        MinerUtils.startMining(alice);
 
-        BlockchainUtils.addTransaction(transaction);
-        client.announceNewTransaction(transaction);
+        KademliaClient client = new KademliaClient(bucketManager);
+        BlockchainUtils.setKademliaClient(client);
 
+        random.nextBytes(randomNodeID);
+        KademliaNode bootstrapNode = new KademliaNode(KademliaUtils.bootstrapNodeIP, KademliaUtils.bootstrapNodePort, KademliaUtils.bootstrapNodeID);
 
-        random.nextBytes(rand);
-        Wallet bob = Wallet.createWalletFromFile("bob");
-        bid = new Bid(creator, new String(rand), bob.getAddress(), BlockchainUtils.minerReward/2, 5);
-        transaction = new Transaction(bob, bid);
+        client.bootstrap(bootstrapNode);
 
-        BlockchainUtils.addTransaction(transaction);
-        client.announceNewTransaction(transaction);
+        client.bootstrapBlockchain();
 
+        List<Transaction> mempool = client.getMempool();
+        for(Transaction trans : mempool)
+            BlockchainUtils.addTransaction(trans);
 
+        List<Auction> auctions = client.getAuctions();
+        for(Auction auction : auctions) {
+            AuctionsState.addAuction(auction);
 
-
-//        Thread.sleep(10000);
-
-//        System.out.println(BlockchainUtils.getLongestChain().makeJson());
+            List<Bid> bids = client.getBidsFromAuction(auction);
+            for(Bid bid : bids)
+                AuctionsState.updateBid(bid);
+        }
 
         server.blockUntilShutdown();
     }
 }
+
