@@ -324,49 +324,7 @@ public class BlockChain{
         this.walletsMoney.replace(minersReward.getSellerID(), minerNewValue);
     }
 
-
-
-    /*public Boolean isChainValidAndCreateHashMap(){
-        //clear HashMap
-        walletsMoney.clear();
-        blocksHashes.clear();
-
-        Block currentBlock = null;
-        Block previousBlock;
-
-        //loop through blockchain to check hashes:
-        for(Block block: blockchain) {
-            previousBlock=currentBlock;
-            currentBlock=block;
-            //Do Hashes check
-            if (previousBlock==null){
-                if(!currentBlock.isHashValid()) return false;
-            }
-            else{
-                if (!areHashesValid(currentBlock, previousBlock)) return false;
-            }
-            //check if miner reward with Transaction fees are valid
-            if(!block.areTransactionFeesValid()) return false;
-            //make transactions checks
-            //Do Hash and signature check
-            if(!block.areSignaturesAndHashValid()) return false;
-            //Check if they have money and for duplicated buyerIDs
-            if(!areFundsSufficient(block)) return false;
-            //add transaction block hashes list
-            blocksHashes.put(block.getHash(), block);
-            for(int i= 0; i<block.getNrTransactions(); i++){
-                Transaction trans = block.getXData(i);
-                //Add Transaction to HashMap
-                updateHashMapValues(trans, this.walletsMoney);
-            }
-            //Add minersReward to HashMap
-            this.addMinerRewardToHashMap(block.getMinersReward());
-        }
-        logger.info("Chain was validated and the hashmap with transactions has been created\n");
-        return true;
-    }*/
-
-    private Boolean areHashesValid(Block currentBlock, Block previousBlock){
+    public Boolean areHashesValid(Block currentBlock, Block previousBlock){
         //compare registered hash and calculated hash:
         if(!currentBlock.isHashValid()){
             logger.warning("Current Hashes not equal");
@@ -464,10 +422,10 @@ public class BlockChain{
     }
 
     public String makeJson(){
-        return new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
+        return new GsonBuilder().create().toJson(blockchain);
     }
-    public BlockChain makeFromJson(String blockChainJson){
-        return new Gson().fromJson(blockChainJson, BlockChain.class);
+    public ArrayList<Block> makeFromJson(String blockChainJson){
+        return (ArrayList<Block>) new Gson().fromJson(blockChainJson, blockchain.getClass());
     }
 
     public ArrayList<BlockChain> getUnconfirmedBlockChains() {
