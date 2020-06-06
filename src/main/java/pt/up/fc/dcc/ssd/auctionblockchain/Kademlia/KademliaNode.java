@@ -1,5 +1,7 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Kademlia;
 
+import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
+
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -83,8 +85,8 @@ public class KademliaNode {
     public String toString() {
         StringBuffer buf = new StringBuffer();
 
-        for(int i=0; i<pt.up.fc.dcc.ssd.auctionblockchain.Utils.hashAlgorithmLengthInBytes; i++)
-            buf.append(nodeID[i]);
+        for(int i = 0; i < Utils.hashAlgorithmLengthInBytes; i++)
+            buf.append(String.format("%02x", nodeID[i]));
 
         buf.append(" " + ipAddress + ":" + port);
 

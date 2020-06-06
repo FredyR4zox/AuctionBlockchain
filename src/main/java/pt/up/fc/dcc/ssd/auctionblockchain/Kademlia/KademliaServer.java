@@ -107,32 +107,41 @@ public class KademliaServer {
 
                 result = BlockchainUtils.addTransaction(transaction);
 
-                if(!result)
-                    logger.log(Level.WARNING, "Could not add transaction");
+                if(result)
+                    logger.log(Level.INFO, "Added transaction with hash " + transaction.getHash());
+                else
+                    logger.log(Level.WARNING, "Could not add transaction with hash " + transaction.getHash());
             }
             else if(type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.BLOCK){
                 Block block = KademliaUtils.BlockProtoToBlock(request.getBlock());
 
                 result = BlockchainUtils.addBlock(block);
 
-                if(!result)
-                    logger.log(Level.WARNING, "Could not add block");
+                if(result)
+                    logger.log(Level.INFO, "Added block with hash " + block.getHash());
+                else
+                    logger.log(Level.WARNING, "Could not add block with hash " + block.getHash());
             }
             else if(type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.AUCTION){
                 Auction auction = KademliaUtils.AuctionProtoToAuction(request.getAuction());
 
                 result = AuctionsState.addAuction(auction);
 
-                if(!result)
-                    logger.log(Level.WARNING, "Could not add auction");
+                if(result)
+                    logger.log(Level.INFO, "Added auction with hash " + auction.getHash());
+                else
+                    logger.log(Level.WARNING, "Could not add auction with hash " + auction.getHash());
+
             }
             else if(type == StoreRequest.BlockOrTransactionOrAuctionOrBidCase.BID){
                 Bid bid = KademliaUtils.BidProtoToBid(request.getBid());
 
                 result = AuctionsState.updateBid(bid);
 
-                if(!result)
-                    logger.log(Level.WARNING, "Could not add bid");
+                if(result)
+                    logger.log(Level.INFO, "Added bid with hash " + bid.getHash());
+                else
+                    logger.log(Level.WARNING, "Could not add bid with hash " + bid.getHash());
             }
             else
                 logger.log(Level.SEVERE, "Error: Type of store request not known");
@@ -182,6 +191,8 @@ public class KademliaServer {
             byte[] requestorID = KademliaUtils.NodeIDProtoToNodeID(request.getNode().getNodeID());
             byte[] requestedID = KademliaUtils.NodeIDProtoToNodeID(request.getRequestedNodeId());
 
+            logger.log(Level.INFO, "Processing a FIND_NODE RPC for key " + Utils.bytesToHexString(requestedID));
+
             List<KademliaNode> nodes = bucketManager.getClosestNodes(requestorID, requestedID, KademliaUtils.k);
 
             FindNodeResponse response = FindNodeResponse.newBuilder()
@@ -203,6 +214,8 @@ public class KademliaServer {
             logger.log(Level.INFO, "Received a FIND_VALUE RPC");
 
             byte[] key = request.getKey().toByteArray();
+
+            logger.log(Level.INFO, "Processing a FIND_VALUE RPC for key " + Utils.bytesToHexString(key));
 
             FindValueResponse.Builder responseBuilder = FindValueResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
@@ -245,7 +258,7 @@ public class KademliaServer {
 
             bucketManager.insertNode(node);
 
-            logger.log(Level.INFO, "Processed FIND_NODE RPC from " + node);
+            logger.log(Level.INFO, "Processed FIND_VALUE RPC from " + node);
         }
     }
 }

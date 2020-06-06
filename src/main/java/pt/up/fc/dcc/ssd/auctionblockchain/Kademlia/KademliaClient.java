@@ -34,7 +34,12 @@ public class KademliaClient {
     }
 
     public boolean bootstrap(KademliaNode bootstrappingNode){
+        logger.log(Level.INFO, "Bootstrapping kademlia network");
+
         Pair<KademliaNode, Boolean> response = KademliaClient.ping(bucketManager.getMyNode(), bootstrappingNode);
+
+        bucketManager.insertNode(bootstrappingNode);
+        bucketManager.insertNode(response.getFirst());
 
         if(!response.getSecond().booleanValue()){
             logger.log(Level.SEVERE, "Bootstrap failed. Could not contact node " + bootstrappingNode + " for bootstrap.");
@@ -50,6 +55,8 @@ public class KademliaClient {
     }
 
     public <T> List<Transaction> getMempool(){
+        logger.log(Level.INFO, "Getting mempool");
+
         byte[] mempoolKey = KademliaUtils.mempoolHash();
 
         if(mempoolKey == null)
@@ -61,6 +68,9 @@ public class KademliaClient {
         random.nextBytes(rand);
 
         List<T> transactions = findValue(rand, mempoolKey);
+
+        if(transactions.isEmpty())
+            logger.log(Level.INFO, "Received empty mempool list. Returning...");
 
         List<Transaction> retList = new ArrayList<>();
         for(T tmp : transactions){
@@ -76,6 +86,8 @@ public class KademliaClient {
     }
 
     public <T> List<Auction> getAuctions(){
+        logger.log(Level.INFO, "Getting Auctions");
+
         byte[] auctionsKey = KademliaUtils.auctionsHash();
 
         if(auctionsKey == null)
@@ -87,6 +99,9 @@ public class KademliaClient {
         random.nextBytes(rand);
 
         List<T> auctions = findValue(rand, auctionsKey);
+
+        if(auctions.isEmpty())
+            logger.log(Level.INFO, "Received empty auctions list. Returning...");
 
         List<Auction> retList = new ArrayList<>();
         for(T tmp : auctions){
@@ -102,12 +117,14 @@ public class KademliaClient {
     }
 
     public <T> List<Bid> getBidsFromAuction(Auction auction){
+        logger.log(Level.INFO, "Getting bids from auction " + auction.getHash());
+
         byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
 
         Random random = new SecureRandom();
         random.nextBytes(rand);
 
-        List<T> bids = findValue(rand, auction.getItemID().getBytes(KademliaUtils.charset));
+        List<T> bids = findValue(rand, auction.getItemID().getBytes(Utils.charset));
 
         List<Bid> retList = new ArrayList<>();
         for(T tmp : bids){
@@ -123,7 +140,9 @@ public class KademliaClient {
     }
 
     public <T> Block findBlockWithPreviousHash(String hash){
-        byte[] hashBytes = hash.getBytes(KademliaUtils.charset);
+        logger.log(Level.INFO, "Trying to find block with previous hash " + hash);
+
+        byte[] hashBytes = hash.getBytes(Utils.charset);
 
         List<T> values = findValue(hashBytes, hashBytes);
 
@@ -139,20 +158,29 @@ public class KademliaClient {
     }
 
     public void bootstrapBlockchain(){
+        logger.log(Level.INFO, "Bootstrapping blockchain");
+
         String lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash();
 
         while(true){
-            byte[] lastBlockHashBytes = lastBlockHash.getBytes(KademliaUtils.charset);
+            byte[] lastBlockHashBytes;
+            if(lastBlockHash == null)
+                lastBlockHashBytes = new byte[Utils.hashAlgorithmLengthInBytes];
+            else
+                lastBlockHashBytes = lastBlockHash.getBytes(Utils.charset);
 
             List<Block> blocks = findValue(lastBlockHashBytes, lastBlockHashBytes);
 
-            if(blocks.isEmpty())
+            if(blocks.isEmpty()) {
+                logger.log(Level.INFO, "Received empty block list. Returning...");
                 break;
+            }
 
             Block block = null;
             for(int i=0; i<blocks.size(); i++) {
                 Block blockAux = blocks.get(i);
                 if (blockAux.getPreviousHash().equals(lastBlockHash)){
+                    logger.log(Level.INFO, "Received block with hash " + blockAux.getHash());
                     block = blockAux;
                     break;
                 }
@@ -241,6 +269,8 @@ public class KademliaClient {
      * ########################################## */
 
     private static Pair<KademliaNode, Boolean> pingGRPC(KademliaNode myNode, KademliaNode node){
+        logger.log(Level.INFO, "Sending PING RPC to " + node);
+
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
         AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
 
@@ -265,10 +295,13 @@ public class KademliaClient {
 
         closeChannel(channel);
 
+        logger.log(Level.INFO, "Successfully sent PING RPC to " + node);
         return new Pair(nodeInResponse, true);
     }
 
     private <T> Pair<KademliaNode, Boolean> storeGRPC(KademliaNode node, byte[] key, T info) {
+        logger.log(Level.INFO, "Sending STORE RPC to " + node + " for key " + Utils.bytesToHexString(key));
+
         StoreRequest.Builder request = StoreRequest.newBuilder()
                 .setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()))
                 .setKey(ByteString.copyFrom(key));
@@ -315,10 +348,13 @@ public class KademliaClient {
 
         closeChannel(channel);
 
+        logger.log(Level.INFO, "Successfully sent STORE RPC to " + node);
         return new Pair(nodeInResponse, response.getSuccess());
     }
 
     private <T> Pair<KademliaNode, List<T>> findNodeGRPC(KademliaNode node, byte[] requestedID) {
+        logger.log(Level.INFO, "Sending FIND_NODE RPC to " + node + " for key " + Utils.bytesToHexString(requestedID));
+
         FindNodeRequest request = FindNodeRequest.newBuilder()
                 .setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()))
                 .setRequestedNodeId(KademliaUtils.NodeIDToNodeIDProto(requestedID))
@@ -348,10 +384,13 @@ public class KademliaClient {
 
         closeChannel(channel);
 
+        logger.log(Level.INFO, "Successfully sent FIND_NODE RPC to " + node);
         return new Pair(nodeInResponse, (List<T>)KademliaUtils.KBucketProtoToKademliaNodeList(response.getBucket()));
     }
 
     private <T> Pair<KademliaNode, List<T>> findValueGRPC(KademliaNode node, byte[] key) {
+        logger.log(Level.INFO, "Sending FIND_VALUE RPC to " + node + " for key " + Utils.bytesToHexString(key));
+
         FindValueRequest request = FindValueRequest.newBuilder()
                 .setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()))
                 .setKey(ByteString.copyFrom(key))
@@ -400,6 +439,7 @@ public class KademliaClient {
 
         closeChannel(channel);
 
+        logger.log(Level.INFO, "Successfully sent FIND_VALUE RPC to " + node);
         return new Pair(nodeInResponse, ret);
     }
 
@@ -436,11 +476,12 @@ public class KademliaClient {
 
         // Query selected alpha nodes
         for(KademliaNodeWrapper node : tempAlphaList) {
+            boolean received = false;
 
             Pair<KademliaNode, List<T>> retAux = rpc.apply(node, key);
 
-            if(retAux.getSecond().isEmpty()) {
-                logger.log(Level.INFO, "Node " + node + " didn't return anything. Removing from list.");
+            if(retAux.getFirst() == null) {
+                logger.log(Level.INFO, "Node " + node + " didn't respond. Removing from shortlist.");
                 shortList.remove(node);
             }
             else {
@@ -449,11 +490,12 @@ public class KademliaClient {
                 probedNodes.add(node);
             }
 
+
             // Set node timestamp as the distance
             for(T aux : retAux.getSecond()) {
                 if (aux.getClass() == KademliaNode.class) {
                     KademliaNode aux2 = (KademliaNode) aux;
-                    bucketManager.insertNode(aux2);
+//                    bucketManager.insertNode(aux2);
 
                     KademliaNodeWrapper aux3 = new KademliaNodeWrapper(aux2, KademliaUtils.distanceTo(aux2.getNodeID(), nodeKey));
                     shortList.add(aux3);
@@ -461,10 +503,14 @@ public class KademliaClient {
                     logger.log(Level.INFO, "Node " + aux2 + " added.");
                 }
                 else {
-                    logger.log(Level.INFO, "Added some information");
+                    logger.log(Level.INFO, "Added some information.");
                     ret.add(aux);
+                    received = true;
                 }
             }
+
+            if(received)
+                return ret;
         }
 
         return ret;
@@ -518,11 +564,14 @@ public class KademliaClient {
         boolean success = false;
         for(KademliaNode node : probedNodes) {
             Pair<KademliaNode, Boolean> ret = storeGRPC(node, serviceKey, value);
-            if (ret.getSecond().booleanValue()) {
+
+            if(ret.getSecond().booleanValue()) {
                 logger.log(Level.INFO, "Success in storeGRPC for node " + node);
-                bucketManager.insertNode(ret.getFirst());
                 success = true;
             }
+
+            if(ret.getFirst() != null)
+                bucketManager.insertNode(ret.getFirst());
         }
 
         return success;

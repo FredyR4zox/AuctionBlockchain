@@ -3,6 +3,7 @@ package pt.up.fc.dcc.ssd.auctionblockchain;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,9 +12,11 @@ import java.util.Comparator;
 import java.util.logging.Logger;
 
 public class Utils {
+    public static final Charset charset = Charset.forName("ASCII");
     public static final String hashAlgorithm = "SHA-1";
     public static final int hashAlgorithmLengthInBits = 160;
     public static final int hashAlgorithmLengthInBytes = hashAlgorithmLengthInBits/8;
+    public static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(charset);
 
     public static BigInteger[] twoLargest(BigInteger values[]){
         BigInteger largestA = BigInteger.valueOf(Integer.MIN_VALUE), largestB = BigInteger.valueOf(Integer.MIN_VALUE);
@@ -105,7 +108,32 @@ public class Utils {
         }
     }
 
-    public static String getStandardString(){
+    public static String getStandardString() {
         return "00000000000000000000";
+    }
+
+    public static String bytesToHexString(byte[] bytes) {
+        int len = bytes.length;
+        byte[] hexChars = new byte[len * 2];
+
+        for (int j = 0; j < len; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+
+        return new String(hexChars, StandardCharsets.US_ASCII);
+    }
+
+    public static byte[] hexStringToBytes(String string) {
+        int len = string.length();
+        byte[] data = new byte[len / 2];
+
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(string.charAt(i), 16) << 4)
+                    + Character.digit(string.charAt(i+1), 16));
+        }
+
+        return data;
     }
 }
