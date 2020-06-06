@@ -39,7 +39,8 @@ public class Main {
             else
                 port = KademliaUtils.bootstrapNodePort;
 
-            startBootstrap("127.0.0.1", port);
+//            startBootstrap("127.0.0.1", port);
+            startBootstrap(myIpAddress, port);
         }
 
         else if(args[0].equals("listener")){

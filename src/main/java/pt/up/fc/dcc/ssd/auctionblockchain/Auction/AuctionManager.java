@@ -60,7 +60,7 @@ public class AuctionManager implements Runnable{
                 timestamp = new Date().getTime();
             }else{
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
