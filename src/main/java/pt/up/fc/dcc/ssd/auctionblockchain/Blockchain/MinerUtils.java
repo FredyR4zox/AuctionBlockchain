@@ -12,7 +12,7 @@ public class MinerUtils implements Runnable {
     public static void startMining(Wallet miner){
         MinerUtils.miner=miner;
         MinerUtils object= new MinerUtils();
-        alwaysMining = new Thread(object);
+        alwaysMining = new Thread(object, "MinerManager");
         alwaysMining.start();
     }
 
@@ -42,7 +42,7 @@ public class MinerUtils implements Runnable {
             boolean enoughSize = longestChain.getUnconfirmedTransaction().size()>=BlockchainUtils.getMinNrTransactions();
             if (miningThread==null && enoughSize) {
                 Runnable r = new Mine(longestChain);
-                miningThread = new Thread(r);
+                miningThread = new Thread(r, "MineBlock");
                 miningThread.start();
             }
             else if ( miningThread!= null && enoughSize && !longestChain.isMining() && !miningThread.isAlive()){

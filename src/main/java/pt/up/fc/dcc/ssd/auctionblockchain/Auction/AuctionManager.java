@@ -34,7 +34,7 @@ public class AuctionManager implements Runnable{
         AuctionsState.addAuction(auction);
         this.bids_status = AuctionsState.getAuctionBidsTreeSet(randomString);
         BlockchainUtils.getKademliaClient().announceNewAuction(auction);
-        runningAuction = new Thread(this);
+        runningAuction = new Thread(this, "AuctionRunning: " + auction.getItemID());
         runningAuction.start();
     }
 
