@@ -49,6 +49,7 @@ public class Wallet {
     }
 
     public static boolean checkAddress(PublicKey pubKey, String address){
+        String tempAddress = getAddressFromPubKey(pubKey);
         if(getAddressFromPubKey(pubKey).equals(address))
             return true;
         else {

@@ -74,6 +74,7 @@ public class Transaction {
     }
 
     public Boolean isHashValid(){
+        logger.info("Received hash : " +  this.hash + "\nRecalculated hash : " + this.getHashToBeSigned());
         if(!this.hash.equals(this.getHashToBeSigned())){
             logger.warning("Transaction Hashes don't match");
             return false;
