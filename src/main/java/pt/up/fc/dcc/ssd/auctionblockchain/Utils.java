@@ -76,7 +76,8 @@ public class Utils {
         }
 
         byte[] hash = digest.digest(input.getBytes(charset));
-        return new String(Hex.encode(hash));
+        return bytesToHexString(hash);
+//        return new String(Hex.encode(hash));
     }
 
     public static byte[] getHash(byte[] input){
@@ -134,6 +135,9 @@ public class Utils {
     }
 
     public static String bytesToHexString(byte[] bytes) {
+        if(bytes == null)
+            return null;
+
         int len = bytes.length;
         byte[] hexChars = new byte[len * 2];
 
@@ -147,6 +151,9 @@ public class Utils {
     }
 
     public static byte[] hexStringToBytes(String string) {
+        if(string == null)
+            return null;
+
         int len = string.length();
         byte[] data = new byte[len / 2];
 

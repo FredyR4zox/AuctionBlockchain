@@ -107,7 +107,9 @@ public class KademliaUtils {
                 .setPreviousWork(ByteString.copyFrom(block.getPreviousWork().toByteArray()))
                 .build();
 
-        BlockProto.Builder builder = BlockProto.newBuilder().setBlockHeader(header);
+        BlockProto.Builder builder = BlockProto.newBuilder()
+                .setBlockHeader(header)
+                .setReward(MinersRewardToTransactionProto(block.getMinersReward()));
 
         int size = block.getNrTransactions();
         Transaction[] transactions = block.getData();
@@ -130,7 +132,7 @@ public class KademliaUtils {
         Block block = new Block(
                 Utils.bytesToHexString(blockHeader.getMerkleRoot().toByteArray()),
                 Utils.bytesToHexString(blockHeader.getPrevBlock().toByteArray()),
-                TransactionProtoToTransaction(blockProto.getReward()),
+                TransactionProtoToMinersReward(blockProto.getReward()),
                 transactions,
                 blockHeader.getDifficulty(),
                 blockHeader.getTimestamp(),
@@ -209,6 +211,21 @@ public class KademliaUtils {
                 bidProto.getSignature().toByteArray());
     }
 
+    public static BidProto BidMinersRewardToBidProto(Bid bid){
+        return BidProto.newBuilder()
+                .setSellerID(ByteString.copyFrom(Utils.hexStringToBytes(bid.getSellerID())))
+                .setAmount(bid.getAmount())
+                .setHash(ByteString.copyFrom(Utils.hexStringToBytes(bid.getHash())))
+                .build();
+    }
+
+    public static Bid BidProtoToBidMinersReward(BidProto bidProto){
+        return new Bid(
+                Utils.bytesToHexString(bidProto.getSellerID().toByteArray()),
+                bidProto.getAmount(),
+                Utils.bytesToHexString(bidProto.getHash().toByteArray()));
+    }
+
     public static List<Bid> BidListProtoToBidList(BidListProto bidListProto){
         List<Bid> ret = new ArrayList<>();
 
@@ -240,6 +257,26 @@ public class KademliaUtils {
     public static Transaction TransactionProtoToTransaction(TransactionProto transactionProto){
         return new Transaction(
                 BidProtoToBid(transactionProto.getBid()),
+                transactionProto.getSellerPublicKey().toByteArray(),
+                transactionProto.getTimestamp(),
+                Utils.bytesToHexString(transactionProto.getHash().toByteArray()),
+                transactionProto.getSignature().toByteArray());
+    }
+
+    public static TransactionProto MinersRewardToTransactionProto(Transaction transaction){
+
+        return TransactionProto.newBuilder()
+                .setBid(BidMinersRewardToBidProto(transaction.getBid()))
+                .setSellerPublicKey(ByteString.copyFrom(transaction.getSellerPublicKey().getEncoded()))
+                .setTimestamp(transaction.getTimeStamp())
+                .setHash(ByteString.copyFrom(Utils.hexStringToBytes(transaction.getHash())))
+                .setSignature(ByteString.copyFrom(transaction.getSignature()))
+                .build();
+    }
+
+    public static Transaction TransactionProtoToMinersReward(TransactionProto transactionProto){
+        return new Transaction(
+                BidProtoToBidMinersReward(transactionProto.getBid()),
                 transactionProto.getSellerPublicKey().toByteArray(),
                 transactionProto.getTimestamp(),
                 Utils.bytesToHexString(transactionProto.getHash().toByteArray()),

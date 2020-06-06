@@ -226,10 +226,12 @@ public class KademliaServer {
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
 
             if(mempoolKey != null && Arrays.equals(key, mempoolKey)) {
+                logger.log(Level.INFO, "Sending mempool.");
                 List<Transaction> transactions = new ArrayList<>(BlockchainUtils.getLongestChain().getUnconfirmedTransaction());
                 responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
             }
             else if(auctionsKey != null && Arrays.equals(key, auctionsKey)) {
+                logger.log(Level.INFO, "Sending all auctions.");
                 List<Auction> auctions = new ArrayList<>(AuctionsState.getAuctions());
                 responseBuilder.setAuctions(KademliaUtils.AuctionListToAuctionListProto(auctions));
             }
@@ -240,15 +242,17 @@ public class KademliaServer {
                 Block block = BlockchainUtils.getBlockWithPreviousHash(keyString);
                 Auction auction = AuctionsState.getAuction(keyString);
 
-                logger.log(Level.INFO, "Could not get block with hash " + keyString);
                 if(block != null) {
+                    logger.log(Level.INFO, "Sending block with previous hash " + keyString);
                     responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(block));
                 }
                 else if(auction != null) {
+                    logger.log(Level.INFO, "Sending auction bids with hash " + keyString);
                     List<Bid> bids = new ArrayList<>(AuctionsState.getAuctionBidsTreeSet(keyString));
                     responseBuilder.setBids(KademliaUtils.BidListToBidListProto(bids));
                 }
                 else {
+                    logger.log(Level.INFO, "Sending kbuckets because no value was found to hash " + keyString);
                     List<KademliaNode> nodes = bucketManager.getClosestNodes(node.getNodeID(), key, KademliaUtils.k);
                     responseBuilder.setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes));
                 }

@@ -39,7 +39,7 @@ public class Main {
             else
                 port = KademliaUtils.bootstrapNodePort;
 
-            startBootstrap(myIpAddress, port);
+            startBootstrap("127.0.0.1", port);
         }
 
         else if(args[0].equals("listener")){
@@ -126,6 +126,7 @@ public class Main {
         Wallet alice = Wallet.createWalletFromFile("alice");
         Bid bid = new Bid(creator, Utils.bytesToHexString(rand), alice.getAddress(), BlockchainUtils.minerReward/2, 5);
         Transaction transaction = new Transaction(alice, bid);
+//        String a = Utils.bytesToHexString(alice.getPubKey().getEncoded());
 
         BlockchainUtils.addTransaction(transaction);
         client.announceNewTransaction(transaction);

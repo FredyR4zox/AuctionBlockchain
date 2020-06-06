@@ -186,7 +186,10 @@ public class KademliaClient {
                 break;
             }
 
-            BlockchainUtils.addBlock(block);
+            if(!BlockchainUtils.addBlock(block)){
+                logger.log(Level.WARNING, "Could not add block to blockchain.");
+                break;
+            }
 
             lastBlockHash = BlockchainUtils.getLongestChain().getLastBlockHash();
         }

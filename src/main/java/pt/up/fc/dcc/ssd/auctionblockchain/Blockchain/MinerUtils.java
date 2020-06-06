@@ -52,7 +52,7 @@ public class MinerUtils implements Runnable {
             }
             else {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(2000);
                 } catch (InterruptedException ignored) {}
             }
         }
