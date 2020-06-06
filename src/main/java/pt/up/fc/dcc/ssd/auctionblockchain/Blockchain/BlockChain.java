@@ -449,7 +449,7 @@ public class BlockChain implements Runnable {
             logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
             this.removeTransactionsFromTransPool(newBlock);
             this.setMining(false);
-            //BlockchainUtils.getKademliaClient().announceNewBlock(newBlock);
+            BlockchainUtils.getKademliaClient().announceNewBlock(newBlock);
         }
         this.setMining(false);
     }

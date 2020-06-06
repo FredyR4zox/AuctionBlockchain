@@ -84,6 +84,10 @@ public class BlockchainUtils {
         return original;
     }
 
+    public static void setKademliaClient(KademliaClient client){
+        kademliaClient = client;
+    }
+
     public static KademliaClient getKademliaClient() {
         return kademliaClient;
     }
