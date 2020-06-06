@@ -39,6 +39,7 @@ public class BlockchainUtils{
         genesis.mineGenesisBlock(creator);
         original.addBlock(genesis);
         logger.info("created genesis block");
+        BlockchainUtils.getKademliaClient().announceNewBlock(genesis);
     }
 
     public static BlockChain getLongestChain(){

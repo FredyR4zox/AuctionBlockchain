@@ -78,7 +78,7 @@ class Mine implements Runnable {
             miningChain.addBlock(newBlock);
             logger.info("Added block: " + newBlock.getHash() + " to blockchain\n");
             miningChain.removeTransactionsFromTransPool(newBlock);
-            //BlockchainUtils.getKademliaClient().announceNewBlock(newBlock);
+            BlockchainUtils.getKademliaClient().announceNewBlock(newBlock);
         }
         miningChain.setMining(false);
     }
