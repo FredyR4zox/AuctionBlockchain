@@ -58,6 +58,9 @@ public class KademliaNode {
 //        System.out.println("\n\n");
 
         // field comparison
+//        System.out.println(Utils.bytesToHexString(nodeID));
+//        System.out.println(Utils.bytesToHexString(node.getNodeID()));
+//        System.out.println(Arrays.equals(nodeID, node.getNodeID()));
         return Arrays.equals(nodeID, node.getNodeID());
     }
 

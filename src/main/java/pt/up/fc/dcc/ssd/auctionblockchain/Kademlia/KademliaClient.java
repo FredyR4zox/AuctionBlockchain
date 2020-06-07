@@ -72,7 +72,7 @@ public class KademliaClient {
         Random random = new SecureRandom();
         random.nextBytes(distance);
 
-        Set<KademliaNode> contactedNodes = new HashSet<>();
+        HashMap<String, KademliaNode> contactedNodes = new HashMap<>();
 
         for(int i = 0; i < Utils.hashAlgorithmLengthInBytes; i++){
 
@@ -99,7 +99,7 @@ public class KademliaClient {
                     logger.log(Level.SEVERE, "Bootstrap failed for distance " + i + ". Received an empty list while performing a node lookup.");
 
                 for(KademliaNode node : nodes){
-                    if(contactedNodes.contains(node))
+                    if(contactedNodes.containsKey(Utils.bytesToHexString(node.getNodeID())))
                         continue;
 
                     Pair<KademliaNode, Boolean> ret = KademliaClient.ping(bucketManager.getMyNode(), node);
@@ -113,7 +113,7 @@ public class KademliaClient {
                         logger.log(Level.WARNING, "Could not PING node " + node);
                     }
 
-                    contactedNodes.add(node);
+                    contactedNodes.put(Utils.bytesToHexString(retNode.getNodeID()), retNode);
                 }
             }
         }

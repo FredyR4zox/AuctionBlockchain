@@ -46,12 +46,12 @@ public class Main {
         if (wallet == null) {
             System.out.println("File not found. Generating a new wallet and saving it to file.");
 
-            Wallet creator = new Wallet();
+            wallet = new Wallet();
             System.out.println("---Generated wallet---");
-            System.out.println("\tAddress: " + creator.getAddress());
-            System.out.println("\tPublic key: " + creator.getPubKey().toString());
+            System.out.println("\tAddress: " + wallet.getAddress());
+            System.out.println("\tPublic key: " + wallet.getPubKey().toString());
 
-            if (Wallet.createFileWithWallet(walletFile, creator) == null) {
+            if (Wallet.createFileWithWallet(walletFile, wallet) == null) {
                 System.out.println("Error writing wallet to file " + Wallet.WALLETS_PATH + walletFile);
                 return;
             }
