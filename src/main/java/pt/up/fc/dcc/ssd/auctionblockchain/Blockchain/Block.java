@@ -64,8 +64,8 @@ public class Block{
             total += trans.getBid().getFee();
         }
         //check if miner reward with Transaction fees are valid
-        if(total == BlockchainUtils.getMinerReward() - this.getMinersReward().getBid().getAmount()){
-            logger.warning("transaction fee in miner transaction is doesn't match");
+        if(total != this.getMinersReward().getBid().getAmount() - BlockchainUtils.getMinerReward()){
+            logger.warning("transaction fee in miner transaction doesn't match");
             return false;
         }
         return true;

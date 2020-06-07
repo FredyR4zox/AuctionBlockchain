@@ -58,8 +58,8 @@ public class Bid {
     public Bid(String sellerID, long fee) {
         this.sellerID = sellerID;
         this.buyerID = Utils.getStandardString();
-        this.amount = BlockchainUtils.getMinerReward();
-        this.fee = fee;
+        this.amount = BlockchainUtils.getMinerReward() + fee;
+        this.fee = 0;
         this.buyerPublicKey = null;
         this.hash = Utils.getHash(this.sellerID + this.buyerID + this.amount + this.fee);
     }
