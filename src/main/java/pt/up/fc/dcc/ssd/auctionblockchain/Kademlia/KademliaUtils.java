@@ -28,6 +28,8 @@ public class KademliaUtils {
 
     public static final int alpha = 3;
     public static final int k = 20;
+    public static final int networkTimeoutMsecs = 5*1000;
+    public static final int badNodeTimeoutSecs = 120;
     public static final String mempoolText = "mempool";
     public static final String auctionsText = "auctions";
 
@@ -153,6 +155,7 @@ public class KademliaUtils {
                 .setMinIncrement(auction.getMinIncrement())
                 .setFee(auction.getFee())
                 .setTimeout(auction.getTimeout())
+                .setSellerPublicKey(ByteString.copyFrom(auction.getSellerPublicKey().getEncoded()))
                 .setHash(ByteString.copyFrom(Utils.hexStringToBytes(auction.getHash())))
                 .setSignature(ByteString.copyFrom(auction.getSignature()))
                 .build();

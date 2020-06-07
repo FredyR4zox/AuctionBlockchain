@@ -74,6 +74,29 @@ public class KBucketManager {
         }
     }
 
+    public boolean removeNode(KademliaNode node) {
+        if (myNode.equals(node)) {
+            logger.log(Level.SEVERE, "Error: Trying to remove own node from bucket");
+            return false;
+        }
+
+//        System.out.println("Inserting Node: ");
+//        for(int j=0; j<KademliaUtils.idSizeInBytes; j++)
+//            System.out.print(" " + node.getNodeID()[j]);
+//        System.out.println("\n\n");
+
+        BigInteger distance = KademliaUtils.distanceTo(myNode, node);
+
+        if(distance.equals(BigInteger.ZERO))
+            logger.log(Level.SEVERE, "Error: Distance of 0 and the node is not equal to myNode");
+
+        int i = BigIntegerMath.log2(distance, RoundingMode.FLOOR);
+
+        synchronized (buckets[i]) {
+            return buckets[i].removeNode(node);
+        }
+    }
+
     public KademliaNode getMyNode() {
         return myNode;
     }

@@ -11,6 +11,7 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.Transaction;
 import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -27,6 +28,7 @@ public class KademliaClient {
     private static final Logger logger = Logger.getLogger(KademliaClient.class.getName());
 
     private final KBucketManager bucketManager;
+    private final HashMap<String, KademliaNodeWrapper> badNodes = new HashMap<>();
 
 
     public KademliaClient(KBucketManager bucketManager){
@@ -64,8 +66,10 @@ public class KademliaClient {
                 bucketManager.insertNode(retNode);
 //                logger.log(Level.INFO, "Inserted node " + retNode);
             }
-            else
+            else {
                 logger.log(Level.INFO, "Could not PING node " + node);
+                bucketManager.removeNode(node);
+            }
         }
 
         byte[] distance = new byte[Utils.hashAlgorithmLengthInBytes];
@@ -77,6 +81,8 @@ public class KademliaClient {
         for(int i = 0; i < Utils.hashAlgorithmLengthInBytes; i++){
 
             for(int j = 1; j < 8; j++){
+//                logger.log(Level.INFO, "Bootstrapping kbucket " + String.valueOf(i*8+j) + "...");
+
                 BitSet bits = new BitSet(8);
                 bits.set(0, 8);
 
@@ -110,6 +116,7 @@ public class KademliaClient {
 //                        logger.log(Level.INFO, "Inserted node " + retNode);
                     }
                     else {
+                        bucketManager.removeNode(node);
                         logger.log(Level.WARNING, "Could not PING node " + node);
                     }
 
@@ -341,14 +348,15 @@ public class KademliaClient {
 //        logger.log(Level.INFO, "Sending PING RPC to " + node);
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);;
 
         KademliaNodeProto response;
 
         try {
             response = blockingStub.ping(KademliaUtils.KademliaNodeToKademliaNodeProto(myNode));
         } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "PING RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+//            logger.log(Level.WARNING, "PING RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "PING RPC failed for " + node);
             closeChannel(channel);
             return new Pair(null, false);
         }
@@ -364,7 +372,7 @@ public class KademliaClient {
 
         closeChannel(channel);
 
-        logger.log(Level.INFO, "Successfully sent PING RPC to " + node);
+//        logger.log(Level.INFO, "Successfully sent PING RPC to " + node);
         return new Pair(nodeInResponse, true);
     }
 
@@ -394,14 +402,15 @@ public class KademliaClient {
         }
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
 
         StoreResponse response;
 
         try {
             response = blockingStub.store(request .build());
         } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "STORE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+//            logger.log(Level.WARNING, "STORE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "STORE RPC failed for " + node);
             closeChannel(channel);
             return new Pair(null, false);
         }
@@ -417,7 +426,7 @@ public class KademliaClient {
 
         closeChannel(channel);
 
-        logger.log(Level.INFO, "Successfully sent STORE RPC to " + node + " for key " + Utils.bytesToHexString(key));
+//        logger.log(Level.INFO, "Successfully sent STORE RPC to " + node + " for key " + Utils.bytesToHexString(key));
         return new Pair(nodeInResponse, response.getSuccess());
     }
 
@@ -430,14 +439,15 @@ public class KademliaClient {
                 .build();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
 
         FindNodeResponse response;
 
         try {
             response = blockingStub.findNode(request);
         } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "FIND_NODE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+//            logger.log(Level.WARNING, "FIND_NODE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "FIND_NODE RPC failed for " + node);
             closeChannel(channel);
             return new Pair(null, new ArrayList<>());
         }
@@ -453,7 +463,7 @@ public class KademliaClient {
 
         closeChannel(channel);
 
-        logger.log(Level.INFO, "Successfully sent FIND_NODE RPC to " + node + " for key " + Utils.bytesToHexString(requestedID));
+//        logger.log(Level.INFO, "Successfully sent FIND_NODE RPC to " + node + " for key " + Utils.bytesToHexString(requestedID));
         return new Pair(nodeInResponse, (List<T>)KademliaUtils.KBucketProtoToKademliaNodeList(response.getBucket()));
     }
 
@@ -466,14 +476,15 @@ public class KademliaClient {
                 .build();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
 
         FindValueResponse response;
 
         try {
             response = blockingStub.findValue(request);
         } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "FIND_VALUE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+//            logger.log(Level.WARNING, "FIND_VALUE RPC failed for " + node.getIpAddress() + ":" + node.getPort() + " - " + e.getStatus());
+            logger.log(Level.WARNING, "FIND_VALUE RPC failed for " + node);
             closeChannel(channel);
             return new Pair(null, new ArrayList<>());
         }
@@ -508,7 +519,7 @@ public class KademliaClient {
 
         closeChannel(channel);
 
-        logger.log(Level.INFO, "Successfully sent FIND_VALUE RPC to " + node + " for key " + Utils.bytesToHexString(key));
+//        logger.log(Level.INFO, "Successfully sent FIND_VALUE RPC to " + node + " for key " + Utils.bytesToHexString(key));
         return new Pair(nodeInResponse, ret);
     }
 
@@ -547,11 +558,21 @@ public class KademliaClient {
         for(KademliaNodeWrapper node : tempAlphaList) {
             boolean received = false;
 
-            Pair<KademliaNode, List<T>> retAux = rpc.apply(node, key);
+            if(badNodes.containsKey(Utils.bytesToHexString(node.getNodeID()))){
+                if(badNodes.get(Utils.bytesToHexString(node.getNodeID())).getLastSeen() > Instant.now().getEpochSecond() + KademliaUtils.badNodeTimeoutSecs) {
+                    badNodes.remove(Utils.bytesToHexString(node.getNodeID()));
+                }
+                else
+                    continue;
+            }
+
+                Pair<KademliaNode, List<T>> retAux = rpc.apply(node, key);
 
             if(retAux.getFirst() == null) {
 //                logger.log(Level.INFO, "Node " + node + " didn't respond. Removing from shortlist.");
                 shortList.remove(node);
+                badNodes.put(Utils.bytesToHexString(node.getNodeID()), node);
+                bucketManager.removeNode(node);
             }
             else {
 //                logger.log(Level.INFO, "Node " + node + " returned some things.");
@@ -567,7 +588,12 @@ public class KademliaClient {
 //                    bucketManager.insertNode(aux2);
 
                     KademliaNodeWrapper aux3 = new KademliaNodeWrapper(aux2, KademliaUtils.distanceTo(aux2.getNodeID(), nodeKey));
-                    shortList.add(aux3);
+                    if(!badNodes.containsKey(Utils.bytesToHexString(aux3.getNodeID())))
+                        shortList.add(aux3);
+                    else if(badNodes.get(Utils.bytesToHexString(aux3.getNodeID())).getLastSeen() > Instant.now().getEpochSecond() + KademliaUtils.badNodeTimeoutSecs){
+                        badNodes.remove(Utils.bytesToHexString(aux3.getNodeID()));
+                        shortList.add(aux3);
+                    }
 
 //                    logger.log(Level.INFO, "Node " + aux2 + " added.");
                 }
@@ -641,6 +667,8 @@ public class KademliaClient {
 
             if(ret.getFirst() != null)
                 bucketManager.insertNode(ret.getFirst());
+            else
+                bucketManager.removeNode(node);
         }
 
         return success;
