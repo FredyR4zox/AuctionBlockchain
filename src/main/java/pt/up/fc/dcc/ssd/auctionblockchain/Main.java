@@ -255,6 +255,8 @@ public class Main {
         server.start();
 
         KademliaClient client = new KademliaClient(bucketManager);
+        BlockchainUtils.setKademliaClient(client);
+
         KademliaNode bootstrapNode = new KademliaNode(defaultBootstrapNodeIP, defaultBootstrapNodePort, KademliaUtils.bootstrapNodeID);
 
         client.bootstrap(bootstrapNode);
@@ -298,6 +300,8 @@ public class Main {
         server.start();
 
         KademliaClient client = new KademliaClient(bucketManager);
+        BlockchainUtils.setKademliaClient(client);
+
         KademliaNode bootstrapNode = new KademliaNode(defaultBootstrapNodeIP, defaultBootstrapNodePort, KademliaUtils.bootstrapNodeID);
 
         client.bootstrap(bootstrapNode);
@@ -317,7 +321,8 @@ public class Main {
                 AuctionsState.updateBid(bid);
         }
 
-        AuctionManager newAuction = new  AuctionManager(wallet, 20, 5, 3, 10000);
+
+        AuctionManager newAuction = new  AuctionManager(wallet);
 
         server.blockUntilShutdown();
     }

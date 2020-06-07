@@ -163,6 +163,13 @@ public class AuctionsState {
             print.printAuctionState();
         }
     }
+
+    public static boolean isNameValid(String name) {
+        if(auctionStates.get(name)!= null){
+            return false;
+        }
+        return !BlockchainUtils.original.getRegisteredIDs().contains(name);
+    }
 }
 class AuctionState{
     Auction auction;

@@ -17,13 +17,13 @@ public class Client implements Runnable{
     static Wallet clientWallet;
     private static final Scanner scanner =new Scanner(System.in);
     //saves the itemID and the lastest bid received
-    public static Bid bet(Wallet buyer, String itemId, long amount){
+    public static Bid bet(String itemId, long amount){
         Auction auction = AuctionsState.getAuction(itemId);
         if(auction==null){
             System.out.println("Auction not found");
             return null;
         }
-        Bid myBid = new Bid(buyer, auction, amount);
+        Bid myBid = new Bid(clientWallet, auction, amount);
         if(!AuctionsState.updateBid(myBid)){
             return null;
         }
@@ -41,9 +41,9 @@ public class Client implements Runnable{
     public static Bid getBid(String itemId){
         System.out.println("How much do u wish to bet");
 
-        long amountAnswer = Long.parseLong(scanner.nextLine());
+        long amountAnswer = scanner.nextLong();
 
-        return bet(clientWallet, itemId, amountAnswer);
+        return bet(itemId, amountAnswer);
     }
 
     public static Bid newBid(){
