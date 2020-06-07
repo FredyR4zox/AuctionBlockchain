@@ -45,7 +45,7 @@ public class Block{
         this.difficulty = BlockchainUtils.difficulty;
         this.previousWork=previousWork;
         //cant initialize with zeroes
-        this.hash = this.calculateHash();
+        this.hash = calculateHash();
     }
 
     @Override
@@ -88,7 +88,12 @@ public class Block{
             transData = transData.concat(data[i].getHash());
         }
         String transSHA = Utils.getHash(transData);
-        return Utils.getHash("" + this.previousHash + this.minersReward.getHash() + transSHA + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
+        if (minersReward!=null) {
+            return Utils.getHash("" + this.previousHash + this.minersReward.getHash() + transSHA + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
+        }
+        else{
+            return Utils.getHash("" + this.previousHash + transSHA + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
+        }
     }
 
     public Boolean checkBlock(){
@@ -221,6 +226,7 @@ public class Block{
         return data[x];
     }
     public void setMinersReward(Transaction minersReward) {
+        this.hash = this.getHash();
         this.minersReward = minersReward;
     }
 
