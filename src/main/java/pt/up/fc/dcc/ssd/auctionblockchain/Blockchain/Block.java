@@ -2,6 +2,7 @@ package pt.up.fc.dcc.ssd.auctionblockchain.Blockchain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import jdk.jshell.execution.Util;
 import pt.up.fc.dcc.ssd.auctionblockchain.*;
 
 import java.math.BigInteger;
@@ -82,7 +83,12 @@ public class Block{
     }
 
     public String calculateHash() {
-        return Utils.getHash(this.previousHash + this.minersReward + Arrays.toString(this.data) + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
+        String transData = "";
+        for(int i = 0; i< this.nrTransactions; i++){
+            transData = transData.concat(data[i].getHash());
+        }
+        String transSHA = Utils.getHash(transData);
+        return Utils.getHash("" + this.previousHash + this.minersReward.getHash() + transSHA + this.nrTransactions + this.timeStamp + this.difficulty + this.nonce + this.previousWork);
     }
 
     public Boolean checkBlock(){
@@ -95,6 +101,9 @@ public class Block{
         //compare registered hash and calculated hash:
         //also check according to difficulty
         String target = new String(new char[this.difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
+        String hashTemp = calculateHash();
+        boolean output1 = hash.equals(hashTemp);
+        boolean output2 = this.hash.substring(0, this.difficulty).equals(target);
         if(!hash.equals(calculateHash()) || !this.hash.substring(0, this.difficulty).equals(target)){
             logger.warning("Hash is not correct");
             return false;

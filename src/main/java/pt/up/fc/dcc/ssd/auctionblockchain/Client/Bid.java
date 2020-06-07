@@ -89,14 +89,14 @@ public class Bid {
     }
 
     public String getHashToBeSigned(){
-        return Utils.getHash(this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode());
+        return Utils.getHash("" + this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode());
     }
 
     public String getHashWithSig() {
         if (signature != null){
-            return Utils.getHash(this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode()+ Arrays.toString(this.signature));
+            return Utils.getHash("" + this.itemId + this.sellerID + this.buyerID + this.amount + this.fee + buyerPublicKey.hashCode() + Arrays.toString(this.signature));
         }else{
-            return this.hash;
+            return Utils.getHash("" + this.sellerID + this.buyerID + this.amount + this.fee);
         }
     }
 
