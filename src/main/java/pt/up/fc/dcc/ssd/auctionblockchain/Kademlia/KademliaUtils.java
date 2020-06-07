@@ -164,7 +164,7 @@ public class KademliaUtils {
     public static Auction AuctionProtoToAuction(AuctionProto auctionProto){
         return new Auction(
                 Utils.bytesToHexString(auctionProto.getItemId().toByteArray()),
-                Utils.bytesToHexString(auctionProto.getItemId().toByteArray()),
+                Utils.bytesToHexString(auctionProto.getSellerId().toByteArray()),
                 auctionProto.getMinAmount(),
                 auctionProto.getMinIncrement(),
                 auctionProto.getFee(),
