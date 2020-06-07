@@ -23,17 +23,19 @@ public class AuctionManager implements Runnable{
 
     public AuctionManager(Auction auction) {
         this.auction = auction;
+        AuctionsState.addAuction(auction);
         this.bids_status= AuctionsState.getAuctionBidsTreeSet(auction.getItemID());
     }
 
     public AuctionManager(Wallet seller, long minAmount, float minIncrement, long fee, long timeout){
         this.seller = seller;
         String randomString = Utils.randomString(Utils.hashAlgorithmLengthInBytes);
+        randomString = "asd";
         Auction auction = new Auction(seller, randomString, minAmount, minIncrement, fee, timeout);
         this.auction = auction;
         AuctionsState.addAuction(auction);
         this.bids_status = AuctionsState.getAuctionBidsTreeSet(randomString);
-        BlockchainUtils.getKademliaClient().announceNewAuction(auction);
+        //BlockchainUtils.getKademliaClient().announceNewAuction(auction);
         runningAuction = new Thread(this, "AuctionRunning: " + auction.getItemID());
         runningAuction.start();
     }
@@ -69,7 +71,7 @@ public class AuctionManager implements Runnable{
         logger.info("Auction has ended");
         Transaction trans = createTransaction(winBid);
         BlockchainUtils.addTransaction(trans);
-        BlockchainUtils.getKademliaClient().announceNewTransaction(trans);
+        //BlockchainUtils.getKademliaClient().announceNewTransaction(trans);
     }
 
     public Auction getAuction() {

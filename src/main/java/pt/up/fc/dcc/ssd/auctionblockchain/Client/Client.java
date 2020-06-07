@@ -1,8 +1,8 @@
 package pt.up.fc.dcc.ssd.auctionblockchain.Client;
 
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.Auction;
-import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionManager;
 import pt.up.fc.dcc.ssd.auctionblockchain.Auction.AuctionsState;
+import pt.up.fc.dcc.ssd.auctionblockchain.Blockchain.BlockchainUtils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Pair;
 import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
@@ -14,39 +14,87 @@ import static java.lang.Thread.sleep;
 public class Client implements Runnable{
     private static final Logger logger = Logger.getLogger(Client.class.getName());
 
+    static Wallet clientWallet;
     private static final Scanner scanner =new Scanner(System.in);
     //saves the itemID and the lastest bid received
-    private static List<Pair<Bid, TreeSet<Bid>>> bidsParticipated = new LinkedList<>();
-
-    public static void bet(Wallet buyer, String itemId, long amount){
+    public static Bid bet(Wallet buyer, String itemId, long amount){
         Auction auction = AuctionsState.getAuction(itemId);
-        assert auction != null;
+        if(auction==null){
+            System.out.println("Auction not found");
+            return null;
+        }
         Bid myBid = new Bid(buyer, auction, amount);
-        AuctionsState.updateBid(myBid);
+        if(!AuctionsState.updateBid(myBid)){
+            return null;
+        }
+        if(!BlockchainUtils.getKademliaClient().announceNewBid(myBid)){
+            return null;
+        }
+        return myBid;
         /*if(interactive){
-            bidsParticipated.add(new Pair(myBid, AuctionsState.getAuctionBidsTreeSet(itemId)));
+
             Thread thread = new Thread(new Client());
             thread.start();
         }*/
     }
 
+    public static Bid getBid(String itemId){
+        System.out.println("How much do u wish to bet");
+
+        long amountAnswer = Long.parseLong(scanner.nextLine());
+
+        return bet(clientWallet, itemId, amountAnswer);
+    }
+
+    public static Bid newBid(){
+        System.out.println("To which auction do you wish to bid?");
+        AuctionsState.printAuctions();
+
+        String auctionAnswer = scanner.nextLine();
+
+        return getBid(auctionAnswer);
+    }
+
     @Override
     public void run() {
+        Bid myBid = newBid();
+        if (myBid==null){
+            System.out.println("Bid not successfull");
+            return;
+        }
+        TreeSet<Bid> competition = AuctionsState.getAuctionBidsTreeSet(myBid.getItemId());
         while(true) {
-            for (Pair<Bid, TreeSet<Bid>> mybet : bidsParticipated) {
-                if (mybet.getFirst() != mybet.getSecond().last()) {
-                    System.out.println("Someone outbid u, do u wish to bet");
-                    String response = scanner.nextLine();
-                    if(response.equals("y")){
-                        System.out.println("update");
+            if (AuctionsState.checkAuctionGoing(myBid.getItemId())){
+                System.out.println("Auction has ended");
+                return;
+            }
+            assert competition != null;
+            Bid winBid = competition.last();
+            if (myBid != winBid) {
+                System.out.println("Someone outbid u at auction : "+ myBid.getItemId() + " with the amount : " + winBid.getAmount() + "\nDo u wish to bet?[y/n]");
+                String response = scanner.nextLine();
+                if(response.equals("y")){
+                    myBid = getBid(myBid.getItemId());
+                    if(myBid!=null){
+                        System.out.println("Bid not successful");
                     }
+                    else{
+                        System.out.println("Bid successful");
+                    }
+                }
+                else{
+                    return;
                 }
             }
             try {
-                sleep(100);
+                sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void setClientWallet(Wallet clientWallet) {
+        Client.clientWallet = clientWallet;
     }
 }

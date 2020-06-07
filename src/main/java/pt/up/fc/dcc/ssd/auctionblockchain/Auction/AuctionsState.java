@@ -45,7 +45,7 @@ public class AuctionsState {
         return true;
     }
 
-    private static boolean checkAuctionGoing(String itemId) {
+    public static boolean checkAuctionGoing(String itemId) {
         return auctionStates.get(itemId) != null;
     }
 
@@ -157,6 +157,12 @@ public class AuctionsState {
 
         return state.getAuction();
     }
+
+    public static void printAuctions() {
+        for(AuctionState print: auctionStates.values()){
+            print.printAuctionState();
+        }
+    }
 }
 class AuctionState{
     Auction auction;
@@ -191,6 +197,18 @@ class AuctionState{
         }else{
             return bids.last();
         }
+    }
+
+    public void printAuctionState(){
+        System.out.println("Auction : " + auction.getItemID());
+        Bid latest = this.getLatestBid();
+        if (latest==null){
+            System.out.println("No latest bid");
+        }
+        else{
+            System.out.println("Latest Bid is off" + latest.getAmount());
+        }
+        System.out.println();
     }
 
     static class BidCompare implements Comparator<Bid> {
