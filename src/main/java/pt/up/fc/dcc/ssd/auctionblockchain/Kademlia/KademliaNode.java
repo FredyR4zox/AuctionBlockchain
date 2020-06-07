@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class KademliaNode {
-    private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
+//    private static final Logger logger = Logger.getLogger(KademliaNode.class.getName());
 
     private final String ipAddress;
     private final int port;

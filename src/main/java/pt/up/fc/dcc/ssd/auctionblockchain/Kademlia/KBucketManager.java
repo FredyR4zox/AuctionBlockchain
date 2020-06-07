@@ -48,7 +48,7 @@ public class KBucketManager {
 
         synchronized (buckets[i]) {
             if(buckets[i].insertNode(node)) {
-                logger.log(Level.INFO, "Added node to bucket " + i);
+//                logger.log(Level.INFO, "Added node to bucket " + i);
                 return true;
             }
 
@@ -61,14 +61,14 @@ public class KBucketManager {
 
                 buckets[i].insertNode(node);
 
-                logger.log(Level.INFO, "Discarded first node " + new BigInteger(first.getNodeID()) + " and added new node " + new BigInteger(node.getNodeID()));
+//                logger.log(Level.INFO, "Discarded first node " + first + " and added new node " + node);
                 return true;
             } else {
                 buckets[i].removeNode(first);
 
                 buckets[i].insertNode(ret.getFirst());
 
-                logger.log(Level.INFO, "Updated first node " + new BigInteger(ret.getFirst().getNodeID()));
+//                logger.log(Level.INFO, "Updated first node " + first);
                 return false;
             }
         }
@@ -120,7 +120,7 @@ public class KBucketManager {
             }
         }
 
-        logger.log(Level.INFO, "Aggregated " + ret.size() + " nodes");
+//        logger.log(Level.INFO, "Aggregated " + ret.size() + " nodes");
         return ret.subList(0, Math.min(ret.size(), maxNodes));
     }
 }

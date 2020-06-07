@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 import org.json.JSONObject;
 
 public class KademliaUtils {
-    private static final Logger logger = Logger.getLogger(KademliaUtils.class.getName());
+//    private static final Logger logger = Logger.getLogger(KademliaUtils.class.getName());
 
     public static final int alpha = 3;
     public static final int k = 20;
@@ -34,6 +34,9 @@ public class KademliaUtils {
     public static final byte[] bootstrapNodeID = new byte[Utils.hashAlgorithmLengthInBytes];
     public static final String bootstrapNodeIP = "34.105.188.87";
     public static final int bootstrapNodePort = 1337;
+
+    public static final String defaultIpAddress = "0.0.0.0";
+    public static final int defaultPort = 1337;
 
 
 

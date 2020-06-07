@@ -48,11 +48,11 @@ public class KBucket {
 //                System.out.print(" " + node.getNodeID()[j]);
 //            System.out.println("\n\n");
 
-            logger.log(Level.INFO, "Updated node in bucket");
+//            logger.log(Level.INFO, "Updated node in bucket");
             return true;
         }
         else if (nodes.size() == KademliaUtils.k){
-            logger.log(Level.INFO, "Bucket full");
+//            logger.log(Level.INFO, "Bucket full");
             return false;
         }
         else if(nodes.size() > KademliaUtils.k){
@@ -61,7 +61,7 @@ public class KBucket {
         }
 
         nodes.addLast(node);
-        logger.log(Level.INFO, "Added node to bucket and now has length of " + nodes.size());
+//        logger.log(Level.INFO, "Added node to bucket and now has length of " + nodes.size());
         return true;
     }
 

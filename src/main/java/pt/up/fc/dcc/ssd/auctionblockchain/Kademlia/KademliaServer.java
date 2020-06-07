@@ -95,7 +95,7 @@ public class KademliaServer {
 
         @Override
         public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
-            logger.log(Level.INFO, "Received a STORE RPC");
+//            logger.log(Level.INFO, "Received a STORE RPC");
 
             StoreResponse.Builder response = StoreResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
@@ -186,12 +186,12 @@ public class KademliaServer {
 
         @Override
         public void findNode(FindNodeRequest request, StreamObserver<FindNodeResponse> responseObserver) {
-            logger.log(Level.INFO, "Received a FIND_NODE RPC");
+//            logger.log(Level.INFO, "Received a FIND_NODE RPC");
 
             byte[] requestorID = KademliaUtils.NodeIDProtoToNodeID(request.getNode().getNodeID());
             byte[] requestedID = KademliaUtils.NodeIDProtoToNodeID(request.getRequestedNodeId());
 
-            logger.log(Level.INFO, "Processing a FIND_NODE RPC for key " + Utils.bytesToHexString(requestedID));
+//            logger.log(Level.INFO, "Processing a FIND_NODE RPC for key " + Utils.bytesToHexString(requestedID));
 
             List<KademliaNode> nodes = bucketManager.getClosestNodes(requestorID, requestedID, KademliaUtils.k);
 
@@ -206,12 +206,12 @@ public class KademliaServer {
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
             bucketManager.insertNode(node);
 
-            logger.log(Level.INFO, "Processed FIND_NODE RPC from " + node);
+            logger.log(Level.INFO, "Processed FIND_NODE RPC from " + node + " for key " + Utils.bytesToHexString(requestedID));
         }
 
         @Override
         public void findValue(FindValueRequest request, StreamObserver<FindValueResponse> responseObserver) {
-            logger.log(Level.INFO, "Received a FIND_VALUE RPC");
+//            logger.log(Level.INFO, "Received a FIND_VALUE RPC");
 
             byte[] key = request.getKey().toByteArray();
 
@@ -264,7 +264,7 @@ public class KademliaServer {
 
             bucketManager.insertNode(node);
 
-            logger.log(Level.INFO, "Processed FIND_VALUE RPC from " + node);
+            logger.log(Level.INFO, "Processed FIND_VALUE RPC from " + node + " for key " + Utils.bytesToHexString(key));
         }
     }
 }

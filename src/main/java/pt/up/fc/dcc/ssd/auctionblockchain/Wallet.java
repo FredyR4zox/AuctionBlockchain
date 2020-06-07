@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 public class Wallet {
     private static final Logger logger = Logger.getLogger(Wallet.class.getName());
     public static final String WALLETS_PATH="./wallets/";
+    public static final String defaultWalletFile = "defaultWallet.txt";
     private String address;
     private PrivateKey privKey;
     private PublicKey pubKey;
@@ -160,6 +161,7 @@ public class Wallet {
             FileWriter writeF = new FileWriter(WALLETS_PATH + filename);
             writeF.write(pubKeyEncoded + " " + privKeyEncoded + " " + addressEncoded);
             writeF.close();
+            return filename;
         } catch (IOException e) {
             e.printStackTrace();
         }
