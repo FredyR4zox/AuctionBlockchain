@@ -215,7 +215,7 @@ public class KademliaServer {
 
             byte[] key = request.getKey().toByteArray();
 
-            logger.log(Level.INFO, "Processing a FIND_VALUE RPC for key " + Utils.bytesToHexString(key));
+//            logger.log(Level.INFO, "Processing a FIND_VALUE RPC for key " + Utils.bytesToHexString(key));
 
             FindValueResponse.Builder responseBuilder = FindValueResponse.newBuilder().setNode(KademliaUtils.KademliaNodeToKademliaNodeProto(bucketManager.getMyNode()));
 
@@ -226,12 +226,12 @@ public class KademliaServer {
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
 
             if(mempoolKey != null && Arrays.equals(key, mempoolKey)) {
-                logger.log(Level.INFO, "Sending mempool.");
+//                logger.log(Level.INFO, "Sending mempool.");
                 List<Transaction> transactions = new ArrayList<>(BlockchainUtils.getLongestChain().getUnconfirmedTransaction());
                 responseBuilder.setTransactions(KademliaUtils.TransactionListToMempoolProto(transactions));
             }
             else if(auctionsKey != null && Arrays.equals(key, auctionsKey)) {
-                logger.log(Level.INFO, "Sending all auctions.");
+//                logger.log(Level.INFO, "Sending all auctions.");
                 List<Auction> auctions = new ArrayList<>(AuctionsState.getAuctions());
                 responseBuilder.setAuctions(KademliaUtils.AuctionListToAuctionListProto(auctions));
             }
@@ -243,16 +243,16 @@ public class KademliaServer {
                 Auction auction = AuctionsState.getAuction(keyString);
 
                 if(block != null) {
-                    logger.log(Level.INFO, "Sending block with previous hash " + keyString);
+//                    logger.log(Level.INFO, "Sending block with previous hash " + keyString);
                     responseBuilder.setBlock(KademliaUtils.BlockToBlockProto(block));
                 }
                 else if(auction != null) {
-                    logger.log(Level.INFO, "Sending auction bids with hash " + keyString);
+//                    logger.log(Level.INFO, "Sending auction bids with hash " + keyString);
                     List<Bid> bids = new ArrayList<>(AuctionsState.getAuctionBidsTreeSet(keyString));
                     responseBuilder.setBids(KademliaUtils.BidListToBidListProto(bids));
                 }
                 else {
-                    logger.log(Level.INFO, "Sending kbuckets because no value was found to hash " + keyString);
+//                    logger.log(Level.INFO, "Sending kbuckets because no value was found to hash " + keyString);
                     List<KademliaNode> nodes = bucketManager.getClosestNodes(node.getNodeID(), key, KademliaUtils.k);
                     responseBuilder.setBucket(KademliaUtils.KademliaNodeListToKBucketProto(nodes));
                 }
