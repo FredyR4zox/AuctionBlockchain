@@ -65,7 +65,7 @@ public class Client implements Runnable{
         TreeSet<Bid> competition = AuctionsState.getAuctionBidsTreeSet(myBid.getItemId());
         while(true) {
             if (AuctionsState.checkAuctionGoing(myBid.getItemId())){
-                System.out.println("Auction has ended");
+                //System.out.println("Auction has ended");
                 return;
             }
             assert competition != null;
