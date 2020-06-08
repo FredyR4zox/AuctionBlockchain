@@ -32,8 +32,8 @@ public class AuctionManager implements Runnable{
 
     public AuctionManager(Wallet seller){
         this.seller = seller;
-        //this.auction = getAuction(seller);
-        this.auction = new Auction(seller, "AAAAAA", 10, 5, 2, 10000);
+        this.auction = getAuction(seller);
+        //this.auction = new Auction(seller, "AAAAAA", 10, 5, 2, 10000);
         AuctionsState.addAuction(auction);
         this.bids_status = AuctionsState.getAuctionBidsTreeSet(auction.getItemID());
         BlockchainUtils.getKademliaClient().announceNewAuction(auction);
@@ -43,7 +43,7 @@ public class AuctionManager implements Runnable{
 
     private Auction getAuction(Wallet seller) {
         //System.out.println("What do you wish the auctionID to be:");
-        byte[] randomID = new byte[8];
+        byte[] randomID = new byte[6];
         Random random = new SecureRandom();
         random.nextBytes(randomID);
 
