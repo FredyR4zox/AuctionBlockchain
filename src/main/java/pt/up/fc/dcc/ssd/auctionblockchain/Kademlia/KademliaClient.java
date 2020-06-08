@@ -348,7 +348,8 @@ public class KademliaClient {
 //        logger.log(Level.INFO, "Sending PING RPC to " + node);
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);;
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+//        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
 
         KademliaNodeProto response;
 
@@ -402,7 +403,8 @@ public class KademliaClient {
         }
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+//        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
 
         StoreResponse response;
 
@@ -439,7 +441,8 @@ public class KademliaClient {
                 .build();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+//        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
 
         FindNodeResponse response;
 
@@ -476,7 +479,8 @@ public class KademliaClient {
                 .build();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(node.getIpAddress() + ":" + node.getPort()).usePlaintext().build();
-        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
+        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel);
+//        AuctionBlockchainBlockingStub blockingStub = AuctionBlockchainGrpc.newBlockingStub(channel).withDeadlineAfter(KademliaUtils.networkTimeoutMsecs, TimeUnit.MILLISECONDS);
 
         FindValueResponse response;
 
