@@ -90,7 +90,7 @@ public class KademliaServer {
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request);
             bucketManager.insertNode(node);
 
-            logger.log(Level.INFO, "Processed PING RPC from " + node);
+//            logger.log(Level.INFO, "Processed PING RPC from " + node);
         }
 
         @Override
@@ -181,7 +181,7 @@ public class KademliaServer {
             }
 
 
-            logger.log(Level.INFO, "Processed STORE RPC from " + node);
+//            logger.log(Level.INFO, "Processed STORE RPC from " + node);
         }
 
         @Override
@@ -206,7 +206,7 @@ public class KademliaServer {
             KademliaNode node =  KademliaUtils.KademliaNodeProtoToKademliaNode(request.getNode());
             bucketManager.insertNode(node);
 
-            logger.log(Level.INFO, "Processed FIND_NODE RPC from " + node + " for key " + Utils.bytesToHexString(requestedID));
+//            logger.log(Level.INFO, "Processed FIND_NODE RPC from " + node + " for key " + Utils.bytesToHexString(requestedID));
         }
 
         @Override
@@ -264,7 +264,7 @@ public class KademliaServer {
 
             bucketManager.insertNode(node);
 
-            logger.log(Level.INFO, "Processed FIND_VALUE RPC from " + node + " for key " + Utils.bytesToHexString(key));
+//            logger.log(Level.INFO, "Processed FIND_VALUE RPC from " + node + " for key " + Utils.bytesToHexString(key));
         }
     }
 }
