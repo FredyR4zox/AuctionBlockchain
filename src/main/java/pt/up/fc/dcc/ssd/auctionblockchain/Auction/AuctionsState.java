@@ -79,6 +79,11 @@ public class AuctionsState {
             logger.warning("bid parameters aren't valid");
             return false;
         }
+        //check if bid exists
+        if(!auctionStates.get(bid.getItemId()).checkUnique(bid)){
+            logger.warning("Duplicated bid");
+            return false;
+        }
         //check if its first bid
         Bid prevBid= auctionStates.get(bid.getItemId()).getLatestBid();
         if(prevBid==null){
@@ -217,6 +222,13 @@ class AuctionState{
             System.out.println("Latest Bid is off" + latest.getAmount());
         }
         System.out.println();
+    }
+
+    public boolean checkUnique(Bid bid) {
+        if(bids.contains(bid)){
+            return false;
+        }
+        return true;
     }
 
     static class BidCompare implements Comparator<Bid> {
