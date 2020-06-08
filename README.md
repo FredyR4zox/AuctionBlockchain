@@ -1,4 +1,5 @@
 # AuctionBlockchain
+Blockchain for auctions.
 
 ### Deployment
 
