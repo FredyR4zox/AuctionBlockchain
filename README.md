@@ -29,10 +29,10 @@ The compiled jar should be on the directory "target" and have the name "AuctionB
 ### Running
 
 The commands to initiate all node types are as follow:
- * Bootstrap (change BootstrapIPAddress to 127.0.0.1 to test on local machine): java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar bootstrap <walletFile> <myIPAddress> <myPort> \end{verbatim}
- * Miner: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar miner <walletFile> <myIPAddress> <myPort> <BootstrapIPAddress> <BootstrapPort> \end{verbatim}
- * Auctioneer: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar auctioneer <walletFile> <myIPAddress> <myPort> <BootstrapIPAddress> <BootstrapPort> \end{verbatim}
- * Client: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar client <walletFile> <myIPAddress> <myPort> <BootstrapIPAddress> <BootstrapPort> \end{verbatim}
+ * Bootstrap (change BootstrapIPAddress to 127.0.0.1 to test on local machine): java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar bootstrap <walletFile> <myIPAddress> <myPort>
+ * Miner: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar miner <walletFile> <myIPAddress> <myPort> <BootstrapIPAddress> <BootstrapPort>
+ * Auctioneer: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar auctioneer <walletFile> <myIPAddress> <myPort> <BootstrapIPAddress> <BootstrapPort>
+ * Client: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar client <walletFile> <myIPAddress> <myPort> <BootstrapIPAddress> <BootstrapPort>
 
 ### Arguments
 
@@ -48,8 +48,8 @@ Attention: The arguments are in order an they cannot be set if the previous isn'
 ### Examples
 
 Examples to test locally:
- * Bootstrap: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar bootstrap alice.txt 127.0.0.1 \end{verbatim}
- * Miner: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar miner alice.txt 127.0.0.1 1337 127.0.0.1 \end{verbatim}
- * Auctioneer: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar auctioneer alice.txt 127.0.0.1 1337 127.0.0.1 \end{verbatim}
- * Client: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar client alice.txt 127.0.0.1 1337 127.0.0.1 \end{verbatim}
+ * Bootstrap: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar bootstrap alice.txt 127.0.0.1
+ * Miner: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar miner alice.txt 127.0.0.1 1337 127.0.0.1
+ * Auctioneer: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar auctioneer alice.txt 127.0.0.1 1337 127.0.0.1
+ * Client: java -jar AuctionBlockchain-1.0-SNAPSHOT-jar-with-dependencies.jar client alice.txt 127.0.0.1 1337 127.0.0.1
 
