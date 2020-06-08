@@ -395,6 +395,7 @@ public class BlockChain{
                 return false;
             }
             this.unconfirmedTransaction.add(trans);
+            logger.info("Added transaction with bid item ID :" + trans.getBid().getItemId() + " and hash : " + trans.getBid().getHash() + " and amount : " + trans.getBid().getAmount());
             return true;
         }else{
             boolean output = false;
