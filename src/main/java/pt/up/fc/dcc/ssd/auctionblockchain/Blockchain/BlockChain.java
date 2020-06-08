@@ -391,6 +391,9 @@ public class BlockChain{
             if(this.confirmedTransactionHashes.contains(trans.getHash())){
                 return false;
             }
+            else if(this.unconfirmedTransaction.contains(trans)){
+                return false;
+            }
             this.unconfirmedTransaction.add(trans);
             return true;
         }else{
@@ -458,9 +461,6 @@ public class BlockChain{
 
     public int getSize() {
         return size;
-    }
-    public Block getXBlock(int blocknr){
-        return blockchain.get(blocknr-1);
     }
 
     public BigInteger getWork(){

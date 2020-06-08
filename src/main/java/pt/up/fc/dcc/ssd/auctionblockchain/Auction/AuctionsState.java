@@ -18,10 +18,13 @@ public class AuctionsState {
         if(!auction.verifyAuction()){
             return false;
         }
-
+        if(auctionStates.containsKey(auction.getItemID())){
+            logger.warning("auction already added");
+            return false;
+        }
         AuctionState newAuctionState = new AuctionState(auction);
         auctionStates.put(auction.getItemID(), newAuctionState);
-
+        logger.info("A new auction was added");
         return true;
     }
 
@@ -106,7 +109,6 @@ public class AuctionsState {
         walletsTrans.replace(newBid.getBuyerID(), newAmount);
     }
 
-    //TODO check if blockchain updates change winning bids
     //end auctions that already have transactions
     public static void updateAuctionsState(){
         Set<String> auctionIds = auctionStates.keySet();
@@ -187,7 +189,6 @@ class AuctionState{
         } catch (NoSuchElementException ignored){}
         bids.add(bid);
         return previousBid;
-
     }
 
     public Auction getAuction() {

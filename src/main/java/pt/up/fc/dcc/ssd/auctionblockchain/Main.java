@@ -167,7 +167,7 @@ public class Main {
 
         // Uncomment the following code to automatically send coins from the mined genesis block to alice and bob (50 coins each)
 
-        /*
+
         System.out.println("---Sending 50 coins to alice---");
 
         byte[] rand = new byte[Utils.hashAlgorithmLengthInBytes];
@@ -193,7 +193,6 @@ public class Main {
 
         BlockchainUtils.addTransaction(transaction);
         client.announceNewTransaction(transaction);
-        */
 
 
         server.blockUntilShutdown();

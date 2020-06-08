@@ -6,7 +6,9 @@ import pt.up.fc.dcc.ssd.auctionblockchain.Client.Bid;
 import pt.up.fc.dcc.ssd.auctionblockchain.Utils;
 import pt.up.fc.dcc.ssd.auctionblockchain.Wallet;
 
+import java.security.SecureRandom;
 import java.util.Date;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -40,12 +42,16 @@ public class AuctionManager implements Runnable{
     }
 
     private Auction getAuction(Wallet seller) {
-        System.out.println("What do you wish the auctionID to be:");
-        String name = scanner.nextLine();
-        while(!AuctionsState.isNameValid(name)){
+        //System.out.println("What do you wish the auctionID to be:");
+        byte[] randomID = new byte[8];
+        Random random = new SecureRandom();
+        random.nextBytes(randomID);
+
+        String name = Utils.bytesToHexString(randomID) ;
+        /*while(!AuctionsState.isNameValid(name)){
             System.out.println("Name already used, insert another one");
             name = scanner.nextLine();
-        }
+        }*/
         System.out.println("Insert the minimun amount for the bid");
         long amountRead = scanner.nextLong();
         System.out.println("Insert the minimun increment percentage");
@@ -67,8 +73,9 @@ public class AuctionManager implements Runnable{
     public void run() {
         logger.info("started auction");
         while(this.bids_status.isEmpty()){
+            this.bids_status = AuctionsState.getAuctionBidsTreeSet(auction.getItemID());
             try {
-                sleep(1000);
+                sleep(4000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

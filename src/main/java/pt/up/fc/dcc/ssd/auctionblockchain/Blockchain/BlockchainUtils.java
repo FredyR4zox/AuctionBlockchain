@@ -17,7 +17,7 @@ public class BlockchainUtils{
     public static final int MAX_NR_TRANSACTIONS = 3;
     public static final int difficulty = 5;
     public static final long minerReward = 100;
-    public static final int MIN_NR_TRANSACTIONS = 2;
+    public static final int MIN_NR_TRANSACTIONS = 1;
     public static final BigInteger WORK_RESOLVE_SPLIT = BigInteger.valueOf(4);
     public static BlockChain original = new BlockChain();
     private static final String CHAIN_FILEPATH = "./chain/";
@@ -131,7 +131,7 @@ public class BlockchainUtils{
         }
         return true;
     }
-    //TODO fix this function
+
     public static void makeBlockchainFromFile(String filename){
         File mychain = new File(CHAIN_FILEPATH + filename);
         try {
